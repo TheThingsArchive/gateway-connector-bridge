@@ -29,7 +29,7 @@ func init() {
 	}
 }
 
-func TestSetupMQTT(t *testing.T) {
+func TestMQTT(t *testing.T) {
 	Convey("Given a new Bridge", t, func(c C) {
 		b := new(Bridge)
 
