@@ -149,7 +149,7 @@ func TestSetupMQTT(t *testing.T) {
 						statusMessage := new(gateway.Status)
 						statusMessage.Description = "Awesome Description"
 						bin, _ := proto.Marshal(statusMessage)
-						b.mqtt.publish(fmt.Sprintf(StatusTopicFormat, "dev"), bin)
+						b.mqtt.publish(fmt.Sprintf(StatusTopicFormat, "dev"), bin).Wait()
 						Convey("There should be a corresponding StatusMessage in the channel", func() {
 							msg := <-status
 							So(msg.message.Description, ShouldEqual, "Awesome Description")
@@ -171,7 +171,7 @@ func TestSetupMQTT(t *testing.T) {
 					var payload []byte
 					b.mqtt.subscribe(fmt.Sprintf(DownlinkTopicFormat, "dev"), func(_ paho.Client, msg paho.Message) {
 						payload = msg.Payload()
-					}, func() {})
+					}, func() {}).Wait()
 
 					Convey("When publishing a downlink message", func() {
 						downlinkMessage := new(router.DownlinkMessage)
