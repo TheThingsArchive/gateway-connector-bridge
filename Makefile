@@ -37,7 +37,7 @@ GO_COVER_DIR ?= .cover
 GO_COVER_FILES = $(patsubst ./%, $(GO_COVER_DIR)/%.out, $(shell echo "$(GO_TEST_PACKAGES)"))
 
 test: $(GO_FILES)
-	go test $(GO_TEST_PACKAGES)
+	go test -v $(GO_TEST_PACKAGES)
 
 cover-clean:
 	rm -rf $(GO_COVER_DIR) $(GO_COVER_FILE)
