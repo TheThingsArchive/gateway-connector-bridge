@@ -1,7 +1,7 @@
 // Copyright © 2016 The Things Network
 // Use of this source code is governed by the MIT license that can be found in the LICENSE file.
 
-package bridge
+package types
 
 import (
 	"github.com/TheThingsNetwork/ttn/api/gateway"
@@ -18,19 +18,16 @@ type DisconnectMessage struct {
 }
 
 type UplinkMessage struct {
-	gatewayID string
-	token     string
-	message   *router.UplinkMessage
+	GatewayID string
+	Message   *router.UplinkMessage
 }
 
 type DownlinkMessage struct {
-	gatewayID string
-	token     string
-	message   *router.DownlinkMessage
+	GatewayID string
+	Message   *router.DownlinkMessage
 }
 
 type StatusMessage struct {
-	gatewayID string
-	token     string
-	message   *gateway.Status
+	GatewayID string
+	Message   *gateway.Status
 }

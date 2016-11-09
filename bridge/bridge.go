@@ -6,14 +6,16 @@ package bridge
 import (
 	"sync"
 
+	"github.com/TheThingsNetwork/gateway-connector-bridge/bridge/mqtt"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/bridge/ttn"
 	"github.com/apex/log"
 )
 
 // Bridge is the bridge between MQTT and gRPC
 type Bridge struct {
 	Ctx       log.Interface
-	mqtt      *MQTT
-	ttnRouter *TTNRouter
+	mqtt      *mqtt.MQTT
+	ttnRouter *ttn.Router
 	tokens    map[string]string
 	mu        sync.Mutex
 }
