@@ -72,9 +72,13 @@ func TestMQTT(t *testing.T) {
 					Convey("When publishing a gateway connection", func() {
 						mqtt.publish(ConnectTopicFormat, []byte(`{"id":"dev","token":"token"}`))
 						Convey("There should be a corresponding ConnectMessage in the channel", func() {
-							msg := <-connect
-							So(msg.GatewayID, ShouldEqual, "dev")
-							So(msg.Token, ShouldEqual, "token")
+							select {
+							case <-time.After(time.Second):
+								So("Timeout Exceeded", ShouldBeFalse)
+							case msg := <-connect:
+								So(msg.GatewayID, ShouldEqual, "dev")
+								So(msg.Token, ShouldEqual, "token")
+							}
 						})
 					})
 					Convey("When unsubscribing from gateway connections", func() {
@@ -97,8 +101,12 @@ func TestMQTT(t *testing.T) {
 					Convey("When publishing a gateway disconnection", func() {
 						mqtt.publish(DisconnectTopicFormat, []byte(`{"id":"dev"}`))
 						Convey("There should be a corresponding ConnectMessage in the channel", func() {
-							msg := <-disconnect
-							So(msg.GatewayID, ShouldEqual, "dev")
+							select {
+							case <-time.After(time.Second):
+								So("Timeout Exceeded", ShouldBeFalse)
+							case msg := <-disconnect:
+								So(msg.GatewayID, ShouldEqual, "dev")
+							}
 						})
 					})
 					Convey("When unsubscribing from gateway disconnections", func() {
@@ -124,8 +132,12 @@ func TestMQTT(t *testing.T) {
 						bin, _ := proto.Marshal(uplinkMessage)
 						mqtt.publish(fmt.Sprintf(UplinkTopicFormat, "dev"), bin)
 						Convey("There should be a corresponding UplinkMessage in the channel", func() {
-							msg := <-uplink
-							So(msg.Message.Payload, ShouldResemble, []byte{1, 2, 3, 4})
+							select {
+							case <-time.After(time.Second):
+								So("Timeout Exceeded", ShouldBeFalse)
+							case msg := <-uplink:
+								So(msg.Message.Payload, ShouldResemble, []byte{1, 2, 3, 4})
+							}
 						})
 					})
 					Convey("When unsubscribing from gateway uplink", func() {
@@ -151,8 +163,12 @@ func TestMQTT(t *testing.T) {
 						bin, _ := proto.Marshal(statusMessage)
 						mqtt.publish(fmt.Sprintf(StatusTopicFormat, "dev"), bin).Wait()
 						Convey("There should be a corresponding StatusMessage in the channel", func() {
-							msg := <-status
-							So(msg.Message.Description, ShouldEqual, "Awesome Description")
+							select {
+							case <-time.After(time.Second):
+								So("Timeout Exceeded", ShouldBeFalse)
+							case msg := <-status:
+								So(msg.Message.Description, ShouldEqual, "Awesome Description")
+							}
 						})
 					})
 					Convey("When unsubscribing from gateway status", func() {
@@ -161,7 +177,11 @@ func TestMQTT(t *testing.T) {
 							So(err, ShouldBeNil)
 						})
 						Convey("The channel should be closed", func() {
-							for range status {
+							select {
+							case <-time.After(time.Second):
+								So("Timeout Exceeded", ShouldBeFalse)
+							case _, ok := <-status:
+								So(ok, ShouldBeFalse)
 							}
 						})
 					})
