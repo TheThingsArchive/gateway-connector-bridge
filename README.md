@@ -1,6 +1,6 @@
 # The Things Network Gateway Connector Bridge
 
-[![Build Status](https://travis-ci.org/TheThingsNetwork/gateway-connector-bridge.svg?branch=master)](https://travis-ci.org/TheThingsNetwork/gateway-connector-bridge) [![Coverage Status](https://coveralls.io/repos/github/TheThingsNetwork/gateway-connector-bridge/badge.svg?branch=master)](https://coveralls.io/github/TheThingsNetwork/ttn?branch=master)
+[![Build Status](https://travis-ci.org/TheThingsNetwork/gateway-connector-bridge.svg?branch=master)](https://travis-ci.org/TheThingsNetwork/gateway-connector-bridge) [![Coverage Status](https://coveralls.io/repos/github/TheThingsNetwork/gateway-connector-bridge/badge.svg?branch=master)](https://coveralls.io/github/TheThingsNetwork/gateway-connector-bridge?branch=master)
 
 ## Getting Started
 

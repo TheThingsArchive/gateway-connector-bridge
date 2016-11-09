@@ -20,5 +20,5 @@ script:
   - make fmt
   - make vet
 
-# after_success:
-#   - make coveralls
+after_success:
+  - make coveralls
