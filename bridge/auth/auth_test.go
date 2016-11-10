@@ -38,6 +38,11 @@ func TestAuth(t *testing.T) {
 			Convey("When running the standardized test", standardizedTest(a, e))
 		})
 
+		Convey("Given a new auth.Redis", func() {
+			a := NewRedis(getRedisClient(), "test-auth")
+			Convey("When running the standardized test", standardizedTest(a, e))
+		})
+
 	})
 }
 
