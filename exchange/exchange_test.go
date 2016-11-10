@@ -9,6 +9,7 @@ import (
 
 	"time"
 
+	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/dummy"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/apex/log"
@@ -33,8 +34,11 @@ func TestExchange(t *testing.T) {
 		ttn := dummy.New(ctx.WithField("Direction", "TTN"))
 		gateway := dummy.New(ctx.WithField("Direction", "Gateway"))
 
+		auth := auth.NewMemory()
+
 		Convey("When creating a new Exchange", func() {
 			b := New(ctx)
+			b.SetAuth(auth)
 
 			Convey("When adding a Northbound and Southbound backend", func() {
 				b.AddNorthbound(ttn)
@@ -46,6 +50,31 @@ func TestExchange(t *testing.T) {
 
 					Convey("When stopping the Exchange", func() {
 						b.Stop()
+					})
+
+					Convey("When sending a connect message with a Token", func() {
+						err := gateway.PublishConnect(&types.ConnectMessage{
+							GatewayID: "dev",
+							Token:     "token",
+						})
+						Convey("There should be no error", func() {
+							So(err, ShouldBeNil)
+						})
+						Convey("The Token should be stored", func() {
+							token, err := auth.GetToken("dev")
+							So(err, ShouldBeNil)
+							So(token, ShouldEqual, "token")
+						})
+					})
+
+					Convey("When sending a connect message with a Key", func() {
+						err := gateway.PublishConnect(&types.ConnectMessage{
+							GatewayID: "dev",
+							Key:       "key",
+						})
+						Convey("There should be no error", func() {
+							So(err, ShouldBeNil)
+						})
 					})
 
 					Convey("When sending a connect message", func() {

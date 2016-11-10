@@ -6,7 +6,9 @@ package exchange
 import (
 	"fmt"
 	"sync"
+	"time"
 
+	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/apex/log"
@@ -24,6 +26,8 @@ type Exchange struct {
 	ctx  log.Interface
 	mu   sync.Mutex
 	done chan struct{}
+
+	auth auth.Interface
 
 	northboundBackends []backend.Northbound
 	southboundBackends []backend.Southbound
@@ -52,6 +56,13 @@ func New(ctx log.Interface) *Exchange {
 		status:         make(chan *types.StatusMessage),
 		downlink:       make(chan *types.DownlinkMessage),
 	}
+}
+
+// SetAuth sets the authentication component
+func (b *Exchange) SetAuth(auth auth.Interface) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.auth = auth
 }
 
 // AddNorthbound adds a new northbound backend (server that is up the chain)
@@ -119,6 +130,18 @@ func (b *Exchange) handleChannels() {
 		case connectMessage, ok := <-b.connect:
 			if !ok {
 				continue
+			}
+			if b.auth != nil {
+				if connectMessage.Key != "" {
+					if err := b.auth.SetKey(connectMessage.GatewayID, connectMessage.Key); err != nil {
+						b.ctx.WithField("GatewayID", connectMessage.GatewayID).WithError(err).Warn("Could not set gateway key")
+					}
+				}
+				if connectMessage.Token != "" {
+					if err := b.auth.SetToken(connectMessage.GatewayID, connectMessage.Token, time.Time{}); err != nil {
+						b.ctx.WithField("GatewayID", connectMessage.GatewayID).WithError(err).Warn("Could not set gateway token")
+					}
+				}
 			}
 			for _, backend := range b.northboundBackends {
 				go b.activateNorthbound(backend, connectMessage.GatewayID)
