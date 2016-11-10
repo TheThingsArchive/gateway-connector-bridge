@@ -70,7 +70,7 @@ func TestMQTT(t *testing.T) {
 						So(err, ShouldBeNil)
 					})
 					Convey("When publishing a gateway connection", func() {
-						mqtt.publish(ConnectTopicFormat, []byte(`{"id":"dev","token":"token"}`))
+						mqtt.publish(ConnectTopicFormat, []byte(`{"id":"dev","token":"token","key":"key"}`))
 						Convey("There should be a corresponding ConnectMessage in the channel", func() {
 							select {
 							case <-time.After(time.Second):
@@ -78,6 +78,7 @@ func TestMQTT(t *testing.T) {
 							case msg := <-connect:
 								So(msg.GatewayID, ShouldEqual, "dev")
 								So(msg.Token, ShouldEqual, "token")
+								So(msg.Key, ShouldEqual, "key")
 							}
 						})
 					})

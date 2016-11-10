@@ -6,7 +6,8 @@
 // Connection/Disconnection of gateways is done by publishing messages to the
 // "connect" and "disconnect" routing keys. When a gateway connects, it (or a
 // plugin on the broker) should publish a types.ConnectMessage to the "connect"
-// routing key (`{"id":"[gateway-id]","token":"[gateway-token]"}``).
+// routing key. This message should contain the gateway's ID, and either a key
+// or a token (`{"id":"[gateway-id]","token":"[gateway-token]"}`).
 //
 // The gateway (or the plugin) can send a types.DisconnectMessage on the
 // "disconnect" topic (`{"id":"[gateway-id]"}``) when it disconnects, in order

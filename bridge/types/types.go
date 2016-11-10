@@ -12,6 +12,7 @@ import (
 type ConnectMessage struct {
 	GatewayID string `json:"id"`
 	Token     string `json:"token"`
+	Key       string `json:"key"`
 }
 
 // DisconnectMessage is published to MQTT/AMQP

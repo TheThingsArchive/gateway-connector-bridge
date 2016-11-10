@@ -6,7 +6,8 @@
 // Connection/Disconnection of gateways is done by publishing messages to the
 // "connect" and "disconnect" topics. When a gateway connects, it (or a plugin
 // of the MQTT broker) should publish a types.ConnectMessage to the "connect"
-// topic (`{"id":"[gateway-id]","token":"[gateway-token]"}``).
+// topic conteining the gateway's ID and either a key or a token
+// (`{"id":"[gateway-id]","token":"[gateway-token]"}`).
 //
 // The gateway (or the plugin) can also set a will with the MQTT broker for
 // when it disconnects. This will should be a types.DisconnectMessage on the

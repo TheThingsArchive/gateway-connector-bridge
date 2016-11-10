@@ -124,7 +124,7 @@ func TestAMQP(t *testing.T) {
 						So(err, ShouldBeNil)
 					})
 					Convey("When publishing a connect message", func() {
-						err := amqp.Publish(ConnectRoutingKeyFormat, []byte(`{"id":"dev"}`))
+						err := amqp.Publish(ConnectRoutingKeyFormat, []byte(`{"id":"dev","token":"token","key":"key"}`))
 						Convey("There should be no error", func() {
 							So(err, ShouldBeNil)
 						})
@@ -134,7 +134,9 @@ func TestAMQP(t *testing.T) {
 								So("Timeout Exceeded", ShouldBeFalse)
 							case msg, ok := <-msg:
 								So(ok, ShouldBeTrue)
-								So(msg, ShouldNotBeNil)
+								So(msg.GatewayID, ShouldEqual, "dev")
+								So(msg.Token, ShouldEqual, "token")
+								So(msg.Key, ShouldEqual, "key")
 							}
 						})
 					})
