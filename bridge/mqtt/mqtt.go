@@ -129,8 +129,9 @@ func (c *MQTT) Connect() error {
 }
 
 // Disconnect from MQTT
-func (c *MQTT) Disconnect() {
+func (c *MQTT) Disconnect() error {
 	c.client.Disconnect(100)
+	return nil
 }
 
 func (c *MQTT) publish(topic string, msg []byte) paho.Token {

@@ -95,8 +95,9 @@ func (r *Router) Connect() error {
 }
 
 // Disconnect from the TTN Router
-func (r *Router) Disconnect() {
+func (r *Router) Disconnect() error {
 	r.client.Close()
+	return nil
 }
 
 // PublishUplink publishes uplink messages to the TTN Router
@@ -113,4 +114,9 @@ func (r *Router) PublishStatus(message *types.StatusMessage) error {
 func (r *Router) SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMessage, error) {
 	// TODO: wait for https://github.com/TheThingsNetwork/ttn/issues/352 to be resolved
 	return nil, errors.New("Not implemented")
+}
+
+// UnsubscribeDownlink unsubscribes from downlink messages
+func (r *Router) UnsubscribeDownlink(gatewayID string) error {
+	return errors.New("Not implemented")
 }

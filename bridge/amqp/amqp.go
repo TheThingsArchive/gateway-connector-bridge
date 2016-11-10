@@ -198,8 +198,9 @@ func (c *AMQP) setup() (err error) {
 }
 
 // Connect to AMQP
-func (c *AMQP) Connect() {
+func (c *AMQP) Connect() error {
 	go c.autoReconnect()
+	return nil
 }
 
 // AutoReconnect connects to AMQP and automatically reconnects when the connection is lost
@@ -244,8 +245,8 @@ func (c *AMQP) autoReconnect() (err error) {
 }
 
 // Disconnect from AMQP
-func (c *AMQP) Disconnect() {
-	c.connection.Close()
+func (c *AMQP) Disconnect() error {
+	return c.connection.Close()
 }
 
 func (c *AMQP) autoRecreatePublishChannel() (err error) {
