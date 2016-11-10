@@ -11,7 +11,7 @@ import (
 
 	"time"
 
-	"github.com/TheThingsNetwork/gateway-connector-bridge/bridge/types"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/ttn/api/gateway"
 	"github.com/TheThingsNetwork/ttn/api/router"
 	"github.com/apex/log"

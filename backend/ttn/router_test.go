@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/TheThingsNetwork/gateway-connector-bridge/bridge/types"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	pb_gateway "github.com/TheThingsNetwork/ttn/api/gateway"
 	pb_router "github.com/TheThingsNetwork/ttn/api/router"
 	"github.com/apex/log"

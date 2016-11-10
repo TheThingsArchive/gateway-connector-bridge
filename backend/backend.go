@@ -1,21 +1,23 @@
 // Copyright © 2016 The Things Network
 // Use of this source code is governed by the MIT license that can be found in the LICENSE file.
 
-package bridge
+package backend
 
-import "github.com/TheThingsNetwork/gateway-connector-bridge/bridge/types"
+import "github.com/TheThingsNetwork/gateway-connector-bridge/types"
 
-type NorthboundBackend interface {
-	CleanupGateway(gatewayID string)
+// Northbound backends talk to servers that are up the chain
+type Northbound interface {
 	Connect() error
 	Disconnect() error
+	CleanupGateway(gatewayID string)
 	PublishUplink(message *types.UplinkMessage) error
 	PublishStatus(message *types.StatusMessage) error
 	SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMessage, error)
 	UnsubscribeDownlink(gatewayID string) error
 }
 
-type SouthboundBackend interface {
+// Southbound backends talk to gateways or servers that are down the chain
+type Southbound interface {
 	Connect() error
 	Disconnect() error
 	SubscribeConnect() (<-chan *types.ConnectMessage, error)
