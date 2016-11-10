@@ -63,6 +63,14 @@ func (m *Memory) SetKey(gatewayID string, key string) error {
 	return nil
 }
 
+// Delete gateway key and token
+func (m *Memory) Delete(gatewayID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.gateways, gatewayID)
+	return nil
+}
+
 // GetToken returns an access token for the gateway
 func (m *Memory) GetToken(gatewayID string) (string, error) {
 	m.mu.RLock()

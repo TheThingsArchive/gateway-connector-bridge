@@ -13,6 +13,8 @@ type Interface interface {
 	SetToken(gatewayID string, token string, expires time.Time) error
 	SetKey(gatewayID string, key string) error
 
+	Delete(gatewayID string) error
+
 	// GetToken returns the access token for a gateway; it exchanges the key for an access token if necessary
 	GetToken(gatewayID string) (token string, err error)
 	SetExchanger(Exchanger)

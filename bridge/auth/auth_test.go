@@ -53,8 +53,24 @@ func standardizedTest(a Interface, e Exchanger) func() {
 
 		Convey("When setting a key", func() {
 			err := a.SetKey("gateway-with-key", "the-key")
+			Reset(func() {
+				a.Delete("gateway-with-key")
+			})
 			Convey("There should be no error", func() {
 				So(err, ShouldBeNil)
+			})
+			Convey("When deleting the gateway", func() {
+				err := a.Delete("gateway-with-key")
+				Convey("There should be no error", func() {
+					So(err, ShouldBeNil)
+				})
+				Convey("When getting the token", func() {
+					_, err := a.GetToken("gateway-with-key")
+					Convey("There should be a NotFound error", func() {
+						So(err, ShouldNotBeNil)
+						So(err, ShouldEqual, ErrGatewayNotFound)
+					})
+				})
 			})
 			Convey("When getting the token", func() {
 				_, err := a.GetToken("gateway-with-key")
@@ -80,8 +96,24 @@ func standardizedTest(a Interface, e Exchanger) func() {
 
 		Convey("When setting a token", func() {
 			err := a.SetToken("gateway-with-token", "the-token", time.Now().Add(time.Second))
+			Reset(func() {
+				a.Delete("gateway-with-token")
+			})
 			Convey("There should be no error", func() {
 				So(err, ShouldBeNil)
+			})
+			Convey("When deleting the gateway", func() {
+				err := a.Delete("gateway-with-token")
+				Convey("There should be no error", func() {
+					So(err, ShouldBeNil)
+				})
+				Convey("When getting the token", func() {
+					_, err := a.GetToken("gateway-with-token")
+					Convey("There should be a NotFound error", func() {
+						So(err, ShouldNotBeNil)
+						So(err, ShouldEqual, ErrGatewayNotFound)
+					})
+				})
 			})
 			Convey("When getting the token", func() {
 				token, err := a.GetToken("gateway-with-token")
@@ -118,6 +150,9 @@ func standardizedTest(a Interface, e Exchanger) func() {
 
 				Convey("When setting a key", func() {
 					err := a.SetKey(gatewayID, gatewayKey)
+					Reset(func() {
+						a.Delete(gatewayID)
+					})
 					Convey("There should be no error", func() {
 						So(err, ShouldBeNil)
 					})
