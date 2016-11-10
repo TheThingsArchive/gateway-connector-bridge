@@ -9,6 +9,60 @@
 			"revisionTime": "2016-08-11T21:45:55Z"
 		},
 		{
+			"checksumSHA1": "joWAlgyzANmhca8jS0qTN6J16ZU=",
+			"path": "github.com/TheThingsNetwork/go-account-lib/account",
+			"revision": "c810617a21a7f3ff6241005747da7c8922caeaff",
+			"revisionTime": "2016-11-07T18:43:25Z"
+		},
+		{
+			"checksumSHA1": "q8JDdyjDeAQLP5ieycuGgUKgUuY=",
+			"path": "github.com/TheThingsNetwork/go-account-lib/auth",
+			"revision": "c810617a21a7f3ff6241005747da7c8922caeaff",
+			"revisionTime": "2016-11-07T18:43:25Z"
+		},
+		{
+			"checksumSHA1": "crVnJMO1PZvU90k+O+Dj+yAkLu4=",
+			"path": "github.com/TheThingsNetwork/go-account-lib/cache",
+			"revision": "c810617a21a7f3ff6241005747da7c8922caeaff",
+			"revisionTime": "2016-11-07T18:43:25Z"
+		},
+		{
+			"checksumSHA1": "8jECnauAWMYPUg48QaAFsLgB6n4=",
+			"path": "github.com/TheThingsNetwork/go-account-lib/claims",
+			"revision": "c810617a21a7f3ff6241005747da7c8922caeaff",
+			"revisionTime": "2016-11-07T18:43:25Z"
+		},
+		{
+			"checksumSHA1": "SvUkgVuVVVssqpXbE8OfeWCm0KU=",
+			"path": "github.com/TheThingsNetwork/go-account-lib/scope",
+			"revision": "c810617a21a7f3ff6241005747da7c8922caeaff",
+			"revisionTime": "2016-11-07T18:43:25Z"
+		},
+		{
+			"checksumSHA1": "hb9TvLjXpj97hKBWHMBDyHGrpXY=",
+			"path": "github.com/TheThingsNetwork/go-account-lib/tokenkey",
+			"revision": "c810617a21a7f3ff6241005747da7c8922caeaff",
+			"revisionTime": "2016-11-07T18:43:25Z"
+		},
+		{
+			"checksumSHA1": "iw9nN70RU1HK4VbosXcZp290WMg=",
+			"path": "github.com/TheThingsNetwork/go-account-lib/tokens",
+			"revision": "c810617a21a7f3ff6241005747da7c8922caeaff",
+			"revisionTime": "2016-11-07T18:43:25Z"
+		},
+		{
+			"checksumSHA1": "bEAGmOA1XitIrfbvyE4K12aB5mc=",
+			"path": "github.com/TheThingsNetwork/go-account-lib/util",
+			"revision": "c810617a21a7f3ff6241005747da7c8922caeaff",
+			"revisionTime": "2016-11-07T18:43:25Z"
+		},
+		{
+			"checksumSHA1": "T7iFQUlCUAv4cJNDZC0//46Nbio=",
+			"path": "github.com/TheThingsNetwork/go-utils/handlers/cli",
+			"revision": "364a5d5b165140adfe751763e651fca78ea5e7ed",
+			"revisionTime": "2016-11-01T08:25:08Z"
+		},
+		{
 			"checksumSHA1": "omG23aAr2ZJYc/kwhDQ95Ucn8iQ=",
 			"path": "github.com/TheThingsNetwork/ttn/api",
 			"revision": "f91fdc35bc220335ed620731235178aff350be34",
@@ -81,6 +135,12 @@
 			"revisionTime": "2016-09-05T15:13:04Z"
 		},
 		{
+			"checksumSHA1": "BdLdZP/C2uOO3lqk9X3NCKFpXa4=",
+			"path": "github.com/asaskevich/govalidator",
+			"revision": "7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877",
+			"revisionTime": "2016-10-01T16:31:30Z"
+		},
+		{
 			"checksumSHA1": "eKlcnwFZSIut8pNEvkLrm3entgc=",
 			"path": "github.com/bluele/gcache",
 			"revision": "740e70e1c445f08ae353214243a4fb0fbe970510",
@@ -97,6 +157,12 @@
 			"path": "github.com/brocaar/lorawan/band",
 			"revision": "f4277a4ddb8f1adc1fead0f96e2e8a7e7bae0456",
 			"revisionTime": "2016-09-30T18:12:03Z"
+		},
+		{
+			"checksumSHA1": "2Fy1Y6Z3lRRX1891WF/+HT4XS2I=",
+			"path": "github.com/dgrijalva/jwt-go",
+			"revision": "9ed569b5d1ac936e6494082958d63a6aa4fff99a",
+			"revisionTime": "2016-11-01T19:39:35Z"
 		},
 		{
 			"checksumSHA1": "PPyNjcW5yfrfXvARE74fh9JBSpo=",
