@@ -78,7 +78,7 @@ func (r *Redis) GetToken(gatewayID string) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			if expires.After(time.Now()) {
+			if expires.IsZero() || expires.After(time.Now()) {
 				return token, nil
 			}
 		}

@@ -81,7 +81,7 @@ func (m *Memory) GetToken(gatewayID string) (string, error) {
 	}
 	gtw.Lock()
 	defer gtw.Unlock()
-	if gtw.token != "" && gtw.tokenExpires.After(time.Now()) {
+	if gtw.token != "" && (gtw.tokenExpires.IsZero() || gtw.tokenExpires.After(time.Now())) {
 		return gtw.token, nil
 	}
 	if gtw.key != "" && m.Exchanger != nil {
