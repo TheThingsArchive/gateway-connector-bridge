@@ -124,7 +124,8 @@ func TestAMQP(t *testing.T) {
 						So(err, ShouldBeNil)
 					})
 					Convey("When publishing a connect message", func() {
-						err := amqp.Publish(ConnectRoutingKeyFormat, []byte(`{"id":"dev","token":"token","key":"key"}`))
+						bytes, _ := (&types.ConnectMessage{GatewayID: "dev", Token: "token", Key: "key"}).Marshal()
+						err := amqp.Publish(ConnectRoutingKeyFormat, bytes)
 						Convey("There should be no error", func() {
 							So(err, ShouldBeNil)
 						})
@@ -152,7 +153,8 @@ func TestAMQP(t *testing.T) {
 						So(err, ShouldBeNil)
 					})
 					Convey("When publishing a disconnect message", func() {
-						err := amqp.Publish(DisconnectRoutingKeyFormat, []byte(`{"id":"dev"}`))
+						bytes, _ := (&types.DisconnectMessage{GatewayID: "dev"}).Marshal()
+						err := amqp.Publish(DisconnectRoutingKeyFormat, bytes)
 						Convey("There should be no error", func() {
 							So(err, ShouldBeNil)
 						})

@@ -5,13 +5,14 @@
 //
 // Connection/Disconnection of gateways is done by publishing messages to the
 // "connect" and "disconnect" routing keys. When a gateway connects, it (or a
-// plugin on the broker) should publish a types.ConnectMessage to the "connect"
-// routing key. This message should contain the gateway's ID, and either a key
-// or a token (`{"id":"[gateway-id]","token":"[gateway-token]"}`).
+// plugin on the broker) should publish a protocol buffer of the type
+// types.ConnectMessage containing the gateway's ID and either a key or a token
+// to the "connect" routing key .
 //
-// The gateway (or the plugin) can send a types.DisconnectMessage on the
-// "disconnect" topic (`{"id":"[gateway-id]"}``) when it disconnects, in order
-// to help the bridge clean up connections.
+// The gateway (or the plugin) can send a protocol buffer of the type
+// types.DisconnectMessage containing the gateway's ID on the "disconnect"
+// routing key when it disconnects, in order to help the bridge clean up
+// connections.
 //
 // Uplink messages are sent as protocol buffers on the "[gateway-id].up" routing
 // key. The bridge should call `SubscribeUplink("gateway-id")` to subscribe to

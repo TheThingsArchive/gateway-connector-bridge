@@ -4,7 +4,6 @@
 package mqtt
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -166,7 +165,7 @@ func (c *MQTT) SubscribeConnect() (<-chan *types.ConnectMessage, error) {
 	messages := make(chan *types.ConnectMessage, BufferSize)
 	token := c.subscribe(ConnectTopicFormat, func(_ paho.Client, msg paho.Message) {
 		var connect types.ConnectMessage
-		if err := json.Unmarshal(msg.Payload(), &connect); err != nil {
+		if err := proto.Unmarshal(msg.Payload(), &connect); err != nil {
 			c.ctx.WithError(err).Warn("Could not unmarshal connect message")
 			return
 		}
@@ -195,7 +194,7 @@ func (c *MQTT) SubscribeDisconnect() (<-chan *types.DisconnectMessage, error) {
 	messages := make(chan *types.DisconnectMessage, BufferSize)
 	token := c.subscribe(DisconnectTopicFormat, func(_ paho.Client, msg paho.Message) {
 		var disconnect types.DisconnectMessage
-		if err := json.Unmarshal(msg.Payload(), &disconnect); err != nil {
+		if err := proto.Unmarshal(msg.Payload(), &disconnect); err != nil {
 			c.ctx.WithError(err).Warn("Could not unmarshal disconnect message")
 			return
 		}

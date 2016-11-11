@@ -5,7 +5,6 @@ package amqp
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -464,7 +463,7 @@ func (c *AMQP) SubscribeConnect() (<-chan *types.ConnectMessage, error) {
 	go func() {
 		for msg := range connect {
 			var connect types.ConnectMessage
-			if err := json.Unmarshal(msg.message, &connect); err != nil {
+			if err := proto.Unmarshal(msg.message, &connect); err != nil {
 				c.ctx.WithError(err).Warn("Could not unmarshal connect message")
 				continue
 			}
@@ -495,7 +494,7 @@ func (c *AMQP) SubscribeDisconnect() (<-chan *types.DisconnectMessage, error) {
 	go func() {
 		for msg := range disconnect {
 			var disconnect types.DisconnectMessage
-			if err := json.Unmarshal(msg.message, &disconnect); err != nil {
+			if err := proto.Unmarshal(msg.message, &disconnect); err != nil {
 				c.ctx.WithError(err).Warn("Could not unmarshal disconnect message")
 				continue
 			}

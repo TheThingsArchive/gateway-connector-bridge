@@ -5,13 +5,14 @@
 //
 // Connection/Disconnection of gateways is done by publishing messages to the
 // "connect" and "disconnect" topics. When a gateway connects, it (or a plugin
-// of the MQTT broker) should publish a types.ConnectMessage to the "connect"
-// topic conteining the gateway's ID and either a key or a token
-// (`{"id":"[gateway-id]","token":"[gateway-token]"}`).
+// of the MQTT broker) should publish a protocol buffer of the type
+// types.ConnectMessage containing the gateway's ID and either a key or a
+// token to the "connect" topic.
 //
 // The gateway (or the plugin) can also set a will with the MQTT broker for
-// when it disconnects. This will should be a types.DisconnectMessage on the
-// "disconnect" topic (`{"id":"[gateway-id]"}``).
+// when it disconnects. This will should be a protocol buffer of the type
+// types.DisconnectMessage containing the gateway's ID on the "disconnect"
+// topic.
 //
 // Uplink messages are sent as protocol buffers on the "[gateway-id]/up" topic.
 // The bridge should call `SubscribeUplink("gateway-id")` to subscribe to this

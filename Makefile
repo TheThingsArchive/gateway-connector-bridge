@@ -10,7 +10,7 @@ GO_SRC = `pwd | xargs dirname | xargs dirname | xargs dirname`
 
 # All
 
-.PHONY: all build-deps deps dev-deps test cover-clean cover-deps cover coveralls fmt vet build dev link docs clean docker
+.PHONY: all build-deps deps dev-deps protos-clean protos test cover-clean cover-deps cover coveralls fmt vet build dev link docs clean docker
 
 all: deps build
 
@@ -23,8 +23,25 @@ deps: build-deps
 	govendor sync
 
 dev-deps: deps
+	@command -v protoc-gen-gofast > /dev/null || go get github.com/gogo/protobuf/protoc-gen-gofast
 	@command -v golint > /dev/null || go get github.com/golang/lint/golint
 	@command -v forego > /dev/null || go get github.com/ddollar/forego
+
+# Protobuf
+
+PROTOC = protoc \
+-I/usr/local/include \
+-I$(GO_PATH)/src \
+--gofast_out=:$(GO_SRC) \
+`pwd`/
+
+protos-clean:
+	rm -f types/types.pb.go
+
+protos: types/types.pb.go
+
+%.pb.go: %.proto
+	$(PROTOC)$<
 
 # Go Test
 

@@ -8,18 +8,6 @@ import (
 	"github.com/TheThingsNetwork/ttn/api/router"
 )
 
-// ConnectMessage is published to MQTT/AMQP
-type ConnectMessage struct {
-	GatewayID string `json:"id"`
-	Token     string `json:"token"`
-	Key       string `json:"key"`
-}
-
-// DisconnectMessage is published to MQTT/AMQP
-type DisconnectMessage struct {
-	GatewayID string `json:"id"`
-}
-
 // UplinkMessage is used internally
 type UplinkMessage struct {
 	GatewayID string

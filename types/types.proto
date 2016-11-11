@@ -1,0 +1,20 @@
+// Copyright © 2016 The Things Network
+// Use of this source code is governed by the MIT license that can be found in the LICENSE file.
+
+syntax = "proto3";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+package types;
+
+option go_package = "github.com/TheThingsNetwork/gateway-connector-bridge/types";
+
+message ConnectMessage {
+  string id    = 1 [(gogoproto.customname) = "GatewayID"];
+  string token = 2;
+  string key   = 3;
+}
+
+message DisconnectMessage {
+  string id = 1 [(gogoproto.customname) = "GatewayID"];
+}
