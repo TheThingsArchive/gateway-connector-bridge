@@ -379,7 +379,7 @@ func (c *AMQP) subscribe(routingKey string) (chan subscribeMessage, error) {
 
 			c.subscriptionLock.RUnlock()
 
-			c.ctx.WithField("RoutingKey", routingKey).Info("Got subscribe channel")
+			c.ctx.WithField("RoutingKey", routingKey).Debug("Got subscribe channel")
 
 			// Monitor the channel
 			ch := make(chan *amqp.Error)
@@ -423,7 +423,7 @@ func (c *AMQP) subscribe(routingKey string) (chan subscribeMessage, error) {
 		if err != nil {
 			c.ctx.WithError(err).Error("Error in subscribe channel")
 		} else {
-			c.ctx.Info("Subscribe channel closed")
+			c.ctx.Debug("Subscribe channel closed")
 		}
 		close(subscribeMessages)
 	}()
