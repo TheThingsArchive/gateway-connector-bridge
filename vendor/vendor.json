@@ -117,6 +117,12 @@
 			"revisionTime": "2016-11-14T10:41:31Z"
 		},
 		{
+			"checksumSHA1": "zxokGYK2jJVdnA+Hn6+QJxZ0cTQ=",
+			"path": "github.com/TheThingsNetwork/ttn/utils/backoff",
+			"revision": "35597e1e47f73d7286876d8dde85acf2fdc6bfc9",
+			"revisionTime": "2016-11-14T12:31:27Z"
+		},
+		{
 			"checksumSHA1": "IAkvCe7EibiAOo76Vco9aWdZXJo=",
 			"path": "github.com/TheThingsNetwork/ttn/utils/errors",
 			"revision": "a9734b1ef339989817009d967a83ade4594b1b24",

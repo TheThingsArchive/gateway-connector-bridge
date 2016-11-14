@@ -11,6 +11,8 @@ import (
 	"github.com/TheThingsNetwork/ttn/api"
 	"github.com/TheThingsNetwork/ttn/api/discovery"
 	"github.com/TheThingsNetwork/ttn/api/router"
+	"github.com/TheThingsNetwork/ttn/utils/backoff"
+	"github.com/TheThingsNetwork/ttn/utils/errors"
 	"github.com/apex/log"
 	"google.golang.org/grpc"
 )
@@ -34,8 +36,9 @@ type RouterConfig struct {
 }
 
 type gatewayConn struct {
-	client     router.GatewayClient
-	lastActive time.Time
+	client             router.GatewayClient
+	lastActive         time.Time
+	downlinkSubscribed bool
 }
 
 // Router side of the bridge
@@ -48,12 +51,12 @@ type Router struct {
 	mu        sync.Mutex
 }
 
-func (r *Router) getGateway(gatewayID string) router.GatewayClient {
+func (r *Router) getGateway(gatewayID string) *gatewayConn {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if gtw, ok := r.gateways[gatewayID]; ok {
 		gtw.lastActive = time.Now()
-		return gtw.client
+		return gtw
 	}
 	r.gateways[gatewayID] = &gatewayConn{
 		client: r.client.ForGateway(gatewayID, func() string {
@@ -61,7 +64,7 @@ func (r *Router) getGateway(gatewayID string) router.GatewayClient {
 		}),
 		lastActive: time.Now(),
 	}
-	return r.gateways[gatewayID].client
+	return r.gateways[gatewayID]
 }
 
 // CleanupGateway cleans up gateway clients that are no longer needed
@@ -103,47 +106,77 @@ func (r *Router) Disconnect() error {
 
 // PublishUplink publishes uplink messages to the TTN Router
 func (r *Router) PublishUplink(message *types.UplinkMessage) error {
-	return r.getGateway(message.GatewayID).SendUplink(message.Message)
+	return r.getGateway(message.GatewayID).client.SendUplink(message.Message)
 }
 
 // PublishStatus publishes status messages to the TTN Router
 func (r *Router) PublishStatus(message *types.StatusMessage) error {
-	return r.getGateway(message.GatewayID).SendGatewayStatus(message.Message)
+	return r.getGateway(message.GatewayID).client.SendGatewayStatus(message.Message)
 }
 
 // SubscribeDownlink handles downlink messages for the given gateway ID
 func (r *Router) SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMessage, error) {
 	// TODO(htdvisser): Update to new client when https://github.com/TheThingsNetwork/ttn/issues/352 is resolved
 	downlink := make(chan *types.DownlinkMessage)
+
+	gtw := r.getGateway(gatewayID)
+	ctx := r.Ctx.WithField("GatewayID", gatewayID)
+
+	downChan, errChan, err := gtw.client.Subscribe()
+	if err != nil {
+		return nil, err
+	}
+
 	go func() {
-	newConnection:
+		defer func() {
+			ctx.Debug("Stopping subscribe loop")
+			close(downlink)
+		}()
+		ctx.Debug("Starting subscribe loop")
+		retries := 0
 		for {
-			downChan, errChan, err := r.getGateway(gatewayID).Subscribe()
-			if err != nil {
-				time.Sleep(time.Second)
-			}
-		loop:
-			for {
-				select {
-				case down, ok := <-downChan:
-					if !ok {
-						break newConnection
-					}
-					downlink <- &types.DownlinkMessage{GatewayID: gatewayID, Message: down}
-				case err := <-errChan:
-					if err != nil {
-						r.Ctx.WithError(err).Error("Error on downlink stream")
-					}
-					break loop
+			select {
+			case err := <-errChan:
+				if err == nil {
+					return
 				}
+				ctx.WithError(err).Error("Error in downlink stream:")
+				gtw.client.Unsubscribe()
+
+				switch errors.GetErrType(err) {
+				case errors.InvalidArgument, errors.PermissionDenied:
+					return
+				}
+
+				for err != nil {
+					time.Sleep(backoff.Backoff(retries))
+					retries++
+					if !gtw.downlinkSubscribed {
+						return
+					}
+					downChan, errChan, err = gtw.client.Subscribe()
+					if err != nil {
+						ctx.WithError(err).Error("Could not re-subscribe to downlink")
+					} else {
+						ctx.Info("Re-subscribed to downlink")
+					}
+				}
+			case in := <-downChan:
+				if in == nil {
+					continue
+				}
+				ctx.Debug("Downlink message received")
+				downlink <- &types.DownlinkMessage{GatewayID: gatewayID, Message: in}
 			}
 		}
-		close(downlink)
 	}()
+
 	return downlink, nil
 }
 
 // UnsubscribeDownlink unsubscribes from downlink messages
 func (r *Router) UnsubscribeDownlink(gatewayID string) error {
-	return r.getGateway(gatewayID).Unsubscribe()
+	gtw := r.getGateway(gatewayID)
+	gtw.downlinkSubscribed = false
+	return gtw.client.Unsubscribe()
 }
