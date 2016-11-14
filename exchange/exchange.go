@@ -136,12 +136,16 @@ func (b *Exchange) handleChannels() {
 				continue
 			}
 			if b.auth != nil {
+				// TODO(htdvisser): Improve performance. Setting the Key/Token is synchronous; slow Redis may
+				// affect overall performance if only one handleChannels() goroutine is running
 				if connectMessage.Key != "" {
+					b.ctx.WithField("GatewayID", connectMessage.GatewayID).Debug("Got access key")
 					if err := b.auth.SetKey(connectMessage.GatewayID, connectMessage.Key); err != nil {
 						b.ctx.WithField("GatewayID", connectMessage.GatewayID).WithError(err).Warn("Could not set gateway key")
 					}
 				}
 				if connectMessage.Token != "" {
+					b.ctx.WithField("GatewayID", connectMessage.GatewayID).Debug("Got access token")
 					if err := b.auth.SetToken(connectMessage.GatewayID, connectMessage.Token, time.Time{}); err != nil {
 						b.ctx.WithField("GatewayID", connectMessage.GatewayID).WithError(err).Warn("Could not set gateway token")
 					}

@@ -81,6 +81,10 @@ func runBridge(cmd *cobra.Command, args []string) {
 		ctx.Info("Initializing Memory auth backend")
 		authBackend = auth.NewMemory()
 	}
+	if accountServer := config.GetString("account-server"); accountServer != "" && accountServer != "disable" {
+		ctx.WithField("AccountServer", accountServer).Info("Initializing access key exchanger")
+		authBackend.SetExchanger(auth.NewAccountServer(accountServer, ctx))
+	}
 	bridge.SetAuth(authBackend)
 
 	// Set up the TTN routers (from comma-separated list of discovery-server/router-id)
@@ -167,6 +171,8 @@ func init() {
 	BridgeCmd.Flags().String("redis-address", "localhost:6379", "Redis host and port")
 	BridgeCmd.Flags().String("redis-password", "", "Redis password")
 	BridgeCmd.Flags().Int("redis-db", 0, "Redis database")
+
+	BridgeCmd.Flags().String("account-server", "https://preview.account.thethingsnetwork.org", "Use an account server for exchanging access keys")
 
 	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discovery.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
 	BridgeCmd.Flags().StringSlice("mqtt", []string{"guest:guest@localhost:1883"}, "MQTT Broker to connect to (disable with \"disable\")")
