@@ -159,6 +159,9 @@ func (b *Exchange) handleChannels() {
 			if !ok {
 				continue
 			}
+			if meta := uplinkMessage.Message.GetGatewayMetadata(); meta != nil {
+				meta.GatewayId = uplinkMessage.GatewayID
+			}
 			for _, backend := range b.northboundBackends {
 				if err := backend.PublishUplink(uplinkMessage); err != nil {
 					b.ctx.WithFields(log.Fields{
@@ -183,6 +186,7 @@ func (b *Exchange) handleChannels() {
 			if !ok {
 				continue
 			}
+			// TODO(htdvisser): Add Bridge ID to status message
 			for _, backend := range b.northboundBackends {
 				if err := backend.PublishStatus(statusMessage); err != nil {
 					b.ctx.WithFields(log.Fields{
