@@ -86,6 +86,9 @@ func runBridge(cmd *cobra.Command, args []string) {
 	// Set up the TTN routers (from comma-separated list of discovery-server/router-id)
 	ttnRouters := strings.Split(config.GetString("ttn-router"), ",")
 	for _, ttnRouter := range ttnRouters {
+		if ttnRouter == "disable" {
+			continue
+		}
 		parts := strings.Split(ttnRouter, "/")
 		if len(parts) == 2 {
 			ctx.WithField("DiscoveryServer", parts[0]).WithField("RouterID", parts[1]).Infof("Initializing TTN Router")
@@ -116,6 +119,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 			continue
 		}
 		parts := mqttRegexp.FindStringSubmatch(mqttBroker)
+		ctx.WithField("Username", parts[1]).WithField("Password", parts[2]).WithField("Address", parts[3]).Infof("Initializing MQTT")
 		mqtt, err := mqtt.New(mqtt.Config{
 			Brokers:  []string{"tcp://" + parts[3]},
 			Username: parts[1],
@@ -135,6 +139,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 			continue
 		}
 		parts := amqpRegexp.FindStringSubmatch(amqpBroker)
+		ctx.WithField("Username", parts[1]).WithField("Password", parts[2]).WithField("Address", parts[3]).Infof("Initializing AMQP")
 		amqp, err := amqp.New(amqp.Config{
 			Address:  parts[3],
 			Username: parts[1],

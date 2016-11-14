@@ -27,4 +27,5 @@ services:
       BRIDGE_REDIS_ADDRESS: redis:6379
       BRIDGE_AMQP: rabbitmq:5672
       BRIDGE_MQTT: disable
+      BRIDGE_TTN_ROUTER: disable
       # BRIDGE_TTN_ROUTER: discovery.thethingsnetwork.org:1900/the-router-id
