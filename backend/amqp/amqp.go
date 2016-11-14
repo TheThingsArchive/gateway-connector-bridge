@@ -467,11 +467,12 @@ func (c *AMQP) SubscribeConnect() (<-chan *types.ConnectMessage, error) {
 				c.ctx.WithError(err).Warn("Could not unmarshal connect message")
 				continue
 			}
+			ctx := c.ctx.WithField("GatewayID", connect.GatewayID)
 			select {
 			case messages <- &connect:
-				c.ctx.Debug("Received connect message")
+				ctx.Debug("Received connect message")
 			default:
-				c.ctx.Warn("Could not handle connect message: buffer full")
+				ctx.Warn("Could not handle connect message: buffer full")
 			}
 		}
 		close(messages)
@@ -498,11 +499,12 @@ func (c *AMQP) SubscribeDisconnect() (<-chan *types.DisconnectMessage, error) {
 				c.ctx.WithError(err).Warn("Could not unmarshal disconnect message")
 				continue
 			}
+			ctx := c.ctx.WithField("GatewayID", disconnect.GatewayID)
 			select {
 			case messages <- &disconnect:
-				c.ctx.Debug("Received disconnect message")
+				ctx.Debug("Received disconnect message")
 			default:
-				c.ctx.Warn("Could not handle disconnect message: buffer full")
+				ctx.Warn("Could not handle disconnect message: buffer full")
 			}
 		}
 		close(messages)
