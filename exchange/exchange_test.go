@@ -57,6 +57,7 @@ func TestExchange(t *testing.T) {
 							GatewayID: "dev",
 							Token:     "token",
 						})
+						time.Sleep(10 * time.Millisecond)
 						Convey("There should be no error", func() {
 							So(err, ShouldBeNil)
 						})
@@ -71,6 +72,7 @@ func TestExchange(t *testing.T) {
 								GatewayID: "dev",
 								Token:     "updated-token",
 							})
+							time.Sleep(10 * time.Millisecond)
 							Convey("There should be no error", func() {
 								So(err, ShouldBeNil)
 							})
@@ -85,6 +87,7 @@ func TestExchange(t *testing.T) {
 							err := gateway.PublishDisconnect(&types.DisconnectMessage{
 								GatewayID: "dev",
 							})
+							time.Sleep(10 * time.Millisecond)
 							Convey("There should be no error", func() {
 								So(err, ShouldBeNil)
 							})
@@ -93,6 +96,7 @@ func TestExchange(t *testing.T) {
 								err := gateway.PublishDisconnect(&types.DisconnectMessage{
 									GatewayID: "dev",
 								})
+								time.Sleep(10 * time.Millisecond)
 								Convey("There should be no error", func() {
 									So(err, ShouldBeNil)
 								})
@@ -105,6 +109,7 @@ func TestExchange(t *testing.T) {
 							GatewayID: "dev",
 							Key:       "key",
 						})
+						time.Sleep(10 * time.Millisecond)
 						Convey("There should be no error", func() {
 							So(err, ShouldBeNil)
 						})
@@ -114,10 +119,10 @@ func TestExchange(t *testing.T) {
 						err := gateway.PublishConnect(&types.ConnectMessage{
 							GatewayID: "dev",
 						})
+						time.Sleep(10 * time.Millisecond)
 						Convey("There should be no error", func() {
 							So(err, ShouldBeNil)
 						})
-						time.Sleep(10 * time.Millisecond)
 
 						Convey("When subscribing to uplink messages on the TTN side", func() {
 							msg, _ := ttn.SubscribeUplink("dev")

@@ -56,11 +56,11 @@ func TestAMQP(t *testing.T) {
 
 			Convey("When calling Connect", func() {
 				amqp.Connect()
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(10 * time.Millisecond)
 
 				Convey("When calling Disconnect", func() {
 					amqp.Disconnect()
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(10 * time.Millisecond)
 				})
 
 				Convey("When getting a channel", func() {
@@ -73,7 +73,7 @@ func TestAMQP(t *testing.T) {
 
 				Convey("When subscribing to a routing key", func() {
 					msg, err := amqp.subscribe("some-key")
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(10 * time.Millisecond)
 					Reset(func() {
 						amqp.unsubscribe("some-key")
 					})
@@ -116,7 +116,7 @@ func TestAMQP(t *testing.T) {
 
 				Convey("When subscribing to connect messages", func() {
 					msg, err := amqp.SubscribeConnect()
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(10 * time.Millisecond)
 					Reset(func() {
 						amqp.UnsubscribeConnect()
 					})
@@ -145,7 +145,7 @@ func TestAMQP(t *testing.T) {
 
 				Convey("When subscribing to disconnect messages", func() {
 					msg, err := amqp.SubscribeDisconnect()
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(10 * time.Millisecond)
 					Reset(func() {
 						amqp.UnsubscribeDisconnect()
 					})
@@ -172,7 +172,7 @@ func TestAMQP(t *testing.T) {
 
 				Convey("When subscribing to uplink messages", func() {
 					msg, err := amqp.SubscribeUplink("dev")
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(10 * time.Millisecond)
 					Reset(func() {
 						amqp.UnsubscribeUplink("dev")
 					})
@@ -199,7 +199,7 @@ func TestAMQP(t *testing.T) {
 
 				Convey("When subscribing to status messages", func() {
 					msg, err := amqp.SubscribeStatus("dev")
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(10 * time.Millisecond)
 					Reset(func() {
 						amqp.UnsubscribeStatus("dev")
 					})
@@ -226,7 +226,7 @@ func TestAMQP(t *testing.T) {
 
 				Convey("When subscribing to downlink messages key", func() {
 					msg, err := amqp.subscribe(fmt.Sprintf(DownlinkRoutingKeyFormat, "dev"))
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(10 * time.Millisecond)
 					Reset(func() {
 						amqp.unsubscribe(fmt.Sprintf(DownlinkRoutingKeyFormat, "dev"))
 					})
