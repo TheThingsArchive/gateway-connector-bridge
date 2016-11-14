@@ -72,17 +72,16 @@ func (r *Redis) GetToken(gatewayID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if token, ok := res[redisKey.token]; ok && token != "" {
-		if expires, ok := res[redisKey.tokenExpires]; ok && expires != "" {
-			expires, err := time.Parse(time.RFC3339, expires)
-			if err != nil {
-				return "", err
-			}
-			if expires.IsZero() || expires.After(time.Now()) {
-				return token, nil
-			}
+	var expires time.Time
+	if expiresStr, ok := res[redisKey.tokenExpires]; ok && expiresStr != "" {
+		if rExpires, err := time.Parse(time.RFC3339, expiresStr); err == nil {
+			expires = rExpires
 		}
-		return token, nil
+	}
+	if token, ok := res[redisKey.token]; ok && token != "" {
+		if expires.IsZero() || expires.After(time.Now()) {
+			return token, nil
+		}
 	}
 	if key, ok := res[redisKey.key]; ok && key != "" && r.Exchanger != nil {
 		token, expires, err := r.Exchange(gatewayID, key)
