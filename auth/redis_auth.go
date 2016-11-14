@@ -55,7 +55,7 @@ func (r *Redis) SetToken(gatewayID string, token string, expires time.Time) erro
 
 // SetKey sets the access key for a gateway
 func (r *Redis) SetKey(gatewayID string, key string) error {
-	return r.client.HSet(r.prefix+gatewayID, "key", key).Err()
+	return r.client.HSet(r.prefix+gatewayID, redisKey.key, key).Err()
 }
 
 // Delete gateway key and token
