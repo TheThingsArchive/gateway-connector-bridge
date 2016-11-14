@@ -227,8 +227,8 @@ func (c *AMQP) autoReconnect() (err error) {
 		// Monitor the connection and reconnect on error
 		ch := make(chan *amqp.Error)
 		c.connection.NotifyClose(ch)
-		if mqttErr, hasErr := <-ch; hasErr {
-			err = errors.New(mqttErr.Error())
+		if amqpErr, hasErr := <-ch; hasErr {
+			err = errors.New(amqpErr.Error())
 		} else {
 			break
 		}
@@ -278,9 +278,9 @@ func (c *AMQP) autoRecreatePublishChannel() (err error) {
 	handle:
 		for {
 			select {
-			case mqttErr, hasErr := <-ch:
+			case amqpErr, hasErr := <-ch:
 				if hasErr {
-					err = errors.New(mqttErr.Error())
+					err = errors.New(amqpErr.Error())
 					break handle
 				}
 				break handle
@@ -399,9 +399,9 @@ func (c *AMQP) subscribe(routingKey string) (chan subscribeMessage, error) {
 		handle:
 			for {
 				select {
-				case mqttErr, hasErr := <-ch:
+				case amqpErr, hasErr := <-ch:
 					if hasErr {
-						err = errors.New(mqttErr.Error())
+						err = errors.New(amqpErr.Error())
 						break handle
 					}
 					break handle
