@@ -4,11 +4,11 @@
 package ttn
 
 import (
-	"errors"
 	"sync"
 	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
+	"github.com/TheThingsNetwork/ttn/api"
 	"github.com/TheThingsNetwork/ttn/api/discovery"
 	"github.com/TheThingsNetwork/ttn/api/router"
 	"github.com/apex/log"
@@ -23,6 +23,7 @@ func New(config RouterConfig, ctx log.Interface, tokenFunc func(string) string) 
 	router.gateways = make(map[string]*gatewayConn)
 	router.tokenFunc = tokenFunc
 	grpc.EnableTracing = false
+	api.SetLogger(api.Apex(ctx))
 	return router, nil
 }
 
@@ -112,11 +113,37 @@ func (r *Router) PublishStatus(message *types.StatusMessage) error {
 
 // SubscribeDownlink handles downlink messages for the given gateway ID
 func (r *Router) SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMessage, error) {
-	// TODO: wait for https://github.com/TheThingsNetwork/ttn/issues/352 to be resolved
-	return nil, errors.New("Not implemented")
+	// TODO(htdvisser): Update to new client when https://github.com/TheThingsNetwork/ttn/issues/352 is resolved
+	downlink := make(chan *types.DownlinkMessage)
+	go func() {
+	newConnection:
+		for {
+			downChan, errChan, err := r.getGateway(gatewayID).Subscribe()
+			if err != nil {
+				time.Sleep(time.Second)
+			}
+		loop:
+			for {
+				select {
+				case down, ok := <-downChan:
+					if !ok {
+						break newConnection
+					}
+					downlink <- &types.DownlinkMessage{GatewayID: gatewayID, Message: down}
+				case err := <-errChan:
+					if err != nil {
+						r.Ctx.WithError(err).Error("Error on downlink stream")
+					}
+					break loop
+				}
+			}
+		}
+		close(downlink)
+	}()
+	return downlink, nil
 }
 
 // UnsubscribeDownlink unsubscribes from downlink messages
 func (r *Router) UnsubscribeDownlink(gatewayID string) error {
-	return errors.New("Not implemented")
+	return r.getGateway(gatewayID).Unsubscribe()
 }
