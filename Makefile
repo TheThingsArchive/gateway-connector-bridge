@@ -95,8 +95,8 @@ CGO_ENABLED ?= 0
 DIST_FLAGS ?= -a -installsuffix cgo
 
 splitfilename = $(subst ., ,$(subst -, ,$(subst $(RELEASE_DIR)/,,$1)))
-GOOSfromfilename = $(word 2, $(call splitfilename, $1))
-GOARCHfromfilename = $(word 3, $(call splitfilename, $1))
+GOOSfromfilename = $(word 4, $(call splitfilename, $1))
+GOARCHfromfilename = $(word 5, $(call splitfilename, $1))
 LDFLAGS = -ldflags "-w -X main.gitBranch=${GIT_BRANCH} -X main.gitCommit=${GIT_COMMIT} -X main.buildDate=${BUILD_DATE}"
 GOBUILD = CGO_ENABLED=$(CGO_ENABLED) GOOS=$(call GOOSfromfilename, $@) GOARCH=$(call GOARCHfromfilename, $@) go build $(DIST_FLAGS) ${LDFLAGS} -tags "${TAGS}" -o "$@"
 
