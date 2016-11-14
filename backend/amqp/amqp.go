@@ -526,6 +526,7 @@ func (c *AMQP) SubscribeUplink(gatewayID string) (<-chan *types.UplinkMessage, e
 	go func() {
 		for msg := range uplink {
 			var uplink types.UplinkMessage
+			uplink.GatewayID = gatewayID
 			uplink.Message = new(router.UplinkMessage)
 			if err := proto.Unmarshal(msg.message, uplink.Message); err != nil {
 				ctx.WithError(err).Warn("Could not unmarshal uplink message")
@@ -559,6 +560,7 @@ func (c *AMQP) SubscribeStatus(gatewayID string) (<-chan *types.StatusMessage, e
 	go func() {
 		for msg := range status {
 			var status types.StatusMessage
+			status.GatewayID = gatewayID
 			status.Message = new(gateway.Status)
 			if err := proto.Unmarshal(msg.message, status.Message); err != nil {
 				ctx.WithError(err).Warn("Could not unmarshal uplink message")
