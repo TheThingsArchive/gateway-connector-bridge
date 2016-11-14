@@ -4,6 +4,7 @@
 package mqtt
 
 import (
+	"crypto/tls"
 	"fmt"
 	"sync"
 	"time"
@@ -26,6 +27,9 @@ func New(config Config, ctx log.Interface) (*MQTT, error) {
 	mqttOpts := paho.NewClientOptions()
 	for _, broker := range config.Brokers {
 		mqttOpts.AddBroker(broker)
+	}
+	if config.TLSConfig != nil {
+		mqttOpts.SetTLSConfig(config.TLSConfig)
 	}
 	mqttOpts.SetClientID(fmt.Sprintf("bridge-%s", random.String(16)))
 	mqttOpts.SetUsername(config.Username)
@@ -79,9 +83,10 @@ var (
 
 // Config contains configuration for MQTT
 type Config struct {
-	Brokers  []string
-	Username string
-	Password string
+	Brokers   []string
+	Username  string
+	Password  string
+	TLSConfig *tls.Config
 }
 
 type subscription struct {
