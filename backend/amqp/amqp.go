@@ -154,15 +154,15 @@ func (c *AMQP) connect() (err error) {
 	} else {
 		conn, err = amqp.Dial(c.config.url())
 	}
+	if err != nil {
+		return err
+	}
 	c.connection.Lock()
 	c.connection.Connection = conn
 	c.connection.Unlock()
 	c.connection.once.Do(func() {
 		c.connection.Done()
 	})
-	if err != nil {
-		return err
-	}
 	if err := c.setup(); err != nil {
 		return err
 	}
