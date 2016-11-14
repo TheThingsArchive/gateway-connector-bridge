@@ -245,6 +245,7 @@ func (c *AMQP) autoReconnect() (err error) {
 
 // Disconnect from AMQP
 func (c *AMQP) Disconnect() error {
+	c.connection.Wait()
 	return c.connection.Close()
 }
 
