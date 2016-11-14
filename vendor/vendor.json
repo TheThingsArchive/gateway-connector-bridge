@@ -141,6 +141,18 @@
 			"revisionTime": "2016-09-05T15:13:04Z"
 		},
 		{
+			"checksumSHA1": "LjQdQscNb25c2HxbREjmFFOoyx4=",
+			"path": "github.com/apex/log/handlers/json",
+			"revision": "4ea85e918cc8389903d5f12d7ccac5c23ab7d89b",
+			"revisionTime": "2016-09-05T15:13:04Z"
+		},
+		{
+			"checksumSHA1": "rxQUkWqruIZKpRzdwqrkxfcZvyw=",
+			"path": "github.com/apex/log/handlers/multi",
+			"revision": "4ea85e918cc8389903d5f12d7ccac5c23ab7d89b",
+			"revisionTime": "2016-09-05T15:13:04Z"
+		},
+		{
 			"checksumSHA1": "o5a5xWoaGDKEnNy0W7TikB66lMc=",
 			"path": "github.com/apex/log/handlers/text",
 			"revision": "4ea85e918cc8389903d5f12d7ccac5c23ab7d89b",
