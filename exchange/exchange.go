@@ -12,6 +12,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/apex/log"
+	"github.com/deckarep/golang-set"
 )
 
 // Exchange routes messages between northbound backends (servers that are up the chain)
@@ -41,6 +42,8 @@ type Exchange struct {
 	uplink     chan *types.UplinkMessage
 	status     chan *types.StatusMessage
 	downlink   chan *types.DownlinkMessage
+
+	gateways mapset.Set
 }
 
 // New initializes a new Exchange
@@ -55,6 +58,7 @@ func New(ctx log.Interface) *Exchange {
 		uplink:         make(chan *types.UplinkMessage),
 		status:         make(chan *types.StatusMessage),
 		downlink:       make(chan *types.DownlinkMessage),
+		gateways:       mapset.NewSet(),
 	}
 }
 
@@ -143,6 +147,10 @@ func (b *Exchange) handleChannels() {
 					}
 				}
 			}
+			if !b.gateways.Add(connectMessage.GatewayID) {
+				b.ctx.WithField("GatewayID", connectMessage.GatewayID).Debug("Got connect message from already-connected gateway")
+				continue
+			}
 			for _, backend := range b.northboundBackends {
 				go b.activateNorthbound(backend, connectMessage.GatewayID)
 			}
@@ -153,8 +161,12 @@ func (b *Exchange) handleChannels() {
 			if !ok {
 				continue
 			}
+			if !b.gateways.Contains(disconnectMessage.GatewayID) {
+				b.ctx.WithField("GatewayID", disconnectMessage.GatewayID).Debug("Got disconnect message from not-connected gateway")
+			}
 			b.deactivateNorthbound(disconnectMessage.GatewayID)
 			b.deactivateSouthbound(disconnectMessage.GatewayID)
+			b.gateways.Remove(disconnectMessage.GatewayID)
 		case uplinkMessage, ok := <-b.uplink:
 			if !ok {
 				continue
