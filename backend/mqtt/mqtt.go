@@ -145,8 +145,15 @@ func (c *MQTT) publish(topic string, msg []byte) paho.Token {
 func (c *MQTT) subscribe(topic string, handler paho.MessageHandler, cancel func()) paho.Token {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.subscriptions[topic] = subscription{handler, cancel}
-	return c.client.Subscribe(topic, SubscribeQoS, handler)
+	wrappedHandler := func(client paho.Client, msg paho.Message) {
+		if msg.Retained() {
+			c.ctx.WithField("Topic", msg.Topic()).Debug("Ignore retained message")
+			return
+		}
+		handler(client, msg)
+	}
+	c.subscriptions[topic] = subscription{wrappedHandler, cancel}
+	return c.client.Subscribe(topic, SubscribeQoS, wrappedHandler)
 }
 
 func (c *MQTT) resubscribe() {
