@@ -18,6 +18,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/ttn"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/exchange"
 	"github.com/TheThingsNetwork/go-utils/handlers/cli"
+	"github.com/TheThingsNetwork/ttn/api"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/json"
 	"github.com/apex/log/handlers/multi"
@@ -89,6 +90,9 @@ func runBridge(cmd *cobra.Command, args []string) {
 
 	// Set up the TTN routers (from comma-separated list of discovery-server/router-id)
 	ttnRouters := strings.Split(config.GetString("ttn-router"), ",")
+	if len(ttnRouters) > 0 {
+		api.SetLogger(api.Apex(ctx))
+	}
 	for _, ttnRouter := range ttnRouters {
 		if ttnRouter == "disable" {
 			continue

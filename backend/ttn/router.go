@@ -23,7 +23,6 @@ func New(config RouterConfig, ctx log.Interface, tokenFunc func(string) string) 
 	router.gateways = make(map[string]*gatewayConn)
 	router.tokenFunc = tokenFunc
 	grpc.EnableTracing = false
-	api.SetLogger(api.Apex(ctx))
 	return router, nil
 }
 
@@ -76,6 +75,7 @@ func (r *Router) getGateway(gatewayID string) *gatewayConn {
 		client:     router.NewRouterClientForGateway(r.routerClient, gatewayID, r.tokenFunc(gatewayID)),
 		lastActive: time.Now(),
 	}
+	gateway.client.SetLogger(api.Apex(r.Ctx.WithField("GatewayID", gatewayID)))
 	gateway.uplink = router.NewMonitoredUplinkStream(gateway.client)
 	gateway.status = router.NewMonitoredGatewayStatusStream(gateway.client)
 	r.gateways[gatewayID] = gateway
