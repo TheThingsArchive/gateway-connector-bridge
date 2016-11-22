@@ -166,6 +166,8 @@ func runBridge(cmd *cobra.Command, args []string) {
 	ctx.WithField("signal", <-sigChan).Info("signal received")
 
 	bridge.Stop()
+
+	time.Sleep(100 * time.Millisecond)
 }
 
 func init() {
