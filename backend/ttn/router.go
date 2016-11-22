@@ -11,8 +11,6 @@ import (
 	"github.com/TheThingsNetwork/ttn/api"
 	"github.com/TheThingsNetwork/ttn/api/discovery"
 	"github.com/TheThingsNetwork/ttn/api/router"
-	"github.com/TheThingsNetwork/ttn/utils/backoff"
-	"github.com/TheThingsNetwork/ttn/utils/errors"
 	"github.com/apex/log"
 	"google.golang.org/grpc"
 )
@@ -36,19 +34,35 @@ type RouterConfig struct {
 }
 
 type gatewayConn struct {
-	client             router.GatewayClient
-	lastActive         time.Time
-	downlinkSubscribed bool
+	client     router.RouterClientForGateway
+	uplink     router.UplinkStream
+	status     router.GatewayStatusStream
+	downlink   router.DownlinkStream
+	lastActive time.Time
+}
+
+func (g *gatewayConn) Close() {
+	if g.uplink != nil {
+		g.uplink.Close()
+	}
+	if g.downlink != nil {
+		g.downlink.Close()
+	}
+	if g.status != nil {
+		g.status.Close()
+	}
+	g.client.Close()
 }
 
 // Router side of the bridge
 type Router struct {
-	config    RouterConfig
-	Ctx       log.Interface
-	client    *router.Client
-	tokenFunc func(string) string
-	gateways  map[string]*gatewayConn
-	mu        sync.Mutex
+	config       RouterConfig
+	Ctx          log.Interface
+	routerConn   *grpc.ClientConn
+	routerClient router.RouterClient
+	tokenFunc    func(string) string
+	gateways     map[string]*gatewayConn
+	mu           sync.Mutex
 }
 
 func (r *Router) getGateway(gatewayID string) *gatewayConn {
@@ -58,12 +72,13 @@ func (r *Router) getGateway(gatewayID string) *gatewayConn {
 		gtw.lastActive = time.Now()
 		return gtw
 	}
-	r.gateways[gatewayID] = &gatewayConn{
-		client: r.client.ForGateway(gatewayID, func() string {
-			return r.tokenFunc(gatewayID)
-		}),
+	gateway := &gatewayConn{
+		client:     router.NewRouterClientForGateway(r.routerClient, gatewayID, r.tokenFunc(gatewayID)),
 		lastActive: time.Now(),
 	}
+	gateway.uplink = router.NewMonitoredUplinkStream(gateway.client)
+	gateway.status = router.NewMonitoredGatewayStatusStream(gateway.client)
+	r.gateways[gatewayID] = gateway
 	return r.gateways[gatewayID]
 }
 
@@ -90,85 +105,51 @@ func (r *Router) Connect() error {
 	if err != nil {
 		return err
 	}
-	client, err := router.NewClient(announcement)
+	r.routerConn, err = announcement.Dial()
 	if err != nil {
 		return err
 	}
-	r.client = client
+	r.routerClient = router.NewRouterClient(r.routerConn)
 	return nil
 }
 
 // Disconnect from the TTN Router
 func (r *Router) Disconnect() error {
-	r.client.Close()
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for id, gtw := range r.gateways {
+		gtw.Close()
+		delete(r.gateways, id)
+	}
+	r.routerConn.Close()
 	return nil
 }
 
 // PublishUplink publishes uplink messages to the TTN Router
 func (r *Router) PublishUplink(message *types.UplinkMessage) error {
-	return r.getGateway(message.GatewayID).client.SendUplink(message.Message)
+	return r.getGateway(message.GatewayID).uplink.Send(message.Message)
 }
 
 // PublishStatus publishes status messages to the TTN Router
 func (r *Router) PublishStatus(message *types.StatusMessage) error {
-	return r.getGateway(message.GatewayID).client.SendGatewayStatus(message.Message)
+	return r.getGateway(message.GatewayID).status.Send(message.Message)
 }
 
 // SubscribeDownlink handles downlink messages for the given gateway ID
 func (r *Router) SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMessage, error) {
-	// TODO(htdvisser): Update to new client when https://github.com/TheThingsNetwork/ttn/issues/352 is resolved
 	downlink := make(chan *types.DownlinkMessage)
 
 	gtw := r.getGateway(gatewayID)
 	ctx := r.Ctx.WithField("GatewayID", gatewayID)
 
-	downChan, errChan, err := gtw.client.Subscribe()
-	if err != nil {
-		return nil, err
-	}
+	gtw.downlink = router.NewMonitoredDownlinkStream(gtw.client)
 
 	go func() {
-		defer func() {
-			ctx.Debug("Stopping subscribe loop")
-			close(downlink)
-		}()
-		ctx.Debug("Starting subscribe loop")
-		retries := 0
-		for {
-			select {
-			case err := <-errChan:
-				if err == nil {
-					return
-				}
-				ctx.WithError(err).Error("Error in downlink stream:")
-				gtw.client.Unsubscribe()
-
-				switch errors.GetErrType(err) {
-				case errors.InvalidArgument, errors.PermissionDenied:
-					return
-				}
-
-				for err != nil {
-					time.Sleep(backoff.Backoff(retries))
-					retries++
-					if !gtw.downlinkSubscribed {
-						return
-					}
-					downChan, errChan, err = gtw.client.Subscribe()
-					if err != nil {
-						ctx.WithError(err).Error("Could not re-subscribe to downlink")
-					} else {
-						ctx.Info("Re-subscribed to downlink")
-					}
-				}
-			case in := <-downChan:
-				if in == nil {
-					continue
-				}
-				ctx.Debug("Downlink message received")
-				downlink <- &types.DownlinkMessage{GatewayID: gatewayID, Message: in}
-			}
+		for in := range gtw.downlink.Channel() {
+			ctx.Debug("Downlink message received")
+			downlink <- &types.DownlinkMessage{GatewayID: gatewayID, Message: in}
 		}
+		close(downlink)
 	}()
 
 	return downlink, nil
@@ -177,6 +158,8 @@ func (r *Router) SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMess
 // UnsubscribeDownlink unsubscribes from downlink messages
 func (r *Router) UnsubscribeDownlink(gatewayID string) error {
 	gtw := r.getGateway(gatewayID)
-	gtw.downlinkSubscribed = false
-	return gtw.client.Unsubscribe()
+	if gtw.downlink != nil {
+		gtw.downlink.Close()
+	}
+	return nil
 }

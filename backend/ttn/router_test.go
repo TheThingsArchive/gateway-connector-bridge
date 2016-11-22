@@ -7,6 +7,8 @@ import (
 	"bytes"
 	"testing"
 
+	"time"
+
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	pb_gateway "github.com/TheThingsNetwork/ttn/api/gateway"
 	pb_router "github.com/TheThingsNetwork/ttn/api/router"
@@ -72,6 +74,35 @@ func TestTTNRouter(t *testing.T) {
 					})
 					Convey("There should be no error", func() {
 						So(err, ShouldBeNil)
+					})
+					router.CleanupGateway("dev")
+				})
+
+				Convey("When subscribing to downlink messages", func() {
+					ch, err := router.SubscribeDownlink("dev")
+					Convey("There should be no error", func() {
+						So(err, ShouldBeNil)
+					})
+					time.Sleep(100 * time.Millisecond)
+					Reset(func() {
+						router.UnsubscribeDownlink("dev")
+						time.Sleep(100 * time.Millisecond)
+					})
+
+					Convey("When unsubscribing from downlink messages", func() {
+						err := router.UnsubscribeDownlink("dev")
+						Convey("There should be no error", func() {
+							So(err, ShouldBeNil)
+						})
+						Convey("The channel should be closed", func() {
+							select {
+							case <-time.After(time.Second):
+								So("Timeout Exceeded", ShouldBeFalse)
+							case _, ok := <-ch:
+								So(ok, ShouldBeFalse)
+							}
+						})
+						router.CleanupGateway("dev")
 					})
 					router.CleanupGateway("dev")
 				})
