@@ -225,7 +225,7 @@ func (b *Exchange) activateNorthbound(backend backend.Northbound, gatewayID stri
 	b.doneLock.Lock()
 	b.northboundDone[gatewayID] = append(b.northboundDone[gatewayID], done)
 	b.doneLock.Unlock()
-	ctx.Debug("Activated southbound")
+	ctx.Debug("Activated northbound")
 loop:
 	for {
 		select {
@@ -241,7 +241,7 @@ loop:
 	if err := backend.UnsubscribeDownlink(gatewayID); err != nil {
 		ctx.WithError(err).Error("Could not unsubscribe from downlink")
 	}
-	ctx.Debug("Deactivated southbound")
+	ctx.Debug("Deactivated northbound")
 }
 
 func (b *Exchange) activateSouthbound(backend backend.Southbound, gatewayID string) {
