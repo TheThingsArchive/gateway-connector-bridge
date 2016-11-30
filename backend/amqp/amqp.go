@@ -331,6 +331,7 @@ func (c *AMQP) Publish(routingKey string, message []byte) error {
 }
 
 func (c *AMQP) subscribe(routingKey string) (chan subscribeMessage, error) {
+	ctx := c.ctx.WithField("RoutingKey", routingKey)
 	channel, err := c.channel()
 	if err != nil {
 		return nil, err
@@ -357,7 +358,7 @@ func (c *AMQP) subscribe(routingKey string) (chan subscribeMessage, error) {
 				if err == nil {
 					break // Got channel, break without err
 				}
-				c.ctx.WithError(err).Warn("Error trying to get channel")
+				ctx.WithError(err).Warn("Error trying to get channel")
 				retries--
 				if retries <= 0 {
 					break // Out of retries, break with err
@@ -380,7 +381,7 @@ func (c *AMQP) subscribe(routingKey string) (chan subscribeMessage, error) {
 
 			c.subscriptionLock.RUnlock()
 
-			c.ctx.WithField("RoutingKey", routingKey).Debug("Got subscribe channel")
+			ctx.Debug("Got subscribe channel")
 
 			// Monitor the channel
 			ch := make(chan *amqp.Error)
@@ -410,7 +411,7 @@ func (c *AMQP) subscribe(routingKey string) (chan subscribeMessage, error) {
 					if !ok {
 						break handle
 					}
-					c.ctx.WithField("RoutingKey", msg.RoutingKey).Debug("Receiving message")
+					ctx.Debug("Receiving message")
 					subscribeMessages <- subscribeMessage{routingKey: msg.RoutingKey, message: msg.Body}
 					msg.Ack(false)
 				}
@@ -418,13 +419,13 @@ func (c *AMQP) subscribe(routingKey string) (chan subscribeMessage, error) {
 			if err == nil {
 				break
 			}
-			c.ctx.WithError(err).Warn("Subscribe channel closed")
+			ctx.WithError(err).Warn("Subscribe channel closed")
 			time.Sleep(ConnectRetryDelay)
 		}
 		if err != nil {
-			c.ctx.WithError(err).Error("Error in subscribe channel")
+			ctx.WithError(err).Error("Error in subscribe channel")
 		} else {
-			c.ctx.Debug("Subscribe channel closed")
+			ctx.Debug("Subscribe channel closed")
 		}
 		close(subscribeMessages)
 	}()
@@ -597,6 +598,6 @@ func (c *AMQP) PublishDownlink(message *types.DownlinkMessage) error {
 	if err != nil {
 		return err
 	}
-	ctx.Debug("Scheduled downlink message")
+	ctx.Debug("Published downlink message")
 	return nil
 }
