@@ -161,6 +161,7 @@ func (b *Exchange) handleChannels() {
 			for _, backend := range b.southboundBackends {
 				go b.activateSouthbound(backend, connectMessage.GatewayID)
 			}
+			b.ctx.WithField("GatewayID", connectMessage.GatewayID).Info("Handled connect")
 		case disconnectMessage, ok := <-b.disconnect:
 			if !ok {
 				continue
@@ -171,6 +172,7 @@ func (b *Exchange) handleChannels() {
 			b.deactivateNorthbound(disconnectMessage.GatewayID)
 			b.deactivateSouthbound(disconnectMessage.GatewayID)
 			b.gateways.Remove(disconnectMessage.GatewayID)
+			b.ctx.WithField("GatewayID", disconnectMessage.GatewayID).Info("Handled disconnect")
 		case uplinkMessage, ok := <-b.uplink:
 			if !ok {
 				continue
@@ -186,6 +188,7 @@ func (b *Exchange) handleChannels() {
 					}).WithError(err).Warn("Could not publish uplink")
 				}
 			}
+			b.ctx.WithField("GatewayID", uplinkMessage.GatewayID).Info("Routed uplink")
 		case downlinkMessage, ok := <-b.downlink:
 			if !ok {
 				continue
@@ -198,6 +201,7 @@ func (b *Exchange) handleChannels() {
 					}).WithError(err).Warn("Could not publish downlink")
 				}
 			}
+			b.ctx.WithField("GatewayID", downlinkMessage.GatewayID).Info("Routed downlink")
 		case statusMessage, ok := <-b.status:
 			if !ok {
 				continue
@@ -211,6 +215,7 @@ func (b *Exchange) handleChannels() {
 					}).WithError(err).Warn("Could not publish status")
 				}
 			}
+			b.ctx.WithField("GatewayID", statusMessage.GatewayID).Info("Routed status")
 		}
 	}
 }
