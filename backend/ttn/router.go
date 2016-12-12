@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	"github.com/TheThingsNetwork/ttn/api"
+	"github.com/TheThingsNetwork/go-utils/log/apex"
 	"github.com/TheThingsNetwork/ttn/api/discovery"
 	"github.com/TheThingsNetwork/ttn/api/router"
 	"github.com/apex/log"
@@ -75,7 +75,7 @@ func (r *Router) getGateway(gatewayID string) *gatewayConn {
 		client:     router.NewRouterClientForGateway(r.routerClient, gatewayID, r.tokenFunc(gatewayID)),
 		lastActive: time.Now(),
 	}
-	gateway.client.SetLogger(api.Apex(r.Ctx.WithField("GatewayID", gatewayID)))
+	gateway.client.SetLogger(apex.Wrap(r.Ctx.WithField("GatewayID", gatewayID)))
 	gateway.uplink = router.NewMonitoredUplinkStream(gateway.client)
 	gateway.status = router.NewMonitoredGatewayStatusStream(gateway.client)
 	r.gateways[gatewayID] = gateway

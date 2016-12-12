@@ -10,6 +10,7 @@ import (
 	"github.com/TheThingsNetwork/go-account-lib/account"
 	"github.com/TheThingsNetwork/go-account-lib/auth"
 	"github.com/TheThingsNetwork/go-account-lib/util"
+	"github.com/TheThingsNetwork/go-utils/log/apex"
 	"github.com/apex/log"
 )
 
@@ -35,7 +36,7 @@ type AccountServerExchanger struct {
 // Exchange implements the Exchanger interface
 func (a *AccountServerExchanger) Exchange(gatewayID, key string) (token string, expires time.Time, err error) {
 	var t account.Token
-	err = util.GET(a.ctx, a.accountServer, auth.AccessKey(key), fmt.Sprintf("/api/v2/gateways/%s/token", gatewayID), &t)
+	err = util.GET(apex.Wrap(a.ctx), a.accountServer, auth.AccessKey(key), fmt.Sprintf("/api/v2/gateways/%s/token", gatewayID), &t)
 	if err != nil {
 		return
 	}
