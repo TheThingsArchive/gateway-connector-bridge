@@ -17,4 +17,6 @@ message ConnectMessage {
 
 message DisconnectMessage {
   string id = 1 [(gogoproto.customname) = "GatewayID"];
+  string token = 2;
+  string key   = 3;
 }

@@ -43,14 +43,58 @@ func (m *ConnectMessage) String() string            { return proto.CompactTextSt
 func (*ConnectMessage) ProtoMessage()               {}
 func (*ConnectMessage) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{0} }
 
+func (m *ConnectMessage) GetGatewayID() string {
+	if m != nil {
+		return m.GatewayID
+	}
+	return ""
+}
+
+func (m *ConnectMessage) GetToken() string {
+	if m != nil {
+		return m.Token
+	}
+	return ""
+}
+
+func (m *ConnectMessage) GetKey() string {
+	if m != nil {
+		return m.Key
+	}
+	return ""
+}
+
 type DisconnectMessage struct {
 	GatewayID string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Token     string `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	Key       string `protobuf:"bytes,3,opt,name=key,proto3" json:"key,omitempty"`
 }
 
 func (m *DisconnectMessage) Reset()                    { *m = DisconnectMessage{} }
 func (m *DisconnectMessage) String() string            { return proto.CompactTextString(m) }
 func (*DisconnectMessage) ProtoMessage()               {}
 func (*DisconnectMessage) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{1} }
+
+func (m *DisconnectMessage) GetGatewayID() string {
+	if m != nil {
+		return m.GatewayID
+	}
+	return ""
+}
+
+func (m *DisconnectMessage) GetToken() string {
+	if m != nil {
+		return m.Token
+	}
+	return ""
+}
+
+func (m *DisconnectMessage) GetKey() string {
+	if m != nil {
+		return m.Key
+	}
+	return ""
+}
 
 func init() {
 	proto.RegisterType((*ConnectMessage)(nil), "types.ConnectMessage")
@@ -113,6 +157,18 @@ func (m *DisconnectMessage) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintTypes(dAtA, i, uint64(len(m.GatewayID)))
 		i += copy(dAtA[i:], m.GatewayID)
 	}
+	if len(m.Token) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Token)))
+		i += copy(dAtA[i:], m.Token)
+	}
+	if len(m.Key) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Key)))
+		i += copy(dAtA[i:], m.Key)
+	}
 	return i, nil
 }
 
@@ -165,6 +221,14 @@ func (m *DisconnectMessage) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.GatewayID)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.Token)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.Key)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
@@ -379,6 +443,64 @@ func (m *DisconnectMessage) Unmarshal(dAtA []byte) error {
 			}
 			m.GatewayID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Token", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Token = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Key = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])
@@ -510,7 +632,7 @@ func init() {
 }
 
 var fileDescriptorTypes = []byte{
-	// 226 bytes of a gzipped FileDescriptorProto
+	// 227 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x72, 0x4b, 0xcf, 0x2c, 0xc9,
 	0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x0f, 0xc9, 0x48, 0x0d, 0xc9, 0xc8, 0xcc, 0x4b, 0x2f,
 	0xf6, 0x4b, 0x2d, 0x29, 0xcf, 0x2f, 0xca, 0xd6, 0x4f, 0x4f, 0x2c, 0x49, 0x2d, 0x4f, 0xac, 0xd4,
@@ -521,9 +643,9 @@ var fileDescriptorTypes = []byte{
 	0x16, 0x17, 0x27, 0xa6, 0xa7, 0x0a, 0xc9, 0x72, 0x31, 0x65, 0xa6, 0x48, 0x30, 0x2a, 0x30, 0x6a,
 	0x70, 0x3a, 0xf1, 0x3e, 0xba, 0x27, 0xcf, 0xe9, 0x0e, 0x71, 0x83, 0xa7, 0x4b, 0x10, 0x53, 0x66,
 	0x8a, 0x90, 0x08, 0x17, 0x6b, 0x49, 0x7e, 0x76, 0x6a, 0x9e, 0x04, 0x13, 0x48, 0x45, 0x10, 0x84,
-	0x23, 0x24, 0xc0, 0xc5, 0x9c, 0x9d, 0x5a, 0x29, 0xc1, 0x0c, 0x16, 0x03, 0x31, 0x95, 0x8c, 0xb8,
-	0x04, 0x5d, 0x32, 0x8b, 0x93, 0x49, 0x31, 0xdb, 0xc9, 0xe7, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f,
-	0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf1, 0x58, 0x8e, 0x21, 0xca, 0x8a, 0xfc, 0xc0, 0x49,
-	0x62, 0x03, 0xfb, 0xd0, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x7b, 0x96, 0xe2, 0xf1, 0x61, 0x01,
-	0x00, 0x00,
+	0x23, 0x24, 0xc0, 0xc5, 0x9c, 0x9d, 0x5a, 0x29, 0xc1, 0x0c, 0x16, 0x03, 0x31, 0x95, 0xa2, 0xb8,
+	0x04, 0x5d, 0x32, 0x8b, 0x93, 0x69, 0x61, 0xb6, 0x93, 0xcf, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e,
+	0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x15, 0xf9, 0x81, 0x98,
+	0xc4, 0x06, 0x0e, 0x09, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x24, 0xae, 0x47, 0xe7, 0x89,
+	0x01, 0x00, 0x00,
 }
