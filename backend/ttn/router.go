@@ -94,6 +94,8 @@ func (r *Router) CleanupGateway(gatewayID string) {
 
 // Connect to the TTN Router
 func (r *Router) Connect() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	discovery, err := discovery.NewClient(r.config.DiscoveryServer, &discovery.Announcement{
 		ServiceName: "bridge",
 	}, func() string { return "" })
