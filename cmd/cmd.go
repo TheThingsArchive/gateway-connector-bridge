@@ -71,20 +71,24 @@ var BridgeCmd = &cobra.Command{
 func runBridge(cmd *cobra.Command, args []string) {
 	bridge := exchange.New(ctx)
 
-	// Set up the Auth backend
+	// Set up Redis
+	var connectedGatewayIDs []string
 	var authBackend auth.Interface
 	if config.GetBool("redis") {
-		ctx.Info("Initializing Redis auth backend")
 		redis := redis.NewClient(&redis.Options{
 			Addr:     config.GetString("redis-address"),
 			Password: config.GetString("redis-password"),
 			DB:       config.GetInt("redis-db"),
 		})
+		ctx.Info("Initializing Redis state backend")
+		connectedGatewayIDs = bridge.InitRedisState(redis, "")
+		ctx.Info("Initializing Redis auth backend")
 		authBackend = auth.NewRedis(redis, "")
 	} else {
 		ctx.Info("Initializing Memory auth backend")
 		authBackend = auth.NewMemory()
 	}
+
 	if accountServer := config.GetString("account-server"); accountServer != "" && accountServer != "disable" {
 		ctx.WithField("AccountServer", accountServer).Info("Initializing access key exchanger")
 		authBackend.SetExchanger(auth.NewAccountServer(accountServer, ctx))
@@ -174,6 +178,11 @@ func runBridge(cmd *cobra.Command, args []string) {
 	}
 
 	bridge.Start()
+
+	if len(connectedGatewayIDs) > 0 {
+		ctx.Infof("Reconnecting %d gateways", len(connectedGatewayIDs))
+		bridge.ConnectGateway(connectedGatewayIDs...)
+	}
 
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)

@@ -43,7 +43,7 @@ type Exchange struct {
 	status     chan *types.StatusMessage
 	downlink   chan *types.DownlinkMessage
 
-	gateways mapset.Set
+	gateways gatewayState
 }
 
 // New initializes a new Exchange
@@ -123,6 +123,13 @@ loop:
 	}
 	if err := backend.UnsubscribeDisconnect(); err != nil {
 		b.ctx.WithError(err).Errorf("Could not unsubscribe from disconnect on backend %v", backend)
+	}
+}
+
+// ConnectGateway force-connects gateways with the given IDs
+func (b *Exchange) ConnectGateway(gatewayID ...string) {
+	for _, gatewayID := range gatewayID {
+		b.connect <- &types.ConnectMessage{GatewayID: gatewayID}
 	}
 }
 
