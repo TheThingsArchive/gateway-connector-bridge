@@ -177,7 +177,16 @@ func runBridge(cmd *cobra.Command, args []string) {
 		bridge.AddSouthbound(amqp)
 	}
 
-	bridge.Start()
+	if bridge.Start(30 * time.Second) {
+		ctx.Info("All backends started")
+	} else {
+		ctx.Fatal("Not all backends started in time")
+	}
+
+	defer func() {
+		bridge.Stop()
+		time.Sleep(100 * time.Millisecond)
+	}()
 
 	if len(connectedGatewayIDs) > 0 {
 		ctx.Infof("Reconnecting %d gateways", len(connectedGatewayIDs))
@@ -187,10 +196,6 @@ func runBridge(cmd *cobra.Command, args []string) {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	ctx.WithField("signal", <-sigChan).Info("signal received")
-
-	bridge.Stop()
-
-	time.Sleep(100 * time.Millisecond)
 }
 
 func init() {

@@ -32,6 +32,7 @@ type Exchange struct {
 
 	northboundBackends []backend.Northbound
 	southboundBackends []backend.Southbound
+	backendInit        sync.WaitGroup
 
 	northboundDone map[string][]chan struct{}
 	southboundDone map[string][]chan struct{}
@@ -80,6 +81,7 @@ func (b *Exchange) subscribeNorthbound(backend backend.Northbound) {
 	if err := backend.Connect(); err != nil {
 		b.ctx.WithError(err).Errorf("Could not set up backend %v", backend)
 	}
+	b.backendInit.Done()
 	for {
 		select {
 		case <-b.done:
@@ -107,6 +109,7 @@ func (b *Exchange) subscribeSouthbound(backend backend.Southbound) {
 	if err != nil {
 		b.ctx.WithError(err).Errorf("Could not subscribe to disconnect from backend %v", backend)
 	}
+	b.backendInit.Done()
 loop:
 	for {
 		select {
@@ -320,15 +323,29 @@ func (b *Exchange) deactivateSouthbound(gatewayID string) {
 }
 
 // Start the Exchange
-func (b *Exchange) Start() {
+func (b *Exchange) Start(timeout time.Duration) (finishedWithinTimeout bool) {
 	b.mu.Lock()
 	for _, backend := range b.northboundBackends {
+		b.backendInit.Add(1)
 		go b.subscribeNorthbound(backend)
 	}
 	for _, backend := range b.southboundBackends {
+		b.backendInit.Add(1)
 		go b.subscribeSouthbound(backend)
 	}
+	c := make(chan struct{})
+	go func() {
+		defer close(c)
+		b.backendInit.Wait()
+	}()
+	select {
+	case <-c:
+		finishedWithinTimeout = true
+	case <-time.After(timeout):
+		finishedWithinTimeout = false
+	}
 	go b.handleChannels()
+	return
 }
 
 // Stop the Exchange

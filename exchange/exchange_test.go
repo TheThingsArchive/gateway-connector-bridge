@@ -45,8 +45,7 @@ func TestExchange(t *testing.T) {
 				b.AddSouthbound(gateway)
 
 				Convey("When starting the Exchange", func() {
-					b.Start()
-					time.Sleep(10 * time.Millisecond)
+					b.Start(10 * time.Millisecond)
 
 					Convey("When stopping the Exchange", func() {
 						b.Stop()
@@ -212,8 +211,7 @@ func TestExchange(t *testing.T) {
 			})
 
 			Convey("When starting the Exchange", func() {
-				b.Start()
-				time.Sleep(10 * time.Millisecond)
+				b.Start(10 * time.Millisecond)
 
 				Convey("When stopping the Exchange", func() {
 					b.Stop()
