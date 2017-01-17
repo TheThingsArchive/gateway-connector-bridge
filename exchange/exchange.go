@@ -10,6 +10,7 @@ import (
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/status/statusserver"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/apex/log"
@@ -179,6 +180,7 @@ func (b *Exchange) handleChannels() {
 			for _, backend := range b.southboundBackends {
 				go b.activateSouthbound(backend, connectMessage.GatewayID)
 			}
+			statusserver.ConnectGateway()
 			b.ctx.WithField("GatewayID", connectMessage.GatewayID).Info("Handled connect")
 		case disconnectMessage, ok := <-b.disconnect:
 			if !ok {
@@ -190,6 +192,7 @@ func (b *Exchange) handleChannels() {
 			b.deactivateNorthbound(disconnectMessage.GatewayID)
 			b.deactivateSouthbound(disconnectMessage.GatewayID)
 			b.gateways.Remove(disconnectMessage.GatewayID)
+			statusserver.DisconnectGateway()
 			b.ctx.WithField("GatewayID", disconnectMessage.GatewayID).Info("Handled disconnect")
 		case uplinkMessage, ok := <-b.uplink:
 			if !ok {
@@ -207,6 +210,7 @@ func (b *Exchange) handleChannels() {
 					}).WithError(err).Warn("Could not publish uplink")
 				}
 			}
+			statusserver.Uplink()
 			b.ctx.WithField("GatewayID", uplinkMessage.GatewayID).Info("Routed uplink")
 		case downlinkMessage, ok := <-b.downlink:
 			if !ok {
@@ -221,6 +225,7 @@ func (b *Exchange) handleChannels() {
 					}).WithError(err).Warn("Could not publish downlink")
 				}
 			}
+			statusserver.Downlink()
 			b.ctx.WithField("GatewayID", downlinkMessage.GatewayID).Info("Routed downlink")
 		case statusMessage, ok := <-b.status:
 			if !ok {
@@ -235,6 +240,7 @@ func (b *Exchange) handleChannels() {
 					}).WithError(err).Warn("Could not publish status")
 				}
 			}
+			statusserver.GatewayStatus()
 			b.ctx.WithField("GatewayID", statusMessage.GatewayID).Info("Routed status")
 		}
 	}

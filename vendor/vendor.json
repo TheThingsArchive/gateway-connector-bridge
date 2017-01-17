@@ -89,74 +89,80 @@
 		{
 			"checksumSHA1": "QQTe2P89BtOgLbDYMT2kzSdEgQ8=",
 			"path": "github.com/TheThingsNetwork/ttn/api",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "uNuOOy238a3auwV+g4sxxYLckC4=",
 			"path": "github.com/TheThingsNetwork/ttn/api/discovery",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "Ex/DYo5YH1XWSiCxAM1sscDL0Oo=",
 			"path": "github.com/TheThingsNetwork/ttn/api/gateway",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "AAXIOWyTWSCFNwFzQKl+Cq3NdY8=",
 			"path": "github.com/TheThingsNetwork/ttn/api/protocol",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "M2LdgHVy9YSruAwkXZYSlhABrkE=",
 			"path": "github.com/TheThingsNetwork/ttn/api/protocol/lorawan",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "L49qUoEasYC0UPPgQ5rjZCJWyBQ=",
 			"path": "github.com/TheThingsNetwork/ttn/api/router",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
+		},
+		{
+			"checksumSHA1": "1hdOwJheyOsSwfurHvBpkvZ91qQ=",
+			"path": "github.com/TheThingsNetwork/ttn/api/stats",
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "dppIgr3GOPrJ+nkHBvtT8Dyckz0=",
 			"path": "github.com/TheThingsNetwork/ttn/api/trace",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "k6MOtRmaqN2581bqWwPeRRIq7/U=",
 			"path": "github.com/TheThingsNetwork/ttn/core/storage",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "o57HAIryHSmgzmgeTueaJ11HavU=",
 			"path": "github.com/TheThingsNetwork/ttn/core/types",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "zxokGYK2jJVdnA+Hn6+QJxZ0cTQ=",
 			"path": "github.com/TheThingsNetwork/ttn/utils/backoff",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "0KY2SIIp2CMW5bBk1HWmkOcw70Q=",
 			"path": "github.com/TheThingsNetwork/ttn/utils/errors",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "XHBjefNbtgJ6J0wUaTtiijfLVxM=",
 			"path": "github.com/TheThingsNetwork/ttn/utils/random",
-			"revision": "4a71eaa48025f8622ec6ac2ee2345119729a610b",
-			"revisionTime": "2017-01-16T16:50:40Z"
+			"revision": "a18dd6f6c6a6c82771007bdea60b7351a171d95d",
+			"revisionTime": "2017-01-17T14:00:00Z"
 		},
 		{
 			"checksumSHA1": "Ur88QI//9Ue82g83qvBSakGlzVg=",
@@ -451,6 +457,12 @@
 			"path": "github.com/pkg/sftp",
 			"revision": "4d0e916071f68db74f8a73926335f809396d6b42",
 			"revisionTime": "2016-09-30T22:07:58Z"
+		},
+		{
+			"checksumSHA1": "KAzbLjI9MzW2tjfcAsK75lVRp6I=",
+			"path": "github.com/rcrowley/go-metrics",
+			"revision": "1f30fe9094a513ce4c700b9a54458bbb0c96996c",
+			"revisionTime": "2016-11-28T21:05:44Z"
 		},
 		{
 			"checksumSHA1": "Nlo+T7BuuSS34towrkeovBeMgQA=",

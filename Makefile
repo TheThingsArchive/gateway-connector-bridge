@@ -32,13 +32,13 @@ dev-deps: deps
 PROTOC = protoc \
 -I/usr/local/include \
 -I$(GO_PATH)/src \
---gofast_out=:$(GO_SRC) \
+--gofast_out=plugins=grpc:$(GO_SRC) \
 `pwd`/
 
 protos-clean:
 	rm -f types/types.pb.go
 
-protos: types/types.pb.go
+protos: types/types.pb.go status/status.pb.go
 
 %.pb.go: %.proto
 	$(PROTOC)$<
