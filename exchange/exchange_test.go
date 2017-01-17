@@ -13,6 +13,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/dummy"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	pb_gateway "github.com/TheThingsNetwork/ttn/api/gateway"
+	pb_router "github.com/TheThingsNetwork/ttn/api/router"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
 	. "github.com/smartystreets/goconvey/convey"
@@ -131,6 +132,7 @@ func TestExchange(t *testing.T) {
 							Convey("When sending an uplink message on the Gateway side", func() {
 								err := gateway.PublishUplink(&types.UplinkMessage{
 									GatewayID: "dev",
+									Message:   &pb_router.UplinkMessage{},
 								})
 								Convey("There should be no error", func() {
 									So(err, ShouldBeNil)
@@ -154,6 +156,7 @@ func TestExchange(t *testing.T) {
 							Convey("When sending a downlink message on the TTN side", func() {
 								err := ttn.PublishDownlink(&types.DownlinkMessage{
 									GatewayID: "dev",
+									Message:   &pb_router.DownlinkMessage{},
 								})
 								Convey("There should be no error", func() {
 									So(err, ShouldBeNil)

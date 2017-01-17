@@ -11,6 +11,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
+	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/apex/log"
 	"github.com/deckarep/golang-set"
 )
@@ -69,6 +70,7 @@ func (b *Exchange) SetID(id string) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.id = id
+	trace.SetComponent("bridge", id)
 }
 
 // SetAuth sets the authentication component
@@ -196,6 +198,7 @@ func (b *Exchange) handleChannels() {
 			if meta := uplinkMessage.Message.GetGatewayMetadata(); meta != nil {
 				meta.GatewayId = uplinkMessage.GatewayID
 			}
+			uplinkMessage.Message.Trace = uplinkMessage.Message.Trace.WithEvent(trace.ForwardEvent)
 			for _, backend := range b.northboundBackends {
 				if err := backend.PublishUplink(uplinkMessage); err != nil {
 					b.ctx.WithFields(log.Fields{
@@ -209,6 +212,7 @@ func (b *Exchange) handleChannels() {
 			if !ok {
 				continue
 			}
+			downlinkMessage.Message.Trace = downlinkMessage.Message.Trace.WithEvent(trace.ForwardEvent)
 			for _, backend := range b.southboundBackends {
 				if err := backend.PublishDownlink(downlinkMessage); err != nil {
 					b.ctx.WithFields(log.Fields{
