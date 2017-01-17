@@ -154,8 +154,6 @@ func (b *Exchange) handleChannels() {
 				continue
 			}
 			if b.auth != nil {
-				// TODO(htdvisser): Improve performance. Setting the Key/Token is synchronous; slow Redis may
-				// affect overall performance if only one handleChannels() goroutine is running
 				if connectMessage.Key != "" {
 					b.ctx.WithField("GatewayID", connectMessage.GatewayID).Debug("Got access key")
 					if err := b.auth.SetKey(connectMessage.GatewayID, connectMessage.Key); err != nil {
@@ -331,7 +329,7 @@ func (b *Exchange) deactivateSouthbound(gatewayID string) {
 }
 
 // Start the Exchange
-func (b *Exchange) Start(timeout time.Duration) (finishedWithinTimeout bool) {
+func (b *Exchange) Start(goroutines int, timeout time.Duration) (finishedWithinTimeout bool) {
 	b.mu.Lock()
 	for _, backend := range b.northboundBackends {
 		b.backendInit.Add(1)
@@ -352,7 +350,9 @@ func (b *Exchange) Start(timeout time.Duration) (finishedWithinTimeout bool) {
 	case <-time.After(timeout):
 		finishedWithinTimeout = false
 	}
-	go b.handleChannels()
+	for i := 0; i < goroutines; i++ {
+		go b.handleChannels()
+	}
 	return
 }
 

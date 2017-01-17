@@ -187,7 +187,8 @@ func runBridge(cmd *cobra.Command, args []string) {
 		bridge.AddSouthbound(amqp)
 	}
 
-	if bridge.Start(30 * time.Second) {
+	ctx.WithField("NumWorkers", config.GetInt("workers")).Info("Starting Bridge...")
+	if bridge.Start(config.GetInt("workers"), 30*time.Second) {
 		ctx.Info("All backends started")
 	} else {
 		ctx.Fatal("Not all backends started in time")
@@ -225,6 +226,7 @@ func init() {
 	BridgeCmd.Flags().StringSlice("amqp", []string{"guest:guest@localhost:5672"}, "AMQP Broker to connect to (disable with \"disable\")")
 
 	BridgeCmd.Flags().String("id", "", "ID of this bridge")
+	BridgeCmd.Flags().Int("workers", 1, "Number of parallel workers")
 
 	viper.BindPFlags(BridgeCmd.Flags())
 }
