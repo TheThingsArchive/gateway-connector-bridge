@@ -12,6 +12,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/dummy"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
+	pb_gateway "github.com/TheThingsNetwork/ttn/api/gateway"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
 	. "github.com/smartystreets/goconvey/convey"
@@ -176,6 +177,7 @@ func TestExchange(t *testing.T) {
 							Convey("When sending an status message on the Gateway side", func() {
 								err := gateway.PublishStatus(&types.StatusMessage{
 									GatewayID: "dev",
+									Message:   &pb_gateway.Status{},
 								})
 								Convey("There should be no error", func() {
 									So(err, ShouldBeNil)

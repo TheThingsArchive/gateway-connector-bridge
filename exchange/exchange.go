@@ -28,6 +28,7 @@ type Exchange struct {
 	mu   sync.Mutex
 	done chan struct{}
 
+	id   string
 	auth auth.Interface
 
 	northboundBackends []backend.Northbound
@@ -61,6 +62,13 @@ func New(ctx log.Interface) *Exchange {
 		downlink:       make(chan *types.DownlinkMessage),
 		gateways:       mapset.NewSet(),
 	}
+}
+
+// SetID sets the id of this bridge
+func (b *Exchange) SetID(id string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.id = id
 }
 
 // SetAuth sets the authentication component
@@ -216,7 +224,7 @@ func (b *Exchange) handleChannels() {
 			if !ok {
 				continue
 			}
-			// TODO(htdvisser): Add Bridge ID to status message
+			statusMessage.Message.Bridge = b.id
 			for _, backend := range b.northboundBackends {
 				if err := backend.PublishStatus(statusMessage); err != nil {
 					b.ctx.WithFields(log.Fields{

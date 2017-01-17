@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	version   = "2.0.0-dev" // Corresponds with the version of the TTN backend
+	version   = "2.x.x"
 	gitBranch = "unknown"
 	gitCommit = "unknown"
 	buildDate = "unknown"

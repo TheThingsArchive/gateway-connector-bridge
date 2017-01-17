@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -70,6 +71,15 @@ var BridgeCmd = &cobra.Command{
 
 func runBridge(cmd *cobra.Command, args []string) {
 	bridge := exchange.New(ctx)
+
+	id := fmt.Sprintf(
+		"gateway-connector-bridge %s %s-%s (%s)",
+		config.GetString("id"),
+		config.GetString("version"),
+		config.GetString("gitCommit"),
+		config.GetString("buildDate"),
+	)
+	bridge.SetID(id)
 
 	// Set up Redis
 	var connectedGatewayIDs []string
@@ -213,6 +223,8 @@ func init() {
 	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discovery.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
 	BridgeCmd.Flags().StringSlice("mqtt", []string{"guest:guest@localhost:1883"}, "MQTT Broker to connect to (disable with \"disable\")")
 	BridgeCmd.Flags().StringSlice("amqp", []string{"guest:guest@localhost:5672"}, "AMQP Broker to connect to (disable with \"disable\")")
+
+	BridgeCmd.Flags().String("id", "", "ID of this bridge")
 
 	viper.BindPFlags(BridgeCmd.Flags())
 }

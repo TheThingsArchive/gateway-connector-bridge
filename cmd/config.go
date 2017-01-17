@@ -5,6 +5,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"os/user"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -29,6 +31,15 @@ func initConfig() {
 		}
 	}
 	viper.BindEnv("debug")
+
+	defaultID := "unknown"
+	if user, err := user.Current(); err == nil {
+		defaultID = user.Username
+	}
+	if hostname, err := os.Hostname(); err == nil {
+		defaultID += "@" + hostname
+	}
+	viper.SetDefault("id", defaultID)
 }
 
 var config = viper.GetViper()
