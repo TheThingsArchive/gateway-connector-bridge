@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -19,6 +20,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/mqtt"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/ttn"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/exchange"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/status/statusserver"
 	"github.com/TheThingsNetwork/go-utils/handlers/cli"
 	ttnlog "github.com/TheThingsNetwork/go-utils/log"
 	"github.com/TheThingsNetwork/go-utils/log/apex"
@@ -28,6 +30,7 @@ import (
 	"github.com/apex/log/handlers/multi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 	redis "gopkg.in/redis.v5"
 )
 
@@ -204,6 +207,17 @@ func runBridge(cmd *cobra.Command, args []string) {
 		bridge.ConnectGateway(connectedGatewayIDs...)
 	}
 
+	if statusAddr := config.GetString("status-addr"); statusAddr != "" {
+		// Set up the status server
+		lis, err := net.Listen("tcp", statusAddr)
+		if err != nil {
+			ctx.WithError(err).Fatal("Could not start status server")
+		}
+		srv := grpc.NewServer()
+		statusserver.Register(srv)
+		go srv.Serve(lis)
+	}
+
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	ctx.WithField("signal", <-sigChan).Info("signal received")
@@ -224,6 +238,8 @@ func init() {
 	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discovery.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
 	BridgeCmd.Flags().StringSlice("mqtt", []string{"guest:guest@localhost:1883"}, "MQTT Broker to connect to (disable with \"disable\")")
 	BridgeCmd.Flags().StringSlice("amqp", []string{"guest:guest@localhost:5672"}, "AMQP Broker to connect to (disable with \"disable\")")
+
+	BridgeCmd.Flags().String("status-addr", "", "Address of the gRPC status server to start")
 
 	BridgeCmd.Flags().String("id", "", "ID of this bridge")
 	BridgeCmd.Flags().Int("workers", 1, "Number of parallel workers")
