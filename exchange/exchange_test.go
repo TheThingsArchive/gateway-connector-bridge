@@ -53,58 +53,6 @@ func TestExchange(t *testing.T) {
 						b.Stop()
 					})
 
-					Convey("When sending a connect message with a Token", func() {
-						err := gateway.PublishConnect(&types.ConnectMessage{
-							GatewayID: "dev",
-							Token:     "token",
-						})
-						time.Sleep(10 * time.Millisecond)
-						Convey("There should be no error", func() {
-							So(err, ShouldBeNil)
-						})
-						Convey("The Token should be stored", func() {
-							token, err := auth.GetToken("dev")
-							So(err, ShouldBeNil)
-							So(token, ShouldEqual, "token")
-						})
-
-						Convey("When sending a second connect message with a Token", func() {
-							err := gateway.PublishConnect(&types.ConnectMessage{
-								GatewayID: "dev",
-								Token:     "updated-token",
-							})
-							time.Sleep(10 * time.Millisecond)
-							Convey("There should be no error", func() {
-								So(err, ShouldBeNil)
-							})
-							Convey("The Token should be stored", func() {
-								token, err := auth.GetToken("dev")
-								So(err, ShouldBeNil)
-								So(token, ShouldEqual, "updated-token")
-							})
-						})
-
-						Convey("When sending a disconnect message", func() {
-							err := gateway.PublishDisconnect(&types.DisconnectMessage{
-								GatewayID: "dev",
-							})
-							time.Sleep(10 * time.Millisecond)
-							Convey("There should be no error", func() {
-								So(err, ShouldBeNil)
-							})
-
-							Convey("When sending a second disconnect message", func() {
-								err := gateway.PublishDisconnect(&types.DisconnectMessage{
-									GatewayID: "dev",
-								})
-								time.Sleep(10 * time.Millisecond)
-								Convey("There should be no error", func() {
-									So(err, ShouldBeNil)
-								})
-							})
-						})
-					})
-
 					Convey("When sending a connect message with a Key", func() {
 						err := gateway.PublishConnect(&types.ConnectMessage{
 							GatewayID: "dev",

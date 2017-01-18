@@ -163,12 +163,6 @@ func (b *Exchange) handleChannels() {
 						b.ctx.WithField("GatewayID", connectMessage.GatewayID).WithError(err).Warn("Could not set gateway key")
 					}
 				}
-				if connectMessage.Token != "" {
-					b.ctx.WithField("GatewayID", connectMessage.GatewayID).Debug("Got access token")
-					if err := b.auth.SetToken(connectMessage.GatewayID, connectMessage.Token, time.Time{}); err != nil {
-						b.ctx.WithField("GatewayID", connectMessage.GatewayID).WithError(err).Warn("Could not set gateway token")
-					}
-				}
 			}
 			if !b.gateways.Add(connectMessage.GatewayID) {
 				b.ctx.WithField("GatewayID", connectMessage.GatewayID).Debug("Got connect message from already-connected gateway")
