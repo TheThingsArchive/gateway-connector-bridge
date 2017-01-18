@@ -309,10 +309,58 @@
 			"revisionTime": "2016-11-17T03:31:26Z"
 		},
 		{
+			"checksumSHA1": "eGFWbGb+FzV8uudYumBaEwLUpiU=",
+			"path": "github.com/googollee/go-engine.io",
+			"revision": "ca9ced27e02c880970ee7726f9814f8a9c55d777",
+			"revisionTime": "2016-05-10T13:12:59Z"
+		},
+		{
+			"checksumSHA1": "Tv1/qmTmjl43MFulf61QbsGuu2c=",
+			"path": "github.com/googollee/go-engine.io/message",
+			"revision": "ca9ced27e02c880970ee7726f9814f8a9c55d777",
+			"revisionTime": "2016-05-10T13:12:59Z"
+		},
+		{
+			"checksumSHA1": "Z3Zs8QiMD9WQdAnRNqyrfuElIxg=",
+			"path": "github.com/googollee/go-engine.io/parser",
+			"revision": "ca9ced27e02c880970ee7726f9814f8a9c55d777",
+			"revisionTime": "2016-05-10T13:12:59Z"
+		},
+		{
+			"checksumSHA1": "Veyca3YORqrCpon9aIvt0CTB3JI=",
+			"path": "github.com/googollee/go-engine.io/polling",
+			"revision": "ca9ced27e02c880970ee7726f9814f8a9c55d777",
+			"revisionTime": "2016-05-10T13:12:59Z"
+		},
+		{
+			"checksumSHA1": "WSC+XDEXrzu11rf+gv1Y2N7v/nE=",
+			"path": "github.com/googollee/go-engine.io/transport",
+			"revision": "ca9ced27e02c880970ee7726f9814f8a9c55d777",
+			"revisionTime": "2016-05-10T13:12:59Z"
+		},
+		{
+			"checksumSHA1": "HKE4UBOwXdi/Qt48b0da4Z/ytSY=",
+			"path": "github.com/googollee/go-engine.io/websocket",
+			"revision": "ca9ced27e02c880970ee7726f9814f8a9c55d777",
+			"revisionTime": "2016-05-10T13:12:59Z"
+		},
+		{
+			"checksumSHA1": "FSHPd8vdTMV4rRzGftBdiPUPQbM=",
+			"path": "github.com/googollee/go-socket.io",
+			"revision": "e9f0a9b7a61267e1476f9f0a0429337813c39edd",
+			"revisionTime": "2016-08-11T13:18:22Z"
+		},
+		{
 			"checksumSHA1": "P3zGmsNjW8m15a+nks4FdVpFKwE=",
 			"path": "github.com/gopherjs/gopherjs/js",
 			"revision": "e34a5cd6a1bc7c4fde759f2d3039852fc68b5fcc",
 			"revisionTime": "2016-10-31T10:43:57Z"
+		},
+		{
+			"checksumSHA1": "O9Gjl1F5NFZoi4HgmkQohzwl+dk=",
+			"path": "github.com/gorilla/websocket",
+			"revision": "0b847f2facc24ec406130a05bb1bb72d41993b05",
+			"revisionTime": "2016-10-21T19:35:05Z"
 		},
 		{
 			"checksumSHA1": "LoEQ+t5UoMm4InaYVPVn0XqHPwA=",
