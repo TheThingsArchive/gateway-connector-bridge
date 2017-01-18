@@ -17,6 +17,7 @@ import (
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/amqp"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/dummy"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/mqtt"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/ttn"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/exchange"
@@ -190,6 +191,13 @@ func runBridge(cmd *cobra.Command, args []string) {
 		bridge.AddSouthbound(amqp)
 	}
 
+	if debugAddr := config.GetString("http-debug-addr"); debugAddr != "" {
+		ctx.WithField("Address", debugAddr).Infof("Initializing HTTP Debug")
+		httpDummy := dummy.New(ctx).WithHTTPServer(debugAddr)
+		bridge.AddNorthbound(httpDummy)
+		bridge.AddSouthbound(httpDummy)
+	}
+
 	ctx.WithField("NumWorkers", config.GetInt("workers")).Info("Starting Bridge...")
 	if bridge.Start(config.GetInt("workers"), 30*time.Second) {
 		ctx.Info("All backends started")
@@ -240,6 +248,7 @@ func init() {
 	BridgeCmd.Flags().StringSlice("amqp", []string{"guest:guest@localhost:5672"}, "AMQP Broker to connect to (disable with \"disable\")")
 
 	BridgeCmd.Flags().String("status-addr", "", "Address of the gRPC status server to start")
+	BridgeCmd.Flags().String("http-debug-addr", "", "The address of the HTTP debug server to start")
 
 	BridgeCmd.Flags().String("id", "", "ID of this bridge")
 	BridgeCmd.Flags().Int("workers", 1, "Number of parallel workers")

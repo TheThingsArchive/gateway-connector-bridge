@@ -1,0 +1,52 @@
+body {
+  font-family: sans-serif;
+  background: #eee;
+  margin: 0;
+}
+
+#gateways, #events {
+  padding: 1em;
+}
+
+#gateways {
+  background: #e8e8e8;
+}
+
+.event .title {
+  margin-bottom: .5em;
+}
+
+.uplink .title {
+  color: green;
+}
+
+.downlink .title {
+  color: red;
+}
+
+.status .title {
+  color: blue;
+}
+
+.event .time {
+  font-family: monospace;
+  margin-bottom: .5em;
+}
+
+.event .data {
+  white-space: pre;
+  font-family: monospace;
+  background: #fafafa;
+  padding: .5em;
+  border-radius: 2px;
+  border: 1px solid #ddd;
+}
+
+.event {
+  border: 1px solid #ccc;
+  border-bottom: 1px solid #bbb;
+  padding: 1em;
+  border-radius: 5px;
+  background: white;
+  margin-bottom: 1em;
+}

@@ -32,7 +32,7 @@ type Dummy struct {
 // New returns a new Dummy backend
 func New(ctx log.Interface) *Dummy {
 	return &Dummy{
-		ctx:      ctx,
+		ctx:      ctx.WithField("Connector", "Dummy"),
 		gateways: make(map[string]*dummyGateway),
 	}
 }
