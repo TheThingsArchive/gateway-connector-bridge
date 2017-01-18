@@ -3,13 +3,31 @@
 
 package dummy
 
-import "github.com/TheThingsNetwork/gateway-connector-bridge/types"
+import (
+	"time"
+
+	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
+	"github.com/TheThingsNetwork/ttn/api/trace"
+)
 
 // WithServer is a Dummy backend that exposes some events on
 // a http page with websockets
 type WithServer struct {
 	*Dummy
 	server *Server
+}
+
+func cleanTrace(in *trace.Trace) *trace.Trace {
+	trace := &trace.Trace{
+		ServiceName: "gateway-connector-bridge",
+		Time:        time.Now().UnixNano(),
+		Event:       "debug",
+		Parents:     in.Flatten(),
+	}
+	for _, parent := range trace.Parents {
+		parent.Parents = nil
+	}
+	return trace
 }
 
 // WithHTTPServer returns the Dummy that also has a HTTP server exposing the events on addr
@@ -31,6 +49,7 @@ func (d *Dummy) WithHTTPServer(addr string) *WithServer {
 func (d *WithServer) PublishUplink(message *types.UplinkMessage) error {
 	uplink := *message.Message
 	uplink.UnmarshalPayload()
+	uplink.Trace = cleanTrace(uplink.Trace)
 	d.server.Uplink(&types.UplinkMessage{GatewayID: message.GatewayID, Message: &uplink})
 	return nil
 }
@@ -45,6 +64,7 @@ func (d *WithServer) PublishStatus(message *types.StatusMessage) error {
 func (d *WithServer) PublishDownlink(message *types.DownlinkMessage) error {
 	downlink := *message.Message
 	downlink.UnmarshalPayload()
+	downlink.Trace = cleanTrace(downlink.Trace)
 	d.server.Downlink(&types.DownlinkMessage{GatewayID: message.GatewayID, Message: &downlink})
 	return nil
 }
