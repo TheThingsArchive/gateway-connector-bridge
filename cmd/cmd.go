@@ -59,8 +59,12 @@ var BridgeCmd = &cobra.Command{
 			}
 		}
 
+		logLevel := log.InfoLevel
+		if config.GetBool("debug") {
+			logLevel = log.DebugLevel
+		}
 		ctx = &log.Logger{
-			Level:   log.DebugLevel,
+			Level:   logLevel,
 			Handler: multi.New(logHandlers...),
 		}
 	},
@@ -232,6 +236,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 }
 
 func init() {
+	BridgeCmd.Flags().Bool("debug", false, "Print debug logs")
 	BridgeCmd.Flags().String("log-file", "", "Location of the log file")
 
 	BridgeCmd.Flags().Bool("redis", true, "Use Redis auth backend")
