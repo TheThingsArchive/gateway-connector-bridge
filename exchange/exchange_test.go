@@ -62,6 +62,37 @@ func TestExchange(t *testing.T) {
 						Convey("There should be no error", func() {
 							So(err, ShouldBeNil)
 						})
+						Convey("The gateway should be connected", func() {
+							So(b.gateways.Contains("dev"), ShouldBeTrue)
+						})
+
+						Convey("When sending a disconnect message with the same Key", func() {
+							err := gateway.PublishDisconnect(&types.DisconnectMessage{
+								GatewayID: "dev",
+								Key:       "key",
+							})
+							time.Sleep(10 * time.Millisecond)
+							Convey("There should be no error", func() {
+								So(err, ShouldBeNil)
+							})
+							Convey("The gateway should be disconnected", func() {
+								So(b.gateways.Contains("dev"), ShouldBeFalse)
+							})
+						})
+
+						Convey("When sending a disconnect message with a different Key", func() {
+							err := gateway.PublishDisconnect(&types.DisconnectMessage{
+								GatewayID: "dev",
+								Key:       "other-key",
+							})
+							time.Sleep(10 * time.Millisecond)
+							Convey("There should be no error", func() {
+								So(err, ShouldBeNil)
+							})
+							Convey("The gateway should not be disconnected", func() {
+								So(b.gateways.Contains("dev"), ShouldBeTrue)
+							})
+						})
 					})
 
 					Convey("When sending a connect message", func() {
@@ -71,6 +102,22 @@ func TestExchange(t *testing.T) {
 						time.Sleep(10 * time.Millisecond)
 						Convey("There should be no error", func() {
 							So(err, ShouldBeNil)
+						})
+						Convey("The gateway should be connected", func() {
+							So(b.gateways.Contains("dev"), ShouldBeTrue)
+						})
+
+						Convey("When sending another connect message", func() {
+							err := gateway.PublishConnect(&types.ConnectMessage{
+								GatewayID: "dev",
+							})
+							time.Sleep(10 * time.Millisecond)
+							Convey("There should be no error", func() {
+								So(err, ShouldBeNil)
+							})
+							Convey("The gateway should still be connected", func() {
+								So(b.gateways.Contains("dev"), ShouldBeTrue)
+							})
 						})
 
 						Convey("When subscribing to uplink messages on the TTN side", func() {
@@ -152,6 +199,22 @@ func TestExchange(t *testing.T) {
 							time.Sleep(10 * time.Millisecond)
 							Convey("There should be no error", func() {
 								So(err, ShouldBeNil)
+							})
+							Convey("The gateway should be disconnected", func() {
+								So(b.gateways.Contains("dev"), ShouldBeFalse)
+							})
+
+							Convey("When sending another disconnect message", func() {
+								err := gateway.PublishDisconnect(&types.DisconnectMessage{
+									GatewayID: "dev",
+								})
+								time.Sleep(10 * time.Millisecond)
+								Convey("There should be no error", func() {
+									So(err, ShouldBeNil)
+								})
+								Convey("The gateway should still be disconnected", func() {
+									So(b.gateways.Contains("dev"), ShouldBeFalse)
+								})
 							})
 						})
 
