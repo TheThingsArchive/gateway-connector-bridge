@@ -30,7 +30,7 @@ func TestAuth(t *testing.T) {
 
 		e := &AccountServerExchanger{
 			ctx:           ctx,
-			accountServer: "https://preview.account.thethingsnetwork.org",
+			accountServer: "https://account.thethingsnetwork.org",
 		}
 
 		Convey("Given a new auth.Memory", func() {

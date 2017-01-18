@@ -246,11 +246,11 @@ func init() {
 
 	BridgeCmd.Flags().String("root-ca-file", "", "Location of the file containing Root CA certificates")
 
-	BridgeCmd.Flags().String("account-server", "https://preview.account.thethingsnetwork.org", "Use an account server for exchanging access keys")
+	BridgeCmd.Flags().String("account-server", "https://account.thethingsnetwork.org", "Use an account server for exchanging access keys")
 
-	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discovery.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
-	BridgeCmd.Flags().StringSlice("mqtt", []string{"guest:guest@localhost:1883"}, "MQTT Broker to connect to (disable with \"disable\")")
-	BridgeCmd.Flags().StringSlice("amqp", []string{"guest:guest@localhost:5672"}, "AMQP Broker to connect to (disable with \"disable\")")
+	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discover.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
+	BridgeCmd.Flags().StringSlice("mqtt", []string{"guest:guest@localhost:1883"}, "MQTT Broker to connect to (user:pass@host:port; disable with \"disable\")")
+	BridgeCmd.Flags().StringSlice("amqp", []string{}, "AMQP Broker to connect to (user:pass@host:port; disable with \"disable\")")
 
 	BridgeCmd.Flags().String("status-addr", "", "Address of the gRPC status server to start")
 	BridgeCmd.Flags().String("http-debug-addr", "", "The address of the HTTP debug server to start")

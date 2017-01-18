@@ -29,10 +29,7 @@ func TestAccountServerExchanger(t *testing.T) {
 		}()
 
 		Convey("Given a new AccountServerExchanger", func() {
-			e := &AccountServerExchanger{
-				ctx:           ctx,
-				accountServer: "https://preview.account.thethingsnetwork.org",
-			}
+			e := NewAccountServer("https://account.thethingsnetwork.org", ctx)
 
 			Convey("When calling Exchange for an invalid gateway ID", func() {
 				_, _, err := e.Exchange("some-invalid-gateway-id-that-does-not-exist", "some-invalid-key")
