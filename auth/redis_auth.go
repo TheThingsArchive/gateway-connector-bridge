@@ -4,6 +4,7 @@
 package auth
 
 import (
+	"errors"
 	"time"
 
 	redis "gopkg.in/redis.v5"
@@ -56,6 +57,15 @@ func (r *Redis) SetToken(gatewayID string, token string, expires time.Time) erro
 // SetKey sets the access key for a gateway
 func (r *Redis) SetKey(gatewayID string, key string) error {
 	return r.client.HSet(r.prefix+gatewayID, redisKey.key, key).Err()
+}
+
+// ValidateKey validates the access key for a gateway
+func (r *Redis) ValidateKey(gatewayID string, key string) error {
+	res, err := r.client.HGet(r.prefix+gatewayID, redisKey.key).Result()
+	if err == redis.Nil || len(res) == 0 || key == res {
+		return nil
+	}
+	return errors.New("Invalid Key")
 }
 
 // Delete gateway key and token

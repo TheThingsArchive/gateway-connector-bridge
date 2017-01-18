@@ -70,7 +70,7 @@ func TestMQTT(t *testing.T) {
 						So(err, ShouldBeNil)
 					})
 					Convey("When publishing a gateway connection", func() {
-						bytes, _ := (&types.ConnectMessage{GatewayID: "dev", Token: "token", Key: "key"}).Marshal()
+						bytes, _ := (&types.ConnectMessage{GatewayID: "dev", Key: "key"}).Marshal()
 						mqtt.publish(ConnectTopicFormat, bytes)
 						Convey("There should be a corresponding ConnectMessage in the channel", func() {
 							select {
@@ -78,7 +78,6 @@ func TestMQTT(t *testing.T) {
 								So("Timeout Exceeded", ShouldBeFalse)
 							case msg := <-connect:
 								So(msg.GatewayID, ShouldEqual, "dev")
-								So(msg.Token, ShouldEqual, "token")
 								So(msg.Key, ShouldEqual, "key")
 							}
 						})
@@ -101,7 +100,7 @@ func TestMQTT(t *testing.T) {
 						So(err, ShouldBeNil)
 					})
 					Convey("When publishing a gateway disconnection", func() {
-						bytes, _ := (&types.DisconnectMessage{GatewayID: "dev"}).Marshal()
+						bytes, _ := (&types.DisconnectMessage{GatewayID: "dev", Key: "key"}).Marshal()
 						mqtt.publish(DisconnectTopicFormat, bytes)
 						Convey("There should be a corresponding ConnectMessage in the channel", func() {
 							select {
@@ -109,6 +108,7 @@ func TestMQTT(t *testing.T) {
 								So("Timeout Exceeded", ShouldBeFalse)
 							case msg := <-disconnect:
 								So(msg.GatewayID, ShouldEqual, "dev")
+								So(msg.Key, ShouldEqual, "key")
 							}
 						})
 					})

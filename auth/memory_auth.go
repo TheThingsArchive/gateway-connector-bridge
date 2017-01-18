@@ -4,6 +4,7 @@
 package auth
 
 import (
+	"errors"
 	"sync"
 	"time"
 )
@@ -61,6 +62,22 @@ func (m *Memory) SetKey(gatewayID string, key string) error {
 		}
 	}
 	return nil
+}
+
+// ValidateKey validates the access key for a gateway
+func (m *Memory) ValidateKey(gatewayID string, key string) error {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if gtw, ok := m.gateways[gatewayID]; ok {
+		gtw.Lock()
+		defer gtw.Unlock()
+		if gtw.key == key {
+			return nil
+		}
+	} else {
+		return nil
+	}
+	return errors.New("Invalid Key")
 }
 
 // Delete gateway key and token

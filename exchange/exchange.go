@@ -156,22 +156,17 @@ func (b *Exchange) handleChannels() {
 			if !ok {
 				continue
 			}
+			ctx := b.ctx.WithField("GatewayID", connectMessage.GatewayID)
 			if b.auth != nil {
 				if connectMessage.Key != "" {
-					b.ctx.WithField("GatewayID", connectMessage.GatewayID).Debug("Got access key")
+					ctx.Debug("Got access key")
 					if err := b.auth.SetKey(connectMessage.GatewayID, connectMessage.Key); err != nil {
-						b.ctx.WithField("GatewayID", connectMessage.GatewayID).WithError(err).Warn("Could not set gateway key")
-					}
-				}
-				if connectMessage.Token != "" {
-					b.ctx.WithField("GatewayID", connectMessage.GatewayID).Debug("Got access token")
-					if err := b.auth.SetToken(connectMessage.GatewayID, connectMessage.Token, time.Time{}); err != nil {
-						b.ctx.WithField("GatewayID", connectMessage.GatewayID).WithError(err).Warn("Could not set gateway token")
+						ctx.WithError(err).Warn("Could not set gateway key")
 					}
 				}
 			}
 			if !b.gateways.Add(connectMessage.GatewayID) {
-				b.ctx.WithField("GatewayID", connectMessage.GatewayID).Debug("Got connect message from already-connected gateway")
+				ctx.Debug("Got connect message from already-connected gateway")
 				continue
 			}
 			for _, backend := range b.northboundBackends {
@@ -181,19 +176,25 @@ func (b *Exchange) handleChannels() {
 				go b.activateSouthbound(backend, connectMessage.GatewayID)
 			}
 			statusserver.ConnectGateway()
-			b.ctx.WithField("GatewayID", connectMessage.GatewayID).Info("Handled connect")
+			ctx.Info("Handled connect")
 		case disconnectMessage, ok := <-b.disconnect:
 			if !ok {
 				continue
 			}
+			ctx := b.ctx.WithField("GatewayID", disconnectMessage.GatewayID)
 			if !b.gateways.Contains(disconnectMessage.GatewayID) {
-				b.ctx.WithField("GatewayID", disconnectMessage.GatewayID).Debug("Got disconnect message from not-connected gateway")
+				ctx.Debug("Got disconnect message from not-connected gateway")
+				continue
+			}
+			if err := b.auth.ValidateKey(disconnectMessage.GatewayID, disconnectMessage.Key); err != nil {
+				ctx.WithError(err).Warn("Got disconnect message with invalid Key")
+				continue
 			}
 			b.deactivateNorthbound(disconnectMessage.GatewayID)
 			b.deactivateSouthbound(disconnectMessage.GatewayID)
 			b.gateways.Remove(disconnectMessage.GatewayID)
 			statusserver.DisconnectGateway()
-			b.ctx.WithField("GatewayID", disconnectMessage.GatewayID).Info("Handled disconnect")
+			ctx.Info("Handled disconnect")
 		case uplinkMessage, ok := <-b.uplink:
 			if !ok {
 				continue

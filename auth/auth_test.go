@@ -161,6 +161,18 @@ func standardizedTest(a Interface, e Exchanger) func() {
 					Convey("There should be no error", func() {
 						So(err, ShouldBeNil)
 					})
+					Convey("When validating the correct key", func() {
+						err := a.ValidateKey(gatewayID, gatewayKey)
+						Convey("There should be no error", func() {
+							So(err, ShouldBeNil)
+						})
+					})
+					Convey("When validating an incorrect key", func() {
+						err := a.ValidateKey(gatewayID, "incorrect")
+						Convey("There should be an error", func() {
+							So(err, ShouldNotBeNil)
+						})
+					})
 					Convey("When getting the token", func() {
 						token, err := a.GetToken(gatewayID)
 						Convey("There should be no error", func() {

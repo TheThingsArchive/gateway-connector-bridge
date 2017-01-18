@@ -48,7 +48,6 @@ func TestDummy(t *testing.T) {
 					Convey("When publishing a gateway connection", func() {
 						dummy.PublishConnect(&types.ConnectMessage{
 							GatewayID: "dev",
-							Token:     "token",
 							Key:       "key",
 						})
 						Convey("There should be a corresponding ConnectMessage in the channel", func() {
@@ -57,7 +56,6 @@ func TestDummy(t *testing.T) {
 								So("Timeout Exceeded", ShouldBeFalse)
 							case msg := <-connect:
 								So(msg.GatewayID, ShouldEqual, "dev")
-								So(msg.Token, ShouldEqual, "token")
 								So(msg.Key, ShouldEqual, "key")
 							}
 						})
@@ -82,6 +80,7 @@ func TestDummy(t *testing.T) {
 					Convey("When publishing a gateway disconnection", func() {
 						dummy.PublishDisconnect(&types.DisconnectMessage{
 							GatewayID: "dev",
+							Key:       "key",
 						})
 						Convey("There should be a corresponding ConnectMessage in the channel", func() {
 							select {
@@ -89,6 +88,7 @@ func TestDummy(t *testing.T) {
 								So("Timeout Exceeded", ShouldBeFalse)
 							case msg := <-disconnect:
 								So(msg.GatewayID, ShouldEqual, "dev")
+								So(msg.Key, ShouldEqual, "key")
 							}
 						})
 					})
