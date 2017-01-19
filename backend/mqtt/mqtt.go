@@ -184,7 +184,7 @@ func (c *MQTT) SubscribeConnect() (<-chan *types.ConnectMessage, error) {
 		ctx := c.ctx.WithField("GatewayID", connect.GatewayID)
 		select {
 		case messages <- &connect:
-			ctx.Debug("Received connect message")
+			ctx.WithField("ProtoSize", len(msg.Payload())).Debug("Received connect message")
 		default:
 			ctx.Warn("Could not handle connect message: buffer full")
 		}
@@ -214,7 +214,7 @@ func (c *MQTT) SubscribeDisconnect() (<-chan *types.DisconnectMessage, error) {
 		ctx := c.ctx.WithField("GatewayID", disconnect.GatewayID)
 		select {
 		case messages <- &disconnect:
-			ctx.Debug("Received disconnect message")
+			ctx.WithField("ProtoSize", len(msg.Payload())).Debug("Received disconnect message")
 		default:
 			ctx.Warn("Could not handle disconnect message: buffer full")
 		}
@@ -244,7 +244,7 @@ func (c *MQTT) SubscribeUplink(gatewayID string) (<-chan *types.UplinkMessage, e
 		}
 		select {
 		case messages <- &types.UplinkMessage{GatewayID: gatewayID, Message: &uplink}:
-			ctx.Debug("Received uplink message")
+			ctx.WithField("ProtoSize", len(msg.Payload())).Debug("Received uplink message")
 		default:
 			ctx.Warn("Could not handle uplink message: buffer full")
 		}
@@ -274,7 +274,7 @@ func (c *MQTT) SubscribeStatus(gatewayID string) (<-chan *types.StatusMessage, e
 		}
 		select {
 		case messages <- &types.StatusMessage{GatewayID: gatewayID, Message: &status}:
-			ctx.Debug("Received status message")
+			ctx.WithField("ProtoSize", len(msg.Payload())).Debug("Received status message")
 		default:
 			ctx.Warn("Could not handle status message: buffer full")
 		}
@@ -307,6 +307,6 @@ func (c *MQTT) PublishDownlink(message *types.DownlinkMessage) error {
 		ctx.WithError(err).Warn("Could not publish downlink message")
 		return err
 	}
-	ctx.Debug("Published downlink message")
+	ctx.WithField("ProtoSize", len(msg)).Debug("Published downlink message")
 	return nil
 }
