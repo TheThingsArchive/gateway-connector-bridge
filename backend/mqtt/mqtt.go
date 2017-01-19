@@ -295,7 +295,9 @@ func (c *MQTT) UnsubscribeStatus(gatewayID string) error {
 // PublishDownlink publishes a downlink message
 func (c *MQTT) PublishDownlink(message *types.DownlinkMessage) error {
 	ctx := c.ctx.WithField("GatewayID", message.GatewayID)
-	msg, err := proto.Marshal(message.Message)
+	downlink := *message.Message
+	downlink.Trace = nil
+	msg, err := proto.Marshal(&downlink)
 	if err != nil {
 		return err
 	}
