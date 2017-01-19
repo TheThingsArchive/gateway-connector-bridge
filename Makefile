@@ -36,7 +36,7 @@ PROTOC = protoc \
 `pwd`/
 
 protos-clean:
-	rm -f types/types.pb.go
+	rm -f types/types.pb.go status/status.pb.go
 
 protos: types/types.pb.go status/status.pb.go
 
