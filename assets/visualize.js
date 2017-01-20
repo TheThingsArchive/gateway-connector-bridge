@@ -36,6 +36,9 @@ function visualizeEvents(selector, evts) {
     .style("height", height + "px")
 
   var width = svg.node().clientWidth
+  if (width === 0) {
+    width = svg.node().parentNode.clientWidth
+  }
 
   var xScale = d3.scaleTime()
     .domain([
