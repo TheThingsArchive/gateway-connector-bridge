@@ -54,6 +54,7 @@ socket.on('gtw-disconnect', function (gatewayID) {
 })
 socket.on('uplink', function (msg) {
   var message = JSON.parse(msg)
+  delete message.Message.trace
   var html = (
     '<div class="event uplink">' +
       '<div class="time">' + new Date().toLocaleString() + '</div>' +
@@ -67,6 +68,11 @@ socket.on('uplink', function (msg) {
 })
 socket.on('downlink', function (msg) {
   var message = JSON.parse(msg)
+  var trace = message.Message.trace.parents.map(function (el) {
+    el.time = new Date(el.time / 1000000)
+    return el
+  })
+  delete message.Message.trace
   var html = (
     '<div class="event downlink">' +
       '<div class="time">' + new Date().toLocaleString() + '</div>' +
@@ -77,6 +83,7 @@ socket.on('downlink', function (msg) {
     '</div>'
   )
   events.insertAdjacentHTML('afterbegin', html)
+  visualizeEvents("#trace", trace)
 })
 
 updateGateways()

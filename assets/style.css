@@ -4,11 +4,19 @@ body {
   margin: 0;
 }
 
-#gateways, #events {
+#gateways, #events, #timeline {
   padding: 1em;
 }
 
+#trace {
+  width: 100%;
+}
+
 #gateways {
+  background: #e0e0e0;
+}
+
+#timeline {
   background: #e8e8e8;
 }
 

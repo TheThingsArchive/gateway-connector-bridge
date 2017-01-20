@@ -6,10 +6,13 @@
   </head>
   <body>
     <div id="gateways"><strong>Connected gateways:</strong> <span id="gateways-list"></span></div>
+    <div id="timeline"><strong>Timeline:</strong> <span id="current-event"></span><br><svg id="trace"><g></g></svg></div>
     <div id="events"></div>
+    <script src="/d3.v4.min.js"></script>
     <script src="/socket.io.js"></script>
     <script src="/promise.js"></script>
     <script src="/fetch.js"></script>
+    <script src="/visualize.js"></script>
     <script src="/script.js"></script>
   </body>
 </html>
