@@ -60,7 +60,7 @@ func TestPublic(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			Convey("The info should be stored", func() {
 				gateway := p.get(gatewayID)
 				So(gateway.ID, ShouldEqual, gatewayID)
@@ -147,7 +147,7 @@ func TestPublic(t *testing.T) {
 			Convey("When getting the info of a Gateway some time later", func() {
 				time.Sleep(20 * time.Millisecond)
 				p.get(gatewayID)
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(500 * time.Millisecond)
 				Convey("It should have updated", func() {
 					So(p.info[gatewayID].lastUpdated, ShouldNotEqual, lastUpdated)
 				})
