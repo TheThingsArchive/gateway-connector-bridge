@@ -4,8 +4,6 @@
 package middleware
 
 import (
-	"fmt"
-
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 )
 
@@ -42,7 +40,6 @@ type Chain []interface{}
 
 // Execute the chain
 func (c Chain) Execute(ctx Context, msg interface{}) error {
-	fmt.Printf("Middlware Execute %T: %v\n", msg, c)
 	switch msg := msg.(type) {
 	case *types.ConnectMessage:
 		return c.filterConnect().Execute(ctx, msg)
