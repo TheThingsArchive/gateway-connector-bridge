@@ -10,6 +10,7 @@ import (
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/status/statusserver"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/ttn/api/trace"
@@ -32,6 +33,8 @@ type Exchange struct {
 
 	id   string
 	auth auth.Interface
+
+	middleware middleware.Chain
 
 	northboundBackends []backend.Northbound
 	southboundBackends []backend.Southbound
@@ -72,6 +75,11 @@ func (b *Exchange) SetID(id string) {
 	defer b.mu.Unlock()
 	b.id = id
 	trace.SetComponent("bridge", id)
+}
+
+// SetMiddleware sets the middleware to be executed
+func (b *Exchange) SetMiddleware(chain middleware.Chain) {
+	b.middleware = chain
 }
 
 // SetAuth sets the authentication component
@@ -169,6 +177,10 @@ func (b *Exchange) handleChannels() {
 				ctx.Debug("Got connect message from already-connected gateway")
 				continue
 			}
+			if err := b.middleware.Execute(middleware.NewContext(), connectMessage); err != nil {
+				ctx.WithError(err).Warn("Error in middleware")
+				continue
+			}
 			for _, backend := range b.northboundBackends {
 				go b.activateNorthbound(backend, connectMessage.GatewayID)
 			}
@@ -190,6 +202,10 @@ func (b *Exchange) handleChannels() {
 				ctx.WithError(err).Warn("Got disconnect message with invalid Key")
 				continue
 			}
+			if err := b.middleware.Execute(middleware.NewContext(), disconnectMessage); err != nil {
+				ctx.WithError(err).Warn("Error in middleware")
+				continue
+			}
 			b.deactivateNorthbound(disconnectMessage.GatewayID)
 			b.deactivateSouthbound(disconnectMessage.GatewayID)
 			b.gateways.Remove(disconnectMessage.GatewayID)
@@ -199,50 +215,56 @@ func (b *Exchange) handleChannels() {
 			if !ok {
 				continue
 			}
+			ctx := b.ctx.WithField("GatewayID", uplinkMessage.GatewayID)
+			if err := b.middleware.Execute(middleware.NewContext(), uplinkMessage); err != nil {
+				ctx.WithError(err).Warn("Error in middleware")
+				continue
+			}
 			if meta := uplinkMessage.Message.GetGatewayMetadata(); meta != nil {
 				meta.GatewayId = uplinkMessage.GatewayID
 			}
 			uplinkMessage.Message.Trace = uplinkMessage.Message.Trace.WithEvent(trace.ForwardEvent)
 			for _, backend := range b.northboundBackends {
 				if err := backend.PublishUplink(uplinkMessage); err != nil {
-					b.ctx.WithFields(log.Fields{
-						"Backend":   fmt.Sprintf("%T", backend),
-						"GatewayID": uplinkMessage.GatewayID,
-					}).WithError(err).Warn("Could not publish uplink")
+					ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish uplink")
 				}
 			}
 			statusserver.Uplink()
-			b.ctx.WithField("GatewayID", uplinkMessage.GatewayID).Info("Routed uplink")
+			ctx.Info("Routed uplink")
 		case downlinkMessage, ok := <-b.downlink:
 			if !ok {
+				continue
+			}
+			ctx := b.ctx.WithField("GatewayID", downlinkMessage.GatewayID)
+			if err := b.middleware.Execute(middleware.NewContext(), downlinkMessage); err != nil {
+				ctx.WithError(err).Warn("Error in middleware")
 				continue
 			}
 			downlinkMessage.Message.Trace = downlinkMessage.Message.Trace.WithEvent(trace.ForwardEvent)
 			for _, backend := range b.southboundBackends {
 				if err := backend.PublishDownlink(downlinkMessage); err != nil {
-					b.ctx.WithFields(log.Fields{
-						"Backend":   fmt.Sprintf("%T", backend),
-						"GatewayID": downlinkMessage.GatewayID,
-					}).WithError(err).Warn("Could not publish downlink")
+					ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish downlink")
 				}
 			}
 			statusserver.Downlink()
-			b.ctx.WithField("GatewayID", downlinkMessage.GatewayID).Info("Routed downlink")
+			ctx.Info("Routed downlink")
 		case statusMessage, ok := <-b.status:
 			if !ok {
+				continue
+			}
+			ctx := b.ctx.WithField("GatewayID", statusMessage.GatewayID)
+			if err := b.middleware.Execute(middleware.NewContext(), statusMessage); err != nil {
+				ctx.WithError(err).Warn("Error in middleware")
 				continue
 			}
 			statusMessage.Message.Bridge = b.id
 			for _, backend := range b.northboundBackends {
 				if err := backend.PublishStatus(statusMessage); err != nil {
-					b.ctx.WithFields(log.Fields{
-						"Backend":   fmt.Sprintf("%T", backend),
-						"GatewayID": statusMessage.GatewayID,
-					}).WithError(err).Warn("Could not publish status")
+					ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish status")
 				}
 			}
 			statusserver.GatewayStatus()
-			b.ctx.WithField("GatewayID", statusMessage.GatewayID).Info("Routed status")
+			ctx.Info("Routed status")
 		}
 	}
 }

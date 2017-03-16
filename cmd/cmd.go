@@ -21,6 +21,8 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/mqtt"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/ttn"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/exchange"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/gatewayinfo"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/status/statusserver"
 	"github.com/TheThingsNetwork/go-utils/handlers/cli"
 	ttnlog "github.com/TheThingsNetwork/go-utils/log"
@@ -67,6 +69,8 @@ var BridgeCmd = &cobra.Command{
 			Level:   logLevel,
 			Handler: multi.New(logHandlers...),
 		}
+
+		ttnlog.Set(apex.Wrap(ctx))
 	},
 	Run: runBridge,
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
@@ -79,6 +83,8 @@ var BridgeCmd = &cobra.Command{
 
 func runBridge(cmd *cobra.Command, args []string) {
 	bridge := exchange.New(ctx)
+
+	var middleware middleware.Chain
 
 	id := fmt.Sprintf(
 		"gateway-connector-bridge %s %s-%s (%s)",
@@ -110,6 +116,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 	if accountServer := config.GetString("account-server"); accountServer != "" && accountServer != "disable" {
 		ctx.WithField("AccountServer", accountServer).Info("Initializing access key exchanger")
 		authBackend.SetExchanger(auth.NewAccountServer(accountServer, ctx))
+		middleware = append(middleware, gatewayinfo.NewPublic(accountServer))
 	}
 	bridge.SetAuth(authBackend)
 
@@ -127,7 +134,6 @@ func runBridge(cmd *cobra.Command, args []string) {
 				ctx.Infof("Using Root CAs from %s", rootCAFile)
 			}
 		}
-		ttnlog.Set(apex.Wrap(ctx))
 	}
 	for _, ttnRouter := range ttnRouters {
 		if ttnRouter == "disable" {
@@ -201,6 +207,8 @@ func runBridge(cmd *cobra.Command, args []string) {
 		bridge.AddNorthbound(httpDummy)
 		bridge.AddSouthbound(httpDummy)
 	}
+
+	bridge.SetMiddleware(middleware)
 
 	ctx.WithField("NumWorkers", config.GetInt("workers")).Info("Starting Bridge...")
 	if bridge.Start(config.GetInt("workers"), 30*time.Second) {
