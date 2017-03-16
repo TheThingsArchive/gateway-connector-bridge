@@ -19,6 +19,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/amqp"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/dummy"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/mqtt"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/pktfwd"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/ttn"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/exchange"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
@@ -161,6 +162,13 @@ func runBridge(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	if udp := config.GetString("udp"); udp != "" {
+		pktfwd := pktfwd.New(pktfwd.Config{
+			Bind: udp,
+		}, ttnlog.Get())
+		bridge.AddSouthbound(pktfwd)
+	}
+
 	// Set up the MQTT backends (from comma-separated list of user:pass@host:port)
 	mqttRegexp := regexp.MustCompile(`^(?:([0-9a-z_-]+)(?::([0-9A-Za-z-!"#$%&'()*+,.:;<=>?@[\]^_{|}~]+))?@)?([0-9a-z.-]+:[0-9]+)$`)
 	mqttBrokers := strings.Split(config.GetString("mqtt"), ",")
@@ -257,6 +265,7 @@ func init() {
 	BridgeCmd.Flags().String("account-server", "https://account.thethingsnetwork.org", "Use an account server for exchanging access keys")
 
 	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discover.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
+	BridgeCmd.Flags().String("udp", "", "UDP address to listen on for Semtech Packet Forwarder gateways")
 	BridgeCmd.Flags().StringSlice("mqtt", []string{"guest:guest@localhost:1883"}, "MQTT Broker to connect to (user:pass@host:port; disable with \"disable\")")
 	BridgeCmd.Flags().StringSlice("amqp", []string{}, "AMQP Broker to connect to (user:pass@host:port; disable with \"disable\")")
 
