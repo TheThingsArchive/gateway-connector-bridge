@@ -117,7 +117,10 @@ func runBridge(cmd *cobra.Command, args []string) {
 	if accountServer := config.GetString("account-server"); accountServer != "" && accountServer != "disable" {
 		ctx.WithField("AccountServer", accountServer).Info("Initializing access key exchanger")
 		authBackend.SetExchanger(auth.NewAccountServer(accountServer, ctx))
-		middleware = append(middleware, gatewayinfo.NewPublic(accountServer))
+
+		expire := viper.GetDuration("info-expire")
+		ctx.WithField("AccountServer", accountServer).WithField("Expire", expire).Info("Initializing public gateway info middleware")
+		middleware = append(middleware, gatewayinfo.NewPublic(accountServer).WithExpire(expire))
 	}
 	bridge.SetAuth(authBackend)
 
@@ -262,7 +265,8 @@ func init() {
 
 	BridgeCmd.Flags().String("root-ca-file", "", "Location of the file containing Root CA certificates")
 
-	BridgeCmd.Flags().String("account-server", "https://account.thethingsnetwork.org", "Use an account server for exchanging access keys")
+	BridgeCmd.Flags().String("account-server", "https://account.thethingsnetwork.org", "Use an account server for exchanging access keys and fetching gateway information")
+	BridgeCmd.Flags().Duration("info-expire", 6*time.Hour, "Gateway Information expiration time")
 
 	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discover.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
 	BridgeCmd.Flags().String("udp", "", "UDP address to listen on for Semtech Packet Forwarder gateways")
