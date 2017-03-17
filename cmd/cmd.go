@@ -24,6 +24,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/exchange"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/gatewayinfo"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/inject"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/status/statusserver"
 	"github.com/TheThingsNetwork/go-utils/handlers/cli"
 	ttnlog "github.com/TheThingsNetwork/go-utils/log"
@@ -95,6 +96,11 @@ func runBridge(cmd *cobra.Command, args []string) {
 		config.GetString("buildDate"),
 	)
 	bridge.SetID(id)
+
+	middleware = append(middleware, inject.NewInject(inject.Fields{
+		Bridge: id,
+		Region: viper.GetString("inject-region"),
+	}))
 
 	// Set up Redis
 	var connectedGatewayIDs []string
@@ -275,6 +281,8 @@ func init() {
 
 	BridgeCmd.Flags().String("account-server", "https://account.thethingsnetwork.org", "Use an account server for exchanging access keys and fetching gateway information")
 	BridgeCmd.Flags().Duration("info-expire", 6*time.Hour, "Gateway Information expiration time")
+
+	BridgeCmd.Flags().String("inject-region", "", "Inject a region field into status message that don't have one")
 
 	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discover.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
 	BridgeCmd.Flags().String("udp", "", "UDP address to listen on for Semtech Packet Forwarder gateways")

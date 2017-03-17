@@ -257,7 +257,6 @@ func (b *Exchange) handleChannels() {
 				ctx.WithError(err).Warn("Error in middleware")
 				continue
 			}
-			statusMessage.Message.Bridge = b.id
 			for _, backend := range b.northboundBackends {
 				if err := backend.PublishStatus(statusMessage); err != nil {
 					ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish status")
