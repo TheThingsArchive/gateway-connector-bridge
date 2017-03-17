@@ -176,10 +176,14 @@ func runBridge(cmd *cobra.Command, args []string) {
 	mqttRegexp := regexp.MustCompile(`^(?:([0-9a-z_-]+)(?::([0-9A-Za-z-!"#$%&'()*+,.:;<=>?@[\]^_{|}~]+))?@)?([0-9a-z.-]+:[0-9]+)$`)
 	mqttBrokers := strings.Split(config.GetString("mqtt"), ",")
 	for _, mqttBroker := range mqttBrokers {
-		if mqttBroker == "disable" {
+		if mqttBroker == "disable" || mqttBroker == "" {
 			continue
 		}
 		parts := mqttRegexp.FindStringSubmatch(mqttBroker)
+		if len(parts) < 4 {
+			ctx.WithField("Broker", mqttBroker).Info("Skipping MQTT Broker")
+			continue
+		}
 		ctx.WithField("Username", parts[1]).WithField("Password", parts[2]).WithField("Address", parts[3]).Infof("Initializing MQTT")
 		mqtt, err := mqtt.New(mqtt.Config{
 			Brokers:  []string{"tcp://" + parts[3]},
@@ -196,10 +200,14 @@ func runBridge(cmd *cobra.Command, args []string) {
 	amqpRegexp := regexp.MustCompile(`^(?:([0-9a-z_-]+)(?::([0-9A-Za-z-!"#$%&'()*+,.:;<=>?@[\]^_{|}~]+))?@)?([0-9a-z.-]+:[0-9]+)$`) // user:pass@host:port
 	amqpBrokers := strings.Split(config.GetString("amqp"), ",")
 	for _, amqpBroker := range amqpBrokers {
-		if amqpBroker == "disable" {
+		if amqpBroker == "disable" || amqpBroker == "" {
 			continue
 		}
 		parts := amqpRegexp.FindStringSubmatch(amqpBroker)
+		if len(parts) < 4 {
+			ctx.WithField("Broker", amqpBroker).Info("Skipping AMQP Broker")
+			continue
+		}
 		ctx.WithField("Username", parts[1]).WithField("Password", parts[2]).WithField("Address", parts[3]).Infof("Initializing AMQP")
 		amqp, err := amqp.New(amqp.Config{
 			Address:  parts[3],
