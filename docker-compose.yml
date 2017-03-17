@@ -23,7 +23,10 @@ services:
     depends_on:
       - redis
       - rabbitmq
+    ports:
+      - "1700:1700/udp"
     environment:
+      BRIDGE_UDP: :1700
       BRIDGE_REDIS_ADDRESS: redis:6379
       BRIDGE_AMQP: rabbitmq:5672
       BRIDGE_MQTT: disable

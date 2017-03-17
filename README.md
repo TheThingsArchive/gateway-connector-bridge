@@ -25,11 +25,13 @@ Usage:
   gateway-connector-bridge [flags]
 
 Flags:
-      --account-server string    Use an account server for exchanging access keys (default "https://account.thethingsnetwork.org")
+      --account-server string    Use an account server for exchanging access keys and fetching gateway information (default "https://account.thethingsnetwork.org")
       --amqp stringSlice         AMQP Broker to connect to (user:pass@host:port; disable with "disable")
       --debug                    Print debug logs
       --http-debug-addr string   The address of the HTTP debug server to start
       --id string                ID of this bridge
+      --info-expire duration     Gateway Information expiration time (default 6h0m0s)
+      --inject-region string     Inject a region field into status message that don't have one
       --log-file string          Location of the log file
       --mqtt stringSlice         MQTT Broker to connect to (user:pass@host:port; disable with "disable") (default [guest:guest@localhost:1883])
       --redis                    Use Redis auth backend (default true)
@@ -39,6 +41,7 @@ Flags:
       --root-ca-file string      Location of the file containing Root CA certificates
       --status-addr string       Address of the gRPC status server to start
       --ttn-router stringSlice   TTN Router to connect to (default [discover.thethingsnetwork.org:1900/ttn-router-eu])
+      --udp string               UDP address to listen on for Semtech Packet Forwarder gateways
       --workers int              Number of parallel workers (default 1)
 ```
 
