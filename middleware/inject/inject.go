@@ -35,7 +35,10 @@ func (i *Inject) HandleStatus(ctx middleware.Context, msg *types.StatusMessage) 
 		msg.Message.Region = i.fields.Region
 	}
 	if msg.Message.Bridge == "" {
-		msg.Message.Bridge = i.fields.Bridge + " " + msg.Backend + " Backend"
+		msg.Message.Bridge = i.fields.Bridge
+		if msg.Backend != "" {
+			msg.Message.Bridge += " " + msg.Backend + " Backend"
+		}
 	}
 	return nil
 }

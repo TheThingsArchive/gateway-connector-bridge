@@ -344,6 +344,7 @@ func (b *Backend) handlePushData(addr *net.UDPAddr, data []byte) error {
 
 func (b *Backend) handleStat(addr *net.UDPAddr, mac lorawan.EUI64, stat Stat) {
 	gwStats := newGatewayStatsPacket(mac, stat)
+	gwStats.Message.Ip = append(gwStats.Message.Ip, addr.IP.String())
 	b.log.WithFields(log.Fields{
 		"addr": addr,
 		"mac":  mac,
@@ -407,17 +408,32 @@ func newGatewayStatsPacket(mac lorawan.EUI64, stat Stat) *types.StatusMessage {
 		}
 	}
 
-	return &types.StatusMessage{
+	status := &types.StatusMessage{
 		GatewayID: getID(mac),
 		Message: &pb_gateway.Status{
-			Time: time.Time(stat.Time).UnixNano(),
-			Gps:  gps,
-			RxIn: uint32(stat.RXNb),
-			RxOk: uint32(stat.RXOK),
-			TxIn: uint32(stat.DWNb),
-			TxOk: uint32(stat.TXNb),
+			Time:         time.Time(stat.Time).UnixNano(),
+			Gps:          gps,
+			RxIn:         uint32(stat.RXNb),
+			RxOk:         uint32(stat.RXOK),
+			TxIn:         uint32(stat.DWNb),
+			TxOk:         uint32(stat.TXNb),
+			Platform:     stat.Pfrm,
+			ContactEmail: stat.Mail,
+			Description:  stat.Desc,
 		},
 	}
+
+	if stat.FPGA != 0 || stat.DSP != 0 || stat.HAL != "" {
+		status.Message.Platform += fmt.Sprintf("(FPGA %d, DSP %d, HAL %s)", stat.FPGA, stat.DSP, stat.HAL)
+	}
+
+	if stat.Temp != 0 {
+		status.Message.Os = &pb_gateway.Status_OSMetrics{
+			Temperature: float32(stat.Temp),
+		}
+	}
+
+	return status
 }
 
 // newRXPacketFromRXPK transforms a Semtech packet into an UplinkMessage.
@@ -438,6 +454,18 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 	b, err := base64.StdEncoding.DecodeString(rxpk.Data)
 	if err != nil {
 		return nil, fmt.Errorf("Could not base64 decode data: %s", err)
+	}
+
+	// For multi-antenna gateways, the LSNR and RSSI are those of the best reception
+	for _, sig := range rxpk.RSig {
+		if sig.LSNR > rxpk.LSNR {
+			rxpk.LSNR = sig.LSNR
+			rxpk.RSSI = sig.RSSIC
+			continue
+		}
+		if sig.LSNR == rxpk.LSNR && sig.RSSIC > rxpk.RSSI {
+			rxpk.RSSI = sig.RSSIC
+		}
 	}
 
 	rxPacket := &types.UplinkMessage{

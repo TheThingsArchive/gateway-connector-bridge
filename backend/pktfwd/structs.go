@@ -389,11 +389,25 @@ type RXPK struct {
 	LSNR float64     `json:"lsnr"` // Lora SNR ratio in dB (signed float, 0.1 dB precision)
 	Size uint16      `json:"size"` // RF packet payload size in bytes (unsigned integer)
 	Data string      `json:"data"` // Base64 encoded RF packet payload, padded
+	RSig []RSig      `json:"rsig"` // Received signal information, per antenna (Optional)
+}
+
+// RSig contains the metadata associated with the received signal
+type RSig struct {
+	Ant    uint8   `json:"ant"`    // Antenna number on which signal has been received
+	Chan   uint8   `json:"chan"`   // Concentrator "IF" channel used for RX (unsigned integer)
+	RSSIC  int16   `json:"rssic"`  // RSSI in dBm of the channel (signed integer, 1 dB precision)
+	RSSIS  int16   `json:"rssis"`  // RSSI in dBm of the signal (signed integer, 1 DB precision) (Optional)
+	RSSISD uint16  `json:"rssisd"` // Standard deviation of RSSI during preamble (unsigned integer) (Optional)
+	LSNR   float64 `json:"lsnr"`   // Lora SNR ratio in dB (signed float, 0.1 dB precision)
+	ETime  string  `json:"etime"`  // Encrypted timestamp, ns precision [0..999999999] (Optional)
+	FOff   int32   `json:"foff"`   // Frequency offset in Hz [-125kHz..+125Khz] (Optional)
 }
 
 // Stat contains the status of the gateway.
 type Stat struct {
 	Time ExpandedTime `json:"time"` // UTC 'system' time of the gateway, ISO 8601 'expanded' format (e.g 2014-01-12 08:59:28 GMT)
+	Boot ExpandedTime `json:"boot"` // UTC 'boot' time of the gateway, ISO 8601 'expanded' format (e.g 2014-01-12 08:59:28 GMT)
 	Lati float64      `json:"lati"` // GPS latitude of the gateway in degree (float, N is +)
 	Long float64      `json:"long"` // GPS latitude of the gateway in degree (float, E is +)
 	Alti int32        `json:"alti"` // GPS altitude of the gateway in meter RX (integer)
@@ -403,6 +417,19 @@ type Stat struct {
 	ACKR float64      `json:"ackr"` // Percentage of upstream datagrams that were acknowledged
 	DWNb uint32       `json:"dwnb"` // Number of downlink datagrams received (unsigned integer)
 	TXNb uint32       `json:"txnb"` // Number of packets emitted (unsigned integer)
+	LMOK uint32       `json:"lmok"` // Number of packets received from link testing mote, with CRC OK (unsigned inteter)
+	LMST uint32       `json:"lmst"` // Sequence number of the first packet received from link testing mote (unsigned integer)
+	LMNW uint32       `json:"lmnw"` // Sequence number of the last packet received from link testing mote (unsigned integer)
+	LPPS uint32       `json:"lpps"` // Number of lost PPS pulses (unsigned integer)
+	Temp int32        `json:"temp"` // Temperature of the Gateway (signed integer)
+	FPGA uint32       `json:"fpga"` // Version of Gateway FPGA (unsigned integer)
+	DSP  uint32       `json:"dsp"`  // Version of Gateway DSP software (unsigned interger)
+	HAL  string       `json:"hal"`  // Version of Gateway driver (format X.X.X)
+
+	// Informal fields
+	Pfrm string `json:"pfrm"` // Platform definition
+	Mail string `json:"mail"` // Email address of gateway operator
+	Desc string `json:"desc"` // Public description of this device
 }
 
 // TXPK contains a RF packet to be emitted and associated metadata.
