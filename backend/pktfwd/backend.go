@@ -408,10 +408,16 @@ func newGatewayStatsPacket(mac lorawan.EUI64, stat Stat) *types.StatusMessage {
 		}
 	}
 
+	gatewayTime := time.Time(stat.Time)
+	if gatewayTime.Before(time.Now().Add(-24 * time.Hour)) {
+		// Gateway time is definitely invalid if longer than 24 hours ago
+		gatewayTime = time.Unix(0, 0)
+	}
+
 	status := &types.StatusMessage{
 		GatewayID: getID(mac),
 		Message: &pb_gateway.Status{
-			Time:         time.Time(stat.Time).UnixNano(),
+			Time:         gatewayTime.UnixNano(),
 			Gps:          gps,
 			RxIn:         uint32(stat.RXNb),
 			RxOk:         uint32(stat.RXOK),
@@ -468,6 +474,12 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 		}
 	}
 
+	gatewayTime := time.Time(rxpk.Time)
+	if gatewayTime.Before(time.Now().Add(-24 * time.Hour)) {
+		// Gateway time is definitely invalid if longer than 24 hours ago
+		gatewayTime = time.Unix(0, 0)
+	}
+
 	rxPacket := &types.UplinkMessage{
 		GatewayID: getID(mac),
 		Message: &pb_router.UplinkMessage{
@@ -485,7 +497,7 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 			GatewayMetadata: &pb_gateway.RxMetadata{
 				GatewayId: getID(mac),
 				Timestamp: rxpk.Tmst,
-				Time:      time.Time(rxpk.Time).UnixNano(),
+				Time:      gatewayTime.UnixNano(),
 				RfChain:   uint32(rxpk.RFCh),
 				Channel:   uint32(rxpk.Chan),
 				Frequency: uint64(rxpk.Freq * 1000000),
