@@ -273,7 +273,7 @@ func (c *MQTT) SubscribeStatus(gatewayID string) (<-chan *types.StatusMessage, e
 			return
 		}
 		select {
-		case messages <- &types.StatusMessage{GatewayID: gatewayID, Message: &status}:
+		case messages <- &types.StatusMessage{Backend: "MQTT", GatewayID: gatewayID, Message: &status}:
 			ctx.WithField("ProtoSize", len(msg.Payload())).Debug("Received status message")
 		default:
 			ctx.Warn("Could not handle status message: buffer full")

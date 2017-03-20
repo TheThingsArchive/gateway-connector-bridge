@@ -59,6 +59,7 @@ func (f *PacketForwarder) Connect() (err error) {
 
 	go func() {
 		for status := range f.backend.StatsChan() {
+			status.Backend = "PacketForwarder"
 			f.mu.RLock()
 			if ch, ok := f.status[status.GatewayID]; ok {
 				ch <- status

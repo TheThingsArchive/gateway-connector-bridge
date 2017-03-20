@@ -189,6 +189,7 @@ func (d *Dummy) UnsubscribeDownlink(gatewayID string) error {
 
 // PublishStatus implements backend interfaces
 func (d *Dummy) PublishStatus(message *types.StatusMessage) error {
+	message.Backend = "Dummy"
 	select {
 	case d.getGateway(message.GatewayID).status <- message:
 		d.ctx.WithField("GatewayID", message.GatewayID).Debug("Published status")

@@ -564,6 +564,7 @@ func (c *AMQP) SubscribeStatus(gatewayID string) (<-chan *types.StatusMessage, e
 	go func() {
 		for msg := range status {
 			var status types.StatusMessage
+			status.Backend = "AMQP"
 			status.GatewayID = gatewayID
 			status.Message = new(gateway.Status)
 			if err := proto.Unmarshal(msg.message, status.Message); err != nil {

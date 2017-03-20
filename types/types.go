@@ -22,6 +22,7 @@ type DownlinkMessage struct {
 
 // StatusMessage is used internally
 type StatusMessage struct {
+	Backend   string
 	GatewayID string
 	Message   *gateway.Status
 }
