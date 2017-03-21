@@ -111,6 +111,17 @@ func runBridge(cmd *cobra.Command, args []string) {
 			Password: config.GetString("redis-password"),
 			DB:       config.GetInt("redis-db"),
 		})
+
+		for {
+			err := redis.Ping().Err()
+			if err == nil {
+				ctx.Info("Connected to Redis")
+				break
+			}
+			time.Sleep(time.Second)
+			ctx.WithError(err).Warn("Could not connect to Redis. Retrying...")
+		}
+
 		ctx.Info("Initializing Redis state backend")
 		connectedGatewayIDs = bridge.InitRedisState(redis, "")
 		ctx.Info("Initializing Redis auth backend")
