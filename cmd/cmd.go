@@ -25,6 +25,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/gatewayinfo"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/inject"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/ratelimit"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/status/statusserver"
 	"github.com/TheThingsNetwork/go-utils/handlers/cli"
 	ttnlog "github.com/TheThingsNetwork/go-utils/log"
@@ -124,11 +125,30 @@ func runBridge(cmd *cobra.Command, args []string) {
 
 		ctx.Info("Initializing Redis state backend")
 		connectedGatewayIDs = bridge.InitRedisState(redis, "")
+
 		ctx.Info("Initializing Redis auth backend")
 		authBackend = auth.NewRedis(redis, "")
+
+		if viper.GetBool("ratelimit") {
+			ctx.Info("Initializing Redis rate limiting")
+			middleware = append(middleware, ratelimit.NewRedisRateLimit(redis, ratelimit.Limits{
+				Uplink:   config.GetInt("ratelimit.uplink"),
+				Downlink: config.GetInt("ratelimit.downlink"),
+				Status:   config.GetInt("ratelimit.status"),
+			}))
+		}
 	} else {
 		ctx.Info("Initializing Memory auth backend")
 		authBackend = auth.NewMemory()
+
+		if viper.GetBool("ratelimit") {
+			ctx.Info("Initializing rate limiting")
+			middleware = append(middleware, ratelimit.NewRateLimit(ratelimit.Limits{
+				Uplink:   config.GetInt("ratelimit.uplink"),
+				Downlink: config.GetInt("ratelimit.downlink"),
+				Status:   config.GetInt("ratelimit.status"),
+			}))
+		}
 	}
 
 	if accountServer := config.GetString("account-server"); accountServer != "" && accountServer != "disable" {
@@ -294,6 +314,11 @@ func init() {
 	BridgeCmd.Flags().Duration("info-expire", 6*time.Hour, "Gateway Information expiration time")
 
 	BridgeCmd.Flags().String("inject-region", "", "Inject a region field into status message that don't have one")
+
+	BridgeCmd.Flags().Bool("ratelimit", false, "Rate-limit messages")
+	BridgeCmd.Flags().Uint("ratelimit.uplink", 600, "Uplink rate limit (per gateway per minute)")
+	BridgeCmd.Flags().Uint("ratelimit.downlink", 0, "Downlink rate limit (per gateway per minute)")
+	BridgeCmd.Flags().Uint("ratelimit.status", 20, "Status rate limit (per gateway per minute)")
 
 	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discover.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
 	BridgeCmd.Flags().String("udp", "", "UDP address to listen on for Semtech Packet Forwarder gateways")
