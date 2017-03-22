@@ -11,8 +11,8 @@ import (
 
 // Fields to inject
 type Fields struct {
-	Region string
-	Bridge string
+	FrequencyPlan string
+	Bridge        string
 }
 
 // NewInject returns a middleware that injects fields into all status messages
@@ -31,8 +31,8 @@ type Inject struct {
 
 // HandleStatus inserts fields into status messages if not present
 func (i *Inject) HandleStatus(ctx middleware.Context, msg *types.StatusMessage) error {
-	if msg.Message.Region == "" {
-		msg.Message.Region = i.fields.Region
+	if msg.Message.FrequencyPlan == "" {
+		msg.Message.FrequencyPlan = i.fields.FrequencyPlan
 	}
 	if msg.Message.Bridge == "" {
 		msg.Message.Bridge = i.fields.Bridge

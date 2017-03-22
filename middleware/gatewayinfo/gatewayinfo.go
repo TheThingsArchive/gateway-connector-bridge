@@ -127,8 +127,8 @@ func (p *Public) HandleStatus(ctx middleware.Context, msg *types.StatusMessage) 
 			Altitude:  int32(info.AntennaLocation.Altitude),
 		}
 	}
-	if msg.Message.Region == "" && info.FrequencyPlan != "" {
-		msg.Message.Region = info.FrequencyPlan
+	if msg.Message.FrequencyPlan == "" && info.FrequencyPlan != "" {
+		msg.Message.FrequencyPlan = info.FrequencyPlan
 	}
 	if msg.Message.Platform == "" {
 		platform := []string{}

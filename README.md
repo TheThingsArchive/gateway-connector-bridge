@@ -31,7 +31,7 @@ Flags:
       --http-debug-addr string   The address of the HTTP debug server to start
       --id string                ID of this bridge
       --info-expire duration     Gateway Information expiration time (default 6h0m0s)
-      --inject-region string     Inject a region field into status message that don't have one
+      --inject.frequency-plan string     Inject a frequ field into status message that don't have one
       --log-file string          Location of the log file
       --mqtt stringSlice         MQTT Broker to connect to (user:pass@host:port; disable with "disable") (default [guest:guest@localhost:1883])
       --redis                    Use Redis auth backend (default true)

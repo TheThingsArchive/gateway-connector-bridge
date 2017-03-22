@@ -4,26 +4,21 @@
 package ttn
 
 import (
+	"context"
 	"sync"
 	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	"github.com/TheThingsNetwork/go-utils/log/apex"
+	"github.com/TheThingsNetwork/ttn/api/auth"
 	"github.com/TheThingsNetwork/ttn/api/discovery"
+	"github.com/TheThingsNetwork/ttn/api/pool"
 	"github.com/TheThingsNetwork/ttn/api/router"
 	"github.com/apex/log"
 	"google.golang.org/grpc"
 )
 
-// New sets up a new TTN Router
-func New(config RouterConfig, ctx log.Interface, tokenFunc func(string) string) (*Router, error) {
-	router := new(Router)
-	router.Ctx = ctx.WithField("Connector", "TTN Router")
-	router.config = config
-	router.gateways = make(map[string]*gatewayConn)
-	router.tokenFunc = tokenFunc
+func init() {
 	grpc.EnableTracing = false
-	return router, nil
 }
 
 // RouterConfig contains configuration for the TTN Router
@@ -32,64 +27,28 @@ type RouterConfig struct {
 	RouterID        string
 }
 
-type gatewayConn struct {
-	client     router.RouterClientForGateway
-	uplink     router.UplinkStream
-	status     router.GatewayStatusStream
-	downlink   router.DownlinkStream
-	lastActive time.Time
-}
-
-func (g *gatewayConn) Close() {
-	if g.uplink != nil {
-		g.uplink.Close()
-	}
-	if g.downlink != nil {
-		g.downlink.Close()
-	}
-	if g.status != nil {
-		g.status.Close()
-	}
-	g.client.Close()
-}
-
 // Router side of the bridge
 type Router struct {
-	config       RouterConfig
-	Ctx          log.Interface
-	routerConn   *grpc.ClientConn
-	routerClient router.RouterClient
-	tokenFunc    func(string) string
-	gateways     map[string]*gatewayConn
-	mu           sync.Mutex
+	config RouterConfig
+	Ctx    log.Interface
+	conn   *grpc.ClientConn
+	client *router.Client
+
+	pool *pool.Pool
+
+	mu       sync.Mutex
+	gateways map[string]*gatewayConn
 }
 
-func (r *Router) getGateway(gatewayID string) *gatewayConn {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if gtw, ok := r.gateways[gatewayID]; ok {
-		gtw.lastActive = time.Now()
-		return gtw
+// New sets up a new TTN Router
+func New(config RouterConfig, ctx log.Interface, tokenFunc func(string) string) (*Router, error) {
+	router := &Router{
+		config:   config,
+		Ctx:      ctx.WithField("Connector", "TTN Router"),
+		pool:     pool.NewPool(context.Background(), append(pool.DefaultDialOptions, auth.WithTokenFunc(tokenFunc).DialOption())...),
+		gateways: make(map[string]*gatewayConn),
 	}
-	gateway := &gatewayConn{
-		client:     router.NewRouterClientForGateway(r.routerClient, gatewayID, r.tokenFunc(gatewayID)),
-		lastActive: time.Now(),
-	}
-	gateway.client.SetLogger(apex.Wrap(r.Ctx.WithField("GatewayID", gatewayID)))
-	gateway.uplink = router.NewMonitoredUplinkStream(gateway.client)
-	gateway.status = router.NewMonitoredGatewayStatusStream(gateway.client)
-	r.gateways[gatewayID] = gateway
-	return r.gateways[gatewayID]
-}
-
-// CleanupGateway cleans up gateway clients that are no longer needed
-func (r *Router) CleanupGateway(gatewayID string) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if gtw, ok := r.gateways[gatewayID]; ok {
-		gtw.client.Close()
-		delete(r.gateways, gatewayID)
-	}
+	return router, nil
 }
 
 // Connect to the TTN Router
@@ -102,39 +61,67 @@ func (r *Router) Connect() error {
 	if err != nil {
 		return err
 	}
-	defer discovery.Close()
 	announcement, err := discovery.Get("router", r.config.RouterID)
 	if err != nil {
 		return err
 	}
-	r.routerConn, err = announcement.Dial()
+	r.conn, err = announcement.Dial(r.pool)
 	if err != nil {
 		return err
 	}
-	r.routerClient = router.NewRouterClient(r.routerConn)
+	r.client = router.NewClient(router.DefaultClientConfig)
+	r.client.AddServer(r.config.RouterID, r.conn)
 	return nil
 }
 
-// Disconnect from the TTN Router
+// Disconnect from the TTN Router and clean up gateway connections
 func (r *Router) Disconnect() error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	for id, gtw := range r.gateways {
-		gtw.Close()
-		delete(r.gateways, id)
-	}
-	r.routerConn.Close()
+	r.gateways = make(map[string]*gatewayConn)
+	r.pool.Close()
 	return nil
+}
+
+type gatewayConn struct {
+	stream     router.GenericStream
+	lastActive time.Time
+}
+
+func (r *Router) getGateway(gatewayID string) *gatewayConn {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if gtw, ok := r.gateways[gatewayID]; ok {
+		gtw.lastActive = time.Now()
+		return gtw
+	}
+	r.gateways[gatewayID] = &gatewayConn{
+		stream:     r.client.NewGatewayStreams(gatewayID, ""),
+		lastActive: time.Now(),
+	}
+	return r.gateways[gatewayID]
+}
+
+// CleanupGateway cleans up gateway clients that are no longer needed
+func (r *Router) CleanupGateway(gatewayID string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if gtw, ok := r.gateways[gatewayID]; ok {
+		gtw.stream.Close()
+		delete(r.gateways, gatewayID)
+	}
 }
 
 // PublishUplink publishes uplink messages to the TTN Router
 func (r *Router) PublishUplink(message *types.UplinkMessage) error {
-	return r.getGateway(message.GatewayID).uplink.Send(message.Message)
+	r.getGateway(message.GatewayID).stream.Uplink(message.Message)
+	return nil
 }
 
 // PublishStatus publishes status messages to the TTN Router
 func (r *Router) PublishStatus(message *types.StatusMessage) error {
-	return r.getGateway(message.GatewayID).status.Send(message.Message)
+	r.getGateway(message.GatewayID).stream.Status(message.Message)
+	return nil
 }
 
 // SubscribeDownlink handles downlink messages for the given gateway ID
@@ -144,10 +131,8 @@ func (r *Router) SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMess
 	gtw := r.getGateway(gatewayID)
 	ctx := r.Ctx.WithField("GatewayID", gatewayID)
 
-	gtw.downlink = router.NewMonitoredDownlinkStream(gtw.client)
-
 	go func() {
-		for in := range gtw.downlink.Channel() {
+		for in := range gtw.stream.Downlink() {
 			ctx.Debug("Downlink message received")
 			downlink <- &types.DownlinkMessage{GatewayID: gatewayID, Message: in}
 		}
@@ -157,11 +142,8 @@ func (r *Router) SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMess
 	return downlink, nil
 }
 
-// UnsubscribeDownlink unsubscribes from downlink messages
+// UnsubscribeDownlink should unsubscribe from downlink, but in practice just disconnects the entire gateway
 func (r *Router) UnsubscribeDownlink(gatewayID string) error {
-	gtw := r.getGateway(gatewayID)
-	if gtw.downlink != nil {
-		gtw.downlink.Close()
-	}
+	r.CleanupGateway(gatewayID)
 	return nil
 }

@@ -15,8 +15,8 @@ import (
 func TestInject(t *testing.T) {
 	Convey("Given a new Inject", t, func(c C) {
 		i := NewInject(Fields{
-			Region: "EU_868",
-			Bridge: "bridge",
+			FrequencyPlan: "EU_868",
+			Bridge:        "bridge",
 		})
 
 		Convey("When sending a StatusMessage", func() {
@@ -28,7 +28,7 @@ func TestInject(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 			Convey("The StatusMessage should contain the injected fields", func() {
-				So(status.Message.Region, ShouldEqual, "EU_868")
+				So(status.Message.FrequencyPlan, ShouldEqual, "EU_868")
 				So(status.Message.Bridge, ShouldEqual, "bridge")
 			})
 		})

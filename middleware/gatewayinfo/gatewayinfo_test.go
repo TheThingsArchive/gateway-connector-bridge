@@ -130,7 +130,7 @@ func TestPublic(t *testing.T) {
 					So(status.Message.GetGps().Latitude, ShouldEqual, 12.34)
 					So(status.Message.Description, ShouldEqual, "My Test Gateway")
 					So(status.Message.Platform, ShouldEqual, "Test Gateway")
-					So(status.Message.Region, ShouldEqual, "EU_868")
+					So(status.Message.FrequencyPlan, ShouldEqual, "EU_868")
 				})
 			})
 		})

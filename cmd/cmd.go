@@ -30,7 +30,7 @@ import (
 	"github.com/TheThingsNetwork/go-utils/handlers/cli"
 	ttnlog "github.com/TheThingsNetwork/go-utils/log"
 	"github.com/TheThingsNetwork/go-utils/log/apex"
-	"github.com/TheThingsNetwork/ttn/api"
+	"github.com/TheThingsNetwork/ttn/api/pool"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/json"
 	"github.com/apex/log/handlers/multi"
@@ -99,8 +99,8 @@ func runBridge(cmd *cobra.Command, args []string) {
 	bridge.SetID(id)
 
 	middleware = append(middleware, inject.NewInject(inject.Fields{
-		Bridge: id,
-		Region: viper.GetString("inject-region"),
+		Bridge:        id,
+		FrequencyPlan: viper.GetString("inject.frequency-plan"),
 	}))
 
 	// Set up Redis
@@ -162,6 +162,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 	bridge.SetAuth(authBackend)
 
 	// Set up the TTN routers (from comma-separated list of discovery-server/router-id)
+
 	ttnRouters := strings.Split(config.GetString("ttn-router"), ",")
 	if len(ttnRouters) > 0 {
 		if rootCAFile := config.GetString("root-ca-file"); rootCAFile != "" {
@@ -169,7 +170,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 			if err != nil {
 				ctx.WithError(err).Fatal("Could not load Root CA file")
 			}
-			if !api.RootCAs.AppendCertsFromPEM(roots) {
+			if !pool.RootCAs.AppendCertsFromPEM(roots) {
 				ctx.Warn("Could not load all CAs from the Root CA file")
 			} else {
 				ctx.Infof("Using Root CAs from %s", rootCAFile)
@@ -313,7 +314,7 @@ func init() {
 	BridgeCmd.Flags().String("account-server", "https://account.thethingsnetwork.org", "Use an account server for exchanging access keys and fetching gateway information")
 	BridgeCmd.Flags().Duration("info-expire", 6*time.Hour, "Gateway Information expiration time")
 
-	BridgeCmd.Flags().String("inject-region", "", "Inject a region field into status message that don't have one")
+	BridgeCmd.Flags().String("inject.frequency-plan", "", "Inject a frequency plan field into status message that don't have one")
 
 	BridgeCmd.Flags().Bool("ratelimit", false, "Rate-limit messages")
 	BridgeCmd.Flags().Uint("ratelimit.uplink", 600, "Uplink rate limit (per gateway per minute)")
