@@ -90,13 +90,13 @@ func runBridge(cmd *cobra.Command, args []string) {
 	var middleware middleware.Chain
 
 	id := fmt.Sprintf(
-		"gateway-connector-bridge %s %s-%s (%s)",
+		"%s %s-%s (%s)",
 		config.GetString("id"),
 		config.GetString("version"),
 		config.GetString("gitCommit"),
 		config.GetString("buildDate"),
 	)
-	bridge.SetID(id)
+	bridge.SetID(config.GetString("id"))
 
 	middleware = append(middleware, inject.NewInject(inject.Fields{
 		Bridge:        id,

@@ -32,12 +32,12 @@ func initConfig() {
 	}
 	viper.BindEnv("debug")
 
-	defaultID := "unknown"
+	var defaultID string
 	if user, err := user.Current(); err == nil {
-		defaultID = user.Username
+		defaultID = user.Username + "@"
 	}
 	if hostname, err := os.Hostname(); err == nil {
-		defaultID += "@" + hostname
+		defaultID += hostname
 	}
 	viper.SetDefault("id", defaultID)
 }
