@@ -66,7 +66,11 @@ func (r *Router) Connect() error {
 	if err != nil {
 		return err
 	}
-	r.conn, err = announcement.Dial(r.pool)
+	if announcement.GetCertificate() == "" {
+		r.conn, err = announcement.Dial(nil)
+	} else {
+		r.conn, err = announcement.Dial(r.pool)
+	}
 	if err != nil {
 		return err
 	}
