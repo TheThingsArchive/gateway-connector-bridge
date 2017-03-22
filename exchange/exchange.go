@@ -223,7 +223,6 @@ func (b *Exchange) handleChannels() {
 			if meta := uplinkMessage.Message.GetGatewayMetadata(); meta != nil {
 				meta.GatewayId = uplinkMessage.GatewayID
 			}
-			uplinkMessage.Message.Trace = uplinkMessage.Message.Trace.WithEvent(trace.ForwardEvent)
 			for _, backend := range b.northboundBackends {
 				if err := backend.PublishUplink(uplinkMessage); err != nil {
 					ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish uplink")
@@ -240,7 +239,6 @@ func (b *Exchange) handleChannels() {
 				ctx.WithError(err).Warn("Error in middleware")
 				continue
 			}
-			downlinkMessage.Message.Trace = downlinkMessage.Message.Trace.WithEvent(trace.ForwardEvent)
 			for _, backend := range b.southboundBackends {
 				if err := backend.PublishDownlink(downlinkMessage); err != nil {
 					ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish downlink")

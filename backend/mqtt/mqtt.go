@@ -12,6 +12,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/ttn/api/gateway"
 	"github.com/TheThingsNetwork/ttn/api/router"
+	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/TheThingsNetwork/ttn/utils/random"
 	"github.com/apex/log"
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -242,6 +243,7 @@ func (c *MQTT) SubscribeUplink(gatewayID string) (<-chan *types.UplinkMessage, e
 			ctx.WithError(err).Warn("Could not unmarshal uplink message")
 			return
 		}
+		uplink.Trace = uplink.Trace.WithEvent(trace.ReceiveEvent, "backend", "mqtt")
 		select {
 		case messages <- &types.UplinkMessage{GatewayID: gatewayID, Message: &uplink}:
 			ctx.WithField("ProtoSize", len(msg.Payload())).Debug("Received uplink message")

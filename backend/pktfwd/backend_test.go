@@ -142,6 +142,7 @@ func TestBackend(t *testing.T) {
 
 						rxPacket2, err := newRXPacketFromRXPK(p.GatewayMAC, p.Payload.RXPK[0])
 						So(err, ShouldBeNil)
+						rxPacket.Message.Trace = nil // Unset the trace, we're not testing that
 						So(rxPacket, ShouldResemble, rxPacket2)
 					})
 				})
@@ -240,6 +241,7 @@ func TestBackend(t *testing.T) {
 
 						rxPacket2, err := newRXPacketFromRXPK(p.GatewayMAC, p.Payload.RXPK[0])
 						So(err, ShouldBeNil)
+						rxPacket.Message.Trace = nil // Unset the trace, we're not testing that
 						So(rxPacket, ShouldResemble, rxPacket2)
 					})
 				})
@@ -289,6 +291,7 @@ func TestBackend(t *testing.T) {
 
 						rxPacket2, err := newRXPacketFromRXPK(p.GatewayMAC, p.Payload.RXPK[0])
 						So(err, ShouldBeNil)
+						rxPacket.Message.Trace = nil // Unset the trace, we're not testing that
 						So(rxPacket, ShouldResemble, rxPacket2)
 					})
 				})

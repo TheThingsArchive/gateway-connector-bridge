@@ -15,6 +15,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/ttn/api/gateway"
 	"github.com/TheThingsNetwork/ttn/api/router"
+	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/apex/log"
 	"github.com/gogo/protobuf/proto"
 	"github.com/streadway/amqp"
@@ -536,6 +537,7 @@ func (c *AMQP) SubscribeUplink(gatewayID string) (<-chan *types.UplinkMessage, e
 				ctx.WithError(err).Warn("Could not unmarshal uplink message")
 				continue
 			}
+			uplink.Message.Trace = uplink.Message.Trace.WithEvent(trace.ReceiveEvent, "backend", "amqp")
 			select {
 			case messages <- &uplink:
 				ctx.WithField("ProtoSize", len(msg.message)).Debug("Received uplink message")

@@ -17,6 +17,7 @@ import (
 	pb_protocol "github.com/TheThingsNetwork/ttn/api/protocol"
 	pb_lorawan "github.com/TheThingsNetwork/ttn/api/protocol/lorawan"
 	pb_router "github.com/TheThingsNetwork/ttn/api/router"
+	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/brocaar/lorawan"
 	"github.com/brocaar/lorawan/band"
 )
@@ -365,7 +366,7 @@ func (b *Backend) handleRXPacket(addr *net.UDPAddr, mac lorawan.EUI64, rxpk RXPK
 	if err != nil {
 		return err
 	}
-
+	rxPacket.Message.Trace = rxPacket.Message.Trace.WithEvent(trace.ReceiveEvent, "backend", "packet-forwarder")
 	b.rxChan <- rxPacket
 	return nil
 }

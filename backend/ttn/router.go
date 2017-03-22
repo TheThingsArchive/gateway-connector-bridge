@@ -13,6 +13,7 @@ import (
 	"github.com/TheThingsNetwork/ttn/api/discovery"
 	"github.com/TheThingsNetwork/ttn/api/pool"
 	"github.com/TheThingsNetwork/ttn/api/router"
+	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/apex/log"
 	"google.golang.org/grpc"
 )
@@ -114,6 +115,7 @@ func (r *Router) CleanupGateway(gatewayID string) {
 
 // PublishUplink publishes uplink messages to the TTN Router
 func (r *Router) PublishUplink(message *types.UplinkMessage) error {
+	message.Message.Trace = message.Message.Trace.WithEvent(trace.ForwardEvent, "backend", "ttn")
 	r.getGateway(message.GatewayID).stream.Uplink(message.Message)
 	return nil
 }
@@ -134,6 +136,7 @@ func (r *Router) SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMess
 	go func() {
 		for in := range gtw.stream.Downlink() {
 			ctx.Debug("Downlink message received")
+			in.Trace = in.Trace.WithEvent(trace.ReceiveEvent, "backend", "ttn")
 			downlink <- &types.DownlinkMessage{GatewayID: gatewayID, Message: in}
 		}
 		close(downlink)
