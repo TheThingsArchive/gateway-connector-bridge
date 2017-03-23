@@ -243,6 +243,14 @@ func (b *Backend) sendPackets() error {
 			}).Error("Unknown packet type")
 			continue
 		}
+
+		if p.addr.Port < 1 || p.addr.Port > 65535 {
+			b.log.WithFields(log.Fields{
+				"addr": p.addr,
+			}).Error("Not sending to invalid udp port number")
+			continue
+		}
+
 		b.log.WithFields(log.Fields{
 			"addr":             p.addr,
 			"type":             pt,
