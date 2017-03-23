@@ -26,9 +26,12 @@ func TestPublic(t *testing.T) {
 			Convey("There should be an error", func() {
 				So(err, ShouldNotBeNil)
 			})
+			gateway, err := p.get("dev")
 			Convey("The info should not be stored", func() {
-				gateway := p.get("dev")
 				So(gateway.ID, ShouldBeEmpty)
+			})
+			Convey("An error should not be stored", func() {
+				So(err, ShouldNotBeNil)
 			})
 		})
 
@@ -38,7 +41,7 @@ func TestPublic(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 			Convey("The info should be stored", func() {
-				gateway := p.get(gatewayID)
+				gateway, _ := p.get(gatewayID)
 				So(gateway.ID, ShouldEqual, gatewayID)
 			})
 		})
@@ -62,7 +65,7 @@ func TestPublic(t *testing.T) {
 
 			time.Sleep(500 * time.Millisecond)
 			Convey("The info should be stored", func() {
-				gateway := p.get(gatewayID)
+				gateway, _ := p.get(gatewayID)
 				So(gateway.ID, ShouldEqual, gatewayID)
 			})
 		})
@@ -94,7 +97,7 @@ func TestPublic(t *testing.T) {
 				})
 				time.Sleep(10 * time.Millisecond)
 				Convey("The info should no longer be stored", func() {
-					gateway := p.get(gatewayID)
+					gateway, _ := p.get(gatewayID)
 					So(gateway.ID, ShouldBeEmpty)
 				})
 			})

@@ -42,16 +42,32 @@ type Public struct {
 
 type info struct {
 	lastUpdated time.Time
+	err         error
 	gateway     account.Gateway
 }
 
 func (p *Public) fetch(gatewayID string) error {
 	gateway, err := p.account.FindGateway(gatewayID)
 	if err != nil {
+		p.setErr(gatewayID, err)
 		return err
 	}
 	p.set(gatewayID, gateway)
 	return nil
+}
+
+func (p *Public) setErr(gatewayID string, err error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if gtw, ok := p.info[gatewayID]; ok {
+		gtw.lastUpdated = time.Now()
+		gtw.err = err
+	} else {
+		p.info[gatewayID] = &info{
+			lastUpdated: time.Now(),
+			err:         err,
+		}
+	}
 }
 
 func (p *Public) set(gatewayID string, gateway account.Gateway) {
@@ -63,18 +79,18 @@ func (p *Public) set(gatewayID string, gateway account.Gateway) {
 	}
 }
 
-func (p *Public) get(gatewayID string) (gateway account.Gateway) {
+func (p *Public) get(gatewayID string) (gateway account.Gateway, err error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	info, ok := p.info[gatewayID]
 	if !ok {
-		return gateway
+		return gateway, nil
 	}
 	if p.expire != 0 && time.Since(info.lastUpdated) > p.expire {
 		info.lastUpdated = time.Now()
 		go p.fetch(gatewayID)
 	}
-	return info.gateway
+	return info.gateway, info.err
 }
 
 func (p *Public) unset(gatewayID string) {
@@ -105,9 +121,13 @@ func (p *Public) HandleDisconnect(ctx middleware.Context, msg *types.DisconnectM
 
 // HandleUplink inserts metadata if set in info, but not present in message
 func (p *Public) HandleUplink(ctx middleware.Context, msg *types.UplinkMessage) error {
-	info := p.get(msg.GatewayID)
+	info, err := p.get(msg.GatewayID)
+	if err != nil {
+		msg.Message.Trace = msg.Message.Trace.WithEvent("unable to get gateway info", "error", err)
+	}
 	meta := msg.Message.GetGatewayMetadata()
 	if meta.Gps == nil && info.AntennaLocation != nil {
+		msg.Message.Trace = msg.Message.Trace.WithEvent("injecting gateway location")
 		meta.Gps = &gateway.GPSMetadata{
 			Latitude:  float32(info.AntennaLocation.Latitude),
 			Longitude: float32(info.AntennaLocation.Longitude),
@@ -119,7 +139,7 @@ func (p *Public) HandleUplink(ctx middleware.Context, msg *types.UplinkMessage) 
 
 // HandleStatus inserts metadata if set in info, but not present in message
 func (p *Public) HandleStatus(ctx middleware.Context, msg *types.StatusMessage) error {
-	info := p.get(msg.GatewayID)
+	info, _ := p.get(msg.GatewayID)
 	if msg.Message.Gps == nil && info.AntennaLocation != nil {
 		msg.Message.Gps = &gateway.GPSMetadata{
 			Latitude:  float32(info.AntennaLocation.Latitude),
