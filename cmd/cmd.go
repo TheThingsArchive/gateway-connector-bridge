@@ -312,7 +312,7 @@ func init() {
 	BridgeCmd.Flags().String("root-ca-file", "", "Location of the file containing Root CA certificates")
 
 	BridgeCmd.Flags().String("account-server", "https://account.thethingsnetwork.org", "Use an account server for exchanging access keys and fetching gateway information")
-	BridgeCmd.Flags().Duration("info-expire", 6*time.Hour, "Gateway Information expiration time")
+	BridgeCmd.Flags().Duration("info-expire", time.Hour, "Gateway Information expiration time")
 
 	BridgeCmd.Flags().String("inject.frequency-plan", "", "Inject a frequency plan field into status message that don't have one")
 
