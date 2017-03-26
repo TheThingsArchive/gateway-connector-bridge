@@ -157,6 +157,7 @@ func (b *Exchange) ConnectGateway(gatewayID ...string) {
 
 func (b *Exchange) handleChannels() {
 	for {
+		begin := time.Now()
 		select {
 		case <-b.done:
 			return
@@ -188,7 +189,7 @@ func (b *Exchange) handleChannels() {
 				go b.activateSouthbound(backend, connectMessage.GatewayID)
 			}
 			statusserver.ConnectGateway()
-			ctx.Info("Handled connect")
+			ctx.WithField("Duration", time.Since(begin)).Info("Handled connect")
 		case disconnectMessage, ok := <-b.disconnect:
 			if !ok {
 				continue
@@ -210,7 +211,7 @@ func (b *Exchange) handleChannels() {
 			b.deactivateSouthbound(disconnectMessage.GatewayID)
 			b.gateways.Remove(disconnectMessage.GatewayID)
 			statusserver.DisconnectGateway()
-			ctx.Info("Handled disconnect")
+			ctx.WithField("Duration", time.Since(begin)).Info("Handled disconnect")
 		case uplinkMessage, ok := <-b.uplink:
 			if !ok {
 				continue
@@ -229,7 +230,7 @@ func (b *Exchange) handleChannels() {
 				}
 			}
 			statusserver.Uplink()
-			ctx.Info("Routed uplink")
+			ctx.WithField("Duration", time.Since(begin)).Info("Routed uplink")
 		case downlinkMessage, ok := <-b.downlink:
 			if !ok {
 				continue
@@ -245,7 +246,7 @@ func (b *Exchange) handleChannels() {
 				}
 			}
 			statusserver.Downlink()
-			ctx.Info("Routed downlink")
+			ctx.WithField("Duration", time.Since(begin)).Info("Routed downlink")
 		case statusMessage, ok := <-b.status:
 			if !ok {
 				continue
@@ -261,12 +262,13 @@ func (b *Exchange) handleChannels() {
 				}
 			}
 			statusserver.GatewayStatus()
-			ctx.Info("Routed status")
+			ctx.WithField("Duration", time.Since(begin)).Info("Routed status")
 		}
 	}
 }
 
 func (b *Exchange) activateNorthbound(backend backend.Northbound, gatewayID string) {
+	begin := time.Now()
 	ctx := b.ctx.WithField("GatewayID", gatewayID).WithField("Backend", fmt.Sprintf("%T", backend))
 	downlink, err := backend.SubscribeDownlink(gatewayID)
 	if err != nil {
@@ -276,7 +278,7 @@ func (b *Exchange) activateNorthbound(backend backend.Northbound, gatewayID stri
 	b.doneLock.Lock()
 	b.northboundDone[gatewayID] = append(b.northboundDone[gatewayID], done)
 	b.doneLock.Unlock()
-	ctx.Debug("Activated northbound")
+	ctx.WithField("Duration", time.Since(begin)).Debug("Activated northbound")
 loop:
 	for {
 		select {
@@ -292,10 +294,11 @@ loop:
 	if err := backend.UnsubscribeDownlink(gatewayID); err != nil {
 		ctx.WithError(err).Error("Could not unsubscribe from downlink")
 	}
-	ctx.Debug("Deactivated northbound")
+	ctx.WithField("SessionDuration", time.Since(begin)).Debug("Deactivated northbound")
 }
 
 func (b *Exchange) activateSouthbound(backend backend.Southbound, gatewayID string) {
+	begin := time.Now()
 	ctx := b.ctx.WithField("GatewayID", gatewayID).WithField("Backend", fmt.Sprintf("%T", backend))
 	uplink, err := backend.SubscribeUplink(gatewayID)
 	if err != nil {
@@ -309,7 +312,7 @@ func (b *Exchange) activateSouthbound(backend backend.Southbound, gatewayID stri
 	b.doneLock.Lock()
 	b.southboundDone[gatewayID] = append(b.southboundDone[gatewayID], done)
 	b.doneLock.Unlock()
-	ctx.Debug("Activated southbound")
+	ctx.WithField("Duration", time.Since(begin)).Debug("Activated southbound")
 loop:
 	for {
 		select {
@@ -333,7 +336,7 @@ loop:
 	if err := backend.UnsubscribeStatus(gatewayID); err != nil {
 		ctx.WithError(err).Error("Could not unsubscribe from status")
 	}
-	ctx.Debug("Deactivated southbound")
+	ctx.WithField("SessionDuration", time.Since(begin)).Debug("Deactivated southbound")
 }
 
 func (b *Exchange) deactivateNorthbound(gatewayID string) {
