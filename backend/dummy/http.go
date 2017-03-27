@@ -65,15 +65,16 @@ func (s *Server) Listen() {
 
 	go s.handleEvents()
 
-	http.Handle("/socket.io/", s.server)
-	http.Handle("/", http.FileServer(http.Dir("./assets")))
-	http.HandleFunc("/gateways", func(res http.ResponseWriter, _ *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/socket.io/", s.server)
+	mux.Handle("/", http.FileServer(http.Dir("./assets")))
+	mux.HandleFunc("/gateways", func(res http.ResponseWriter, _ *http.Request) {
 		res.Header().Add("content-type", "application/json; charset=utf-8")
 		enc := json.NewEncoder(res)
 		enc.Encode(s.ConnectedGateways())
 	})
 	s.ctx.Infof("HTTP server listening on %s", s.addr)
-	err := http.ListenAndServe(s.addr, nil)
+	err := http.ListenAndServe(s.addr, mux)
 	if err != nil {
 		s.ctx.WithError(err).Fatal("Could not serve HTTP")
 	}
