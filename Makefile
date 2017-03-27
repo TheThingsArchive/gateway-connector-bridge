@@ -4,9 +4,18 @@ SHELL = bash
 
 GIT_BRANCH = $(or $(CI_BUILD_REF_NAME) ,`git rev-parse --abbrev-ref HEAD 2>/dev/null`)
 GIT_COMMIT = $(or $(CI_BUILD_REF), `git rev-parse HEAD 2>/dev/null`)
+GIT_TAG = $(shell git describe --abbrev=0 --tags 2>/dev/null)
 BUILD_DATE = $(or $(CI_BUILD_DATE), `date -u +%Y-%m-%dT%H:%M:%SZ`)
 GO_PATH = `echo $(GOPATH) | awk -F':' '{print $$1}'`
 GO_SRC = `pwd | xargs dirname | xargs dirname | xargs dirname`
+
+ifeq ($(GIT_BRANCH), $(GIT_TAG))
+	TTN_VERSION = $(GIT_TAG)
+	TAGS += prod
+else
+	TTN_VERSION = $(GIT_TAG)-dev
+	TAGS += dev
+endif
 
 # All
 
