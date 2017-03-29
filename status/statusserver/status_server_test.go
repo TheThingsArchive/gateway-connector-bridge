@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/status"
+	"github.com/TheThingsNetwork/ttn/api"
 	metrics "github.com/rcrowley/go-metrics"
 	. "github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
@@ -26,6 +27,8 @@ func TestStatusServer(t *testing.T) {
 			gatewayStatus:     metrics.NewMeter(),
 			connectedGateways: metrics.NewCounter(),
 		}
+
+		AddAccessKey("key")
 
 		rand.Seed(time.Now().UnixNano())
 		port := rand.Intn(1000) + 10000
@@ -45,8 +48,20 @@ func TestStatusServer(t *testing.T) {
 				panic(err)
 			}
 			cli := status.NewStatusClient(conn)
-			Convey("When requesting the status", func() {
-				res, err := cli.GetStatus(context.Background(), &status.StatusRequest{})
+			Convey("When requesting the status without a Key", func() {
+				_, err := cli.GetStatus(context.Background(), &status.StatusRequest{})
+				Convey("There should be an error", func() {
+					So(err, ShouldNotBeNil)
+				})
+			})
+			Convey("When requesting the status with a wrong Key", func() {
+				_, err := cli.GetStatus(context.Background(), &status.StatusRequest{})
+				Convey("There should be an error", func() {
+					So(err, ShouldNotBeNil)
+				})
+			})
+			Convey("When requesting the status with a correct Key", func() {
+				res, err := cli.GetStatus(api.ContextWithKey(context.Background(), "key"), &status.StatusRequest{})
 				Convey("There should be no error", func() {
 					So(err, ShouldBeNil)
 				})

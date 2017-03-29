@@ -265,6 +265,22 @@ func runBridge(cmd *cobra.Command, args []string) {
 		bridge.AddSouthbound(httpDummy)
 	}
 
+	if statusAddr := config.GetString("status-addr"); statusAddr != "" {
+		for _, key := range strings.Split(config.GetString("status-key"), ",") {
+			statusserver.AddAccessKey(key)
+		}
+
+		// Set up the status server
+		ctx.WithField("Address", statusAddr).Infof("Initializing Status Server")
+		lis, err := net.Listen("tcp", statusAddr)
+		if err != nil {
+			ctx.WithError(err).Fatal("Could not start status server")
+		}
+		srv := grpc.NewServer()
+		statusserver.Register(srv)
+		go srv.Serve(lis)
+	}
+
 	bridge.SetMiddleware(middleware)
 
 	ctx.WithField("NumWorkers", config.GetInt("workers")).Info("Starting Bridge...")
@@ -282,17 +298,6 @@ func runBridge(cmd *cobra.Command, args []string) {
 	if len(connectedGatewayIDs) > 0 {
 		ctx.Infof("Reconnecting %d gateways", len(connectedGatewayIDs))
 		bridge.ConnectGateway(connectedGatewayIDs...)
-	}
-
-	if statusAddr := config.GetString("status-addr"); statusAddr != "" {
-		// Set up the status server
-		lis, err := net.Listen("tcp", statusAddr)
-		if err != nil {
-			ctx.WithError(err).Fatal("Could not start status server")
-		}
-		srv := grpc.NewServer()
-		statusserver.Register(srv)
-		go srv.Serve(lis)
 	}
 
 	sigChan := make(chan os.Signal)
@@ -327,6 +332,7 @@ func init() {
 	BridgeCmd.Flags().StringSlice("amqp", []string{}, "AMQP Broker to connect to (user:pass@host:port; disable with \"disable\")")
 
 	BridgeCmd.Flags().String("status-addr", "", "Address of the gRPC status server to start")
+	BridgeCmd.Flags().StringSlice("status-key", []string{}, "Access key for the gRPC status server")
 	BridgeCmd.Flags().String("http-debug-addr", "", "The address of the HTTP debug server to start")
 
 	BridgeCmd.Flags().String("id", "", "ID of this bridge")

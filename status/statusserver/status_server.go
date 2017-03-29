@@ -10,6 +10,7 @@ import (
 	"github.com/rcrowley/go-metrics"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 var global = &statusServer{
@@ -20,10 +21,21 @@ var global = &statusServer{
 }
 
 type statusServer struct {
+	accessKeys []string
+
 	uplink            metrics.Meter
 	downlink          metrics.Meter
 	gatewayStatus     metrics.Meter
 	connectedGateways metrics.Counter
+}
+
+func (s *statusServer) AddAccessKey(key string) {
+	s.accessKeys = append(s.accessKeys, key)
+}
+
+// AddAccessKey adds an access key for a client
+func AddAccessKey(key string) {
+	global.AddAccessKey(key)
 }
 
 func (s *statusServer) Uplink() {
@@ -97,7 +109,19 @@ func (s *statusServer) getStatus() *status.StatusResponse {
 	return status
 }
 
-func (s *statusServer) GetStatus(context.Context, *status.StatusRequest) (*status.StatusResponse, error) {
+func (s *statusServer) GetStatus(ctx context.Context, _ *status.StatusRequest) (*status.StatusResponse, error) {
+	if len(s.accessKeys) != 0 {
+		key, err := api.KeyFromContext(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, allowed := range s.accessKeys {
+			if key == allowed {
+				return s.getStatus(), nil
+			}
+		}
+		return nil, grpc.Errorf(codes.Unauthenticated, "Not authenticated")
+	}
 	return s.getStatus(), nil
 }
 
