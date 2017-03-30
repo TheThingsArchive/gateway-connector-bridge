@@ -56,6 +56,10 @@ func New(config RouterConfig, ctx log.Interface, tokenFunc func(string) string) 
 func (r *Router) Connect() error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	r.Ctx.WithFields(log.Fields{
+		"Discovery": r.config.DiscoveryServer,
+		"RouterID":  r.config.RouterID,
+	}).Info("Discovering Router")
 	discovery, err := discovery.NewClient(r.config.DiscoveryServer, &discovery.Announcement{
 		ServiceName: "bridge",
 	}, func() string { return "" })
@@ -66,6 +70,10 @@ func (r *Router) Connect() error {
 	if err != nil {
 		return err
 	}
+	r.Ctx.WithFields(log.Fields{
+		"RouterID": r.config.RouterID,
+		"Address":  announcement.NetAddress,
+	}).Info("Connecting with Router")
 	if announcement.GetCertificate() == "" {
 		r.conn, err = announcement.Dial(nil)
 	} else {
