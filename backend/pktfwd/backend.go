@@ -13,6 +13,7 @@ import (
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/go-utils/log"
+	"github.com/TheThingsNetwork/go-utils/pseudorandom"
 	pb_gateway "github.com/TheThingsNetwork/ttn/api/gateway"
 	pb_protocol "github.com/TheThingsNetwork/ttn/api/protocol"
 	pb_lorawan "github.com/TheThingsNetwork/ttn/api/protocol/lorawan"
@@ -198,6 +199,7 @@ func (b *Backend) Send(txPacket *types.DownlinkMessage) error {
 	}
 	pullResp := PullRespPacket{
 		ProtocolVersion: gw.protocolVersion,
+		RandomToken:     uint16(pseudorandom.Intn(1 << 16)),
 		Payload: PullRespPayload{
 			TXPK: txpk,
 		},
