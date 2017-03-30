@@ -15,13 +15,32 @@ import (
 	"github.com/TheThingsNetwork/ttn/api/gateway"
 )
 
+// RequestInterval sets how often the account server may be queried
+var RequestInterval = 50 * time.Millisecond
+
+// RequestBurst sets the burst of requests to the account server
+var RequestBurst = 50
+
 // NewPublic returns a middleware that injects public gateway information
 func NewPublic(accountServer string) *Public {
-	return &Public{
-		log:     log.Get(),
-		account: account.New(accountServer),
-		info:    make(map[string]*info),
+	p := &Public{
+		log:       log.Get(),
+		account:   account.New(accountServer),
+		info:      make(map[string]*info),
+		available: make(chan struct{}, RequestBurst),
 	}
+	for i := 0; i < RequestBurst; i++ {
+		p.available <- struct{}{}
+	}
+	go func() {
+		for range time.Tick(RequestInterval) {
+			select {
+			case p.available <- struct{}{}:
+			default:
+			}
+		}
+	}()
+	return p
 }
 
 // WithExpire adds an expiration to gateway information. Information is re-fetched if expired
@@ -38,6 +57,8 @@ type Public struct {
 
 	mu   sync.Mutex
 	info map[string]*info
+
+	available chan struct{}
 }
 
 type info struct {
@@ -47,6 +68,7 @@ type info struct {
 }
 
 func (p *Public) fetch(gatewayID string) error {
+	<-p.available
 	gateway, err := p.account.FindGateway(gatewayID)
 	if err != nil {
 		p.setErr(gatewayID, err)
