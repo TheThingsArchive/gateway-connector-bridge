@@ -45,6 +45,9 @@ type PacketForwarder struct {
 // Connect implements the Southbound interface
 func (f *PacketForwarder) Connect() (err error) {
 	f.backend, err = NewBackend(f.config.Bind, f.onNew, f.onDelete, false)
+	if err != nil {
+		return err
+	}
 	f.backend.log = f.ctx
 
 	go func() {

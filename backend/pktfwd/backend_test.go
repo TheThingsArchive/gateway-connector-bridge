@@ -358,6 +358,7 @@ func TestBackend(t *testing.T) {
 						So(i, ShouldBeGreaterThan, 0)
 						var pullResp PullRespPacket
 						So(pullResp.UnmarshalBinary(buf[:i]), ShouldBeNil)
+						pullResp.RandomToken = 0
 
 						So(pullResp, ShouldResemble, PullRespPacket{
 							ProtocolVersion: p.ProtocolVersion,
