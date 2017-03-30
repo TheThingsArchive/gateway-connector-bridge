@@ -105,106 +105,94 @@
 			"revisionTime": "2017-03-22T07:18:41Z"
 		},
 		{
-			"checksumSHA1": "gqxUqqHQnCd8Nmdb4FU8vtxibag=",
+			"checksumSHA1": "kLFTtAVcjZbHXybodGAqJ8wxflY=",
 			"path": "github.com/TheThingsNetwork/go-utils/roots",
 			"revision": "f81a36ea68c3a11be75c537d7be25603417b2fb5",
 			"revisionTime": "2017-03-22T07:18:41Z"
 		},
 		{
-			"checksumSHA1": "B796VK7EyFNen1NZhkRHhUnGCO0=",
+			"checksumSHA1": "LvCD42OjFqDdNsat4xMimIJSphI=",
 			"path": "github.com/TheThingsNetwork/ttn/api",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "yuaKTwgbdX6KvgOK7rOj6oIdd3c=",
 			"path": "github.com/TheThingsNetwork/ttn/api/auth",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "FxQiRlLz8BJIyBk7oY2GWqIw2pM=",
 			"path": "github.com/TheThingsNetwork/ttn/api/discovery",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
-		},
-		{
-			"checksumSHA1": "U5k3PCY3+HYwW3VCRsSDMhDzJSo=",
-			"path": "github.com/TheThingsNetwork/ttn/api/fields",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "GyGHV12DdsKP2T4G4jbo2pk3BgY=",
 			"path": "github.com/TheThingsNetwork/ttn/api/gateway",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "jH+soAcJZGaf9MkKrKkTbKcDs3c=",
 			"path": "github.com/TheThingsNetwork/ttn/api/pool",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "sI98NNZ0WcQUcLz989AsTz7S5X8=",
 			"path": "github.com/TheThingsNetwork/ttn/api/protocol",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "wHdi48SsSi2iuY0Ku5nAKynVab4=",
 			"path": "github.com/TheThingsNetwork/ttn/api/protocol/lorawan",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
-			"checksumSHA1": "OUKa7nmx6z8DPhYtC6slsxW3mVo=",
+			"checksumSHA1": "t+cFRVqPYCXLFjYUh5L+blsKGqE=",
 			"path": "github.com/TheThingsNetwork/ttn/api/router",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "rg6douKWnEsuYHHOCgLiwehw9dQ=",
 			"path": "github.com/TheThingsNetwork/ttn/api/stats",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "UZdw7YYv4XfUJxFS/0jw6yHvSLM=",
 			"path": "github.com/TheThingsNetwork/ttn/api/trace",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "3zyUPqj0fOTxm/38QwrOvE6jX/c=",
 			"path": "github.com/TheThingsNetwork/ttn/core/types",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "N1AKuCFfIgMERL3R9XRQCbBbOZY=",
 			"path": "github.com/TheThingsNetwork/ttn/utils",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
-		},
-		{
-			"checksumSHA1": "zxokGYK2jJVdnA+Hn6+QJxZ0cTQ=",
-			"path": "github.com/TheThingsNetwork/ttn/utils/backoff",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "NlzitL9l20CjpLNeIT1aHR95W0U=",
 			"path": "github.com/TheThingsNetwork/ttn/utils/errors",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "VG6n8lqridYPsN6sT4XZbBhPQsg=",
 			"path": "github.com/TheThingsNetwork/ttn/utils/random",
-			"revision": "da00cf05d2a8e022d0feb7fe47703dc8565e38f4",
-			"revisionTime": "2017-03-22T10:14:05Z"
+			"revision": "8bedc07724acb72dc8a901311656444735578a4b",
+			"revisionTime": "2017-03-30T04:43:09Z"
 		},
 		{
 			"checksumSHA1": "EZ0pNaUAiIbJuT5c0Sew85egLgw=",

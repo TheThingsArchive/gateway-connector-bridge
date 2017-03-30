@@ -65,6 +65,14 @@ func TestTTNRouter(t *testing.T) {
 						GatewayID: "dev",
 						Message:   &pb_router.UplinkMessage{},
 					})
+					oldStream := router.gateways["dev"].stream
+					_, err := router.SubscribeDownlink("dev")
+					Convey("There should be no error", func() {
+						So(err, ShouldBeNil)
+					})
+					Convey("The streams should have been replaced", func() {
+						So(router.gateways["dev"].stream, ShouldNotEqual, oldStream)
+					})
 				})
 
 				Convey("When publishing a status message", func() {

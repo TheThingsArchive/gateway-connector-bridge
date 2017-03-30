@@ -93,7 +93,7 @@ type gatewayConn struct {
 	lastActive time.Time
 }
 
-func (r *Router) getGateway(gatewayID string) *gatewayConn {
+func (r *Router) getGateway(gatewayID string, downlinkActive bool) *gatewayConn {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if gtw, ok := r.gateways[gatewayID]; ok {
@@ -101,7 +101,7 @@ func (r *Router) getGateway(gatewayID string) *gatewayConn {
 		return gtw
 	}
 	r.gateways[gatewayID] = &gatewayConn{
-		stream:     r.client.NewGatewayStreams(gatewayID, ""),
+		stream:     r.client.NewGatewayStreams(gatewayID, "", downlinkActive),
 		lastActive: time.Now(),
 	}
 	return r.gateways[gatewayID]
@@ -120,13 +120,13 @@ func (r *Router) CleanupGateway(gatewayID string) {
 // PublishUplink publishes uplink messages to the TTN Router
 func (r *Router) PublishUplink(message *types.UplinkMessage) error {
 	message.Message.Trace = message.Message.Trace.WithEvent(trace.ForwardEvent, "backend", "ttn")
-	r.getGateway(message.GatewayID).stream.Uplink(message.Message)
+	r.getGateway(message.GatewayID, false).stream.Uplink(message.Message)
 	return nil
 }
 
 // PublishStatus publishes status messages to the TTN Router
 func (r *Router) PublishStatus(message *types.StatusMessage) error {
-	r.getGateway(message.GatewayID).stream.Status(message.Message)
+	r.getGateway(message.GatewayID, false).stream.Status(message.Message)
 	return nil
 }
 
@@ -134,11 +134,25 @@ func (r *Router) PublishStatus(message *types.StatusMessage) error {
 func (r *Router) SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMessage, error) {
 	downlink := make(chan *types.DownlinkMessage)
 
-	gtw := r.getGateway(gatewayID)
+	gtw := r.getGateway(gatewayID, true)
 	ctx := r.Ctx.WithField("GatewayID", gatewayID)
 
+	ch, err := gtw.stream.Downlink()
+	if err == router.ErrDownlinkInactive {
+		ctx.Debug("Downlink inactive, restarting streams with downlink")
+		r.mu.Lock()
+		oldStream := gtw.stream
+		gtw.stream = r.client.NewGatewayStreams(gatewayID, "", true)
+		r.mu.Unlock()
+		oldStream.Close()
+		ch, err = gtw.stream.Downlink()
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	go func() {
-		for in := range gtw.stream.Downlink() {
+		for in := range ch {
 			ctx.Debug("Downlink message received")
 			in.Trace = in.Trace.WithEvent(trace.ReceiveEvent, "backend", "ttn")
 			downlink <- &types.DownlinkMessage{GatewayID: gatewayID, Message: in}
