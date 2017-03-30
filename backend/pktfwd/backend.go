@@ -237,12 +237,12 @@ func (b *Backend) readPackets() error {
 
 func (b *Backend) sendPackets() error {
 	for p := range b.udpSendChan {
-		pt, err := GetPacketType(p.data)
+		_, err := GetPacketType(p.data)
 		if err != nil {
 			b.log.WithFields(log.Fields{
 				"addr":        p.addr,
 				"data_base64": base64.StdEncoding.EncodeToString(p.data),
-			}).Error("Unknown packet type")
+			}).Error("Not sending unknown packet to gateway")
 			continue
 		}
 
@@ -252,12 +252,6 @@ func (b *Backend) sendPackets() error {
 			}).Error("Not sending to invalid udp port number")
 			continue
 		}
-
-		b.log.WithFields(log.Fields{
-			"addr":             p.addr,
-			"type":             pt,
-			"protocol_version": p.data[0],
-		}).Debug("Sending udp packet to gateway")
 
 		if _, err := b.conn.WriteToUDP(p.data, p.addr); err != nil {
 			return err
@@ -271,11 +265,6 @@ func (b *Backend) handlePacket(addr *net.UDPAddr, data []byte) error {
 	if err != nil {
 		return err
 	}
-	b.log.WithFields(log.Fields{
-		"addr":             addr,
-		"type":             pt,
-		"protocol_version": data[0],
-	}).Debug("Received udp packet from gateway")
 
 	switch pt {
 	case PushData:
@@ -285,6 +274,11 @@ func (b *Backend) handlePacket(addr *net.UDPAddr, data []byte) error {
 	case TXACK:
 		return b.handleTXACK(addr, data)
 	default:
+		b.log.WithFields(log.Fields{
+			"addr":             addr,
+			"type":             pt,
+			"protocol_version": data[0],
+		}).Debug("Received unknown packet from gateway")
 		return fmt.Errorf("Unknown packet type: %s", pt)
 	}
 }
@@ -294,6 +288,12 @@ func (b *Backend) handlePullData(addr *net.UDPAddr, data []byte) error {
 	if err := p.UnmarshalBinary(data); err != nil {
 		return err
 	}
+
+	b.log.WithFields(log.Fields{
+		"addr": addr,
+		"mac":  fmt.Sprintf("%x", p.GatewayMAC),
+	}).Debug("Handle PullData")
+
 	ack := PullACKPacket{
 		ProtocolVersion: p.ProtocolVersion,
 		RandomToken:     p.RandomToken,
@@ -324,6 +324,13 @@ func (b *Backend) handlePushData(addr *net.UDPAddr, data []byte) error {
 	if err := p.UnmarshalBinary(data); err != nil {
 		return err
 	}
+
+	b.log.WithFields(log.Fields{
+		"addr": addr,
+		"mac":  fmt.Sprintf("%x", p.GatewayMAC),
+		"rxpk": len(p.Payload.RXPK),
+		"stat": p.Payload.Stat != nil,
+	}).Debug("Handle PushData")
 
 	// ack the packet
 	ack := PushACKPacket{
@@ -356,22 +363,10 @@ func (b *Backend) handlePushData(addr *net.UDPAddr, data []byte) error {
 func (b *Backend) handleStat(addr *net.UDPAddr, mac lorawan.EUI64, stat Stat) {
 	gwStats := newGatewayStatsPacket(mac, stat)
 	gwStats.Message.Ip = append(gwStats.Message.Ip, addr.IP.String())
-	b.log.WithFields(log.Fields{
-		"addr": addr,
-		"mac":  mac,
-	}).Debug("stat packet received")
 	b.statsChan <- gwStats
 }
 
 func (b *Backend) handleRXPacket(addr *net.UDPAddr, mac lorawan.EUI64, rxpk RXPK) error {
-	logFields := log.Fields{
-		"addr": addr,
-		"mac":  mac,
-		"data": rxpk.Data,
-	}
-	b.log.WithFields(logFields).Debug("rxpk packet received")
-
-	// decode packet
 	rxPacket, err := newRXPacketFromRXPK(mac, rxpk)
 	if err != nil {
 		return err
@@ -389,8 +384,8 @@ func (b *Backend) handleTXACK(addr *net.UDPAddr, data []byte) error {
 	var errBool bool
 
 	logFields := log.Fields{
-		"mac":          p.GatewayMAC,
-		"random_token": p.RandomToken,
+		"addr": addr,
+		"mac":  fmt.Sprintf("%x", p.GatewayMAC),
 	}
 	if p.Payload != nil {
 		if p.Payload.TXPKACK.Error != "NONE" {
