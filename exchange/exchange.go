@@ -151,13 +151,34 @@ loop:
 // ConnectGateway force-connects gateways with the given IDs
 func (b *Exchange) ConnectGateway(gatewayID ...string) {
 	for _, gatewayID := range gatewayID {
-		b.connect <- &types.ConnectMessage{GatewayID: gatewayID}
+		if !b.gateways.Add(gatewayID) {
+			continue
+		}
+		if gatewayID != "" {
+			for _, backend := range b.northboundBackends {
+				go b.activateNorthbound(backend, gatewayID)
+			}
+		}
+		for _, backend := range b.southboundBackends {
+			go b.activateSouthbound(backend, gatewayID)
+		}
+		statusserver.ConnectGateway()
 	}
 }
 
 func (b *Exchange) handleChannels() {
+	var curStart time.Time
+	var curCtx log.Interface
+	var curMsg string
+	start := func(ctx log.Interface, msg string) {
+		curStart = time.Now()
+		curCtx = ctx
+		curMsg = msg
+	}
 	for {
-		begin := time.Now()
+		if curMsg != "" {
+			curCtx.WithField("Duration", time.Since(curStart)).Infof("Routed %s", curMsg)
+		}
 		select {
 		case <-b.done:
 			return
@@ -166,6 +187,7 @@ func (b *Exchange) handleChannels() {
 				continue
 			}
 			ctx := b.ctx.WithField("GatewayID", connectMessage.GatewayID)
+			start(ctx, "connect")
 			if b.auth != nil {
 				if connectMessage.Key != "" {
 					ctx.Debug("Got access key")
@@ -189,12 +211,12 @@ func (b *Exchange) handleChannels() {
 				go b.activateSouthbound(backend, connectMessage.GatewayID)
 			}
 			statusserver.ConnectGateway()
-			ctx.WithField("Duration", time.Since(begin)).Info("Handled connect")
 		case disconnectMessage, ok := <-b.disconnect:
 			if !ok {
 				continue
 			}
 			ctx := b.ctx.WithField("GatewayID", disconnectMessage.GatewayID)
+			start(ctx, "disconnect")
 			if !b.gateways.Contains(disconnectMessage.GatewayID) {
 				ctx.Debug("Got disconnect message from not-connected gateway")
 				continue
@@ -211,12 +233,12 @@ func (b *Exchange) handleChannels() {
 			b.deactivateSouthbound(disconnectMessage.GatewayID)
 			b.gateways.Remove(disconnectMessage.GatewayID)
 			statusserver.DisconnectGateway()
-			ctx.WithField("Duration", time.Since(begin)).Info("Handled disconnect")
 		case uplinkMessage, ok := <-b.uplink:
 			if !ok {
 				continue
 			}
 			ctx := b.ctx.WithField("GatewayID", uplinkMessage.GatewayID)
+			start(ctx, "uplink")
 			if err := b.middleware.Execute(middleware.NewContext(), uplinkMessage); err != nil {
 				ctx.WithError(err).Warn("Error in middleware")
 				continue
@@ -230,12 +252,12 @@ func (b *Exchange) handleChannels() {
 				}
 			}
 			statusserver.Uplink()
-			ctx.WithField("Duration", time.Since(begin)).Info("Routed uplink")
 		case downlinkMessage, ok := <-b.downlink:
 			if !ok {
 				continue
 			}
 			ctx := b.ctx.WithField("GatewayID", downlinkMessage.GatewayID)
+			start(ctx, "downlink")
 			if err := b.middleware.Execute(middleware.NewContext(), downlinkMessage); err != nil {
 				ctx.WithError(err).Warn("Error in middleware")
 				continue
@@ -246,12 +268,12 @@ func (b *Exchange) handleChannels() {
 				}
 			}
 			statusserver.Downlink()
-			ctx.WithField("Duration", time.Since(begin)).Info("Routed downlink")
 		case statusMessage, ok := <-b.status:
 			if !ok {
 				continue
 			}
 			ctx := b.ctx.WithField("GatewayID", statusMessage.GatewayID)
+			start(ctx, "status")
 			if err := b.middleware.Execute(middleware.NewContext(), statusMessage); err != nil {
 				ctx.WithError(err).Warn("Error in middleware")
 				continue
@@ -262,7 +284,6 @@ func (b *Exchange) handleChannels() {
 				}
 			}
 			statusserver.GatewayStatus()
-			ctx.WithField("Duration", time.Since(begin)).Info("Routed status")
 		}
 	}
 }

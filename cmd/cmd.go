@@ -205,7 +205,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 				RouterID:        parts[1],
 			}, ctx, func(gatewayID string) string {
 				token, err := authBackend.GetToken(gatewayID)
-				if err != nil {
+				if err != nil && err != auth.ErrGatewayNotFound {
 					ctx.WithField("GatewayID", gatewayID).WithError(err).Debug("Could not get token for Gateway")
 					return ""
 				}
@@ -316,6 +316,10 @@ func runBridge(cmd *cobra.Command, args []string) {
 		bridge.ConnectGateway(connectedGatewayIDs...)
 	}
 
+	if viper.GetBool("route-unknown-gateways") {
+		bridge.ConnectGateway("")
+	}
+
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	ctx.WithField("signal", <-sigChan).Info("signal received")
@@ -334,6 +338,7 @@ func init() {
 
 	BridgeCmd.Flags().String("account-server", "https://account.thethingsnetwork.org", "Use an account server for exchanging access keys and fetching gateway information")
 	BridgeCmd.Flags().Duration("info-expire", time.Hour, "Gateway Information expiration time")
+	BridgeCmd.Flags().Bool("route-unknown-gateways", false, "Route traffic for unknown gateways")
 
 	BridgeCmd.Flags().String("inject.frequency-plan", "", "Inject a frequency plan field into status message that don't have one")
 

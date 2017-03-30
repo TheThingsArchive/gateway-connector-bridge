@@ -51,9 +51,15 @@ func (f *PacketForwarder) Connect() (err error) {
 		for uplink := range f.backend.RXPacketChan() {
 			f.mu.RLock()
 			if ch, ok := f.uplink[uplink.GatewayID]; ok {
+				f.mu.RUnlock()
 				ch <- uplink
+			} else if ch, ok := f.uplink[""]; ok {
+				f.mu.RUnlock()
+				ch <- uplink
+			} else {
+				f.mu.RUnlock()
+				f.ctx.WithField("GatewayID", uplink.GatewayID).Debug("Dropping uplink for inactive gateway")
 			}
-			f.mu.RUnlock()
 		}
 	}()
 
@@ -62,9 +68,15 @@ func (f *PacketForwarder) Connect() (err error) {
 			status.Backend = "PacketForwarder"
 			f.mu.RLock()
 			if ch, ok := f.status[status.GatewayID]; ok {
+				f.mu.RUnlock()
 				ch <- status
+			} else if ch, ok := f.status[""]; ok {
+				f.mu.RUnlock()
+				ch <- status
+			} else {
+				f.mu.RUnlock()
+				f.ctx.WithField("GatewayID", status.GatewayID).Debug("Dropping status for inactive gateway")
 			}
-			f.mu.RUnlock()
 		}
 	}()
 

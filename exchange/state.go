@@ -3,7 +3,9 @@
 
 package exchange
 
-import redis "gopkg.in/redis.v5"
+import (
+	redis "gopkg.in/redis.v5"
+)
 
 type gatewayState interface {
 	// Adds an element to the set. Returns whether
@@ -46,7 +48,7 @@ type gatewayStateWithRedisPersistence struct {
 
 func (s *gatewayStateWithRedisPersistence) Add(i interface{}) bool {
 	added := s.gatewayState.Add(i)
-	if added {
+	if added && i != "" {
 		go s.client.SAdd(s.key, i).Result()
 	}
 	return added
@@ -54,5 +56,7 @@ func (s *gatewayStateWithRedisPersistence) Add(i interface{}) bool {
 
 func (s *gatewayStateWithRedisPersistence) Remove(i interface{}) {
 	s.gatewayState.Remove(i)
-	go s.client.SRem(s.key, i).Result()
+	if i != "" {
+		go s.client.SRem(s.key, i).Result()
+	}
 }
