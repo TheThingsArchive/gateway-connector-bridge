@@ -85,6 +85,8 @@ var BridgeCmd = &cobra.Command{
 }
 
 func runBridge(cmd *cobra.Command, args []string) {
+	var err error
+
 	bridge := exchange.New(ctx)
 
 	var middleware middleware.Chain
@@ -104,17 +106,16 @@ func runBridge(cmd *cobra.Command, args []string) {
 	}))
 
 	// Set up Redis
-	var connectedGatewayIDs []string
-	var authBackend auth.Interface
+	var redisClient *redis.Client
 	if config.GetBool("redis") {
-		redis := redis.NewClient(&redis.Options{
+		redisClient = redis.NewClient(&redis.Options{
 			Addr:     config.GetString("redis-address"),
 			Password: config.GetString("redis-password"),
 			DB:       config.GetInt("redis-db"),
 		})
 
 		for {
-			err := redis.Ping().Err()
+			err = redisClient.Ping().Err()
 			if err == nil {
 				ctx.Info("Connected to Redis")
 				break
@@ -122,42 +123,57 @@ func runBridge(cmd *cobra.Command, args []string) {
 			time.Sleep(time.Second)
 			ctx.WithError(err).Warn("Could not connect to Redis. Retrying...")
 		}
+	}
 
+	// Redis state
+	var connectedGatewayIDs []string
+	if redisClient != nil {
 		ctx.Info("Initializing Redis state backend")
-		connectedGatewayIDs = bridge.InitRedisState(redis, "")
+		connectedGatewayIDs = bridge.InitRedisState(redisClient, "")
+	}
 
+	// Auth
+	var authBackend auth.Interface
+	if redisClient != nil {
 		ctx.Info("Initializing Redis auth backend")
-		authBackend = auth.NewRedis(redis, "")
-
-		if viper.GetBool("ratelimit") {
-			ctx.Info("Initializing Redis rate limiting")
-			middleware = append(middleware, ratelimit.NewRedisRateLimit(redis, ratelimit.Limits{
-				Uplink:   config.GetInt("ratelimit.uplink"),
-				Downlink: config.GetInt("ratelimit.downlink"),
-				Status:   config.GetInt("ratelimit.status"),
-			}))
-		}
+		authBackend = auth.NewRedis(redisClient, "")
 	} else {
 		ctx.Info("Initializing Memory auth backend")
 		authBackend = auth.NewMemory()
+	}
 
-		if viper.GetBool("ratelimit") {
+	// Ratelimit
+	if viper.GetBool("ratelimit") {
+		limits := ratelimit.Limits{
+			Uplink:   config.GetInt("ratelimit.uplink"),
+			Downlink: config.GetInt("ratelimit.downlink"),
+			Status:   config.GetInt("ratelimit.status"),
+		}
+
+		if redisClient != nil {
+			ctx.Info("Initializing Redis rate limiting")
+			middleware = append(middleware, ratelimit.NewRedisRateLimit(redisClient, limits))
+		} else {
 			ctx.Info("Initializing rate limiting")
-			middleware = append(middleware, ratelimit.NewRateLimit(ratelimit.Limits{
-				Uplink:   config.GetInt("ratelimit.uplink"),
-				Downlink: config.GetInt("ratelimit.downlink"),
-				Status:   config.GetInt("ratelimit.status"),
-			}))
+			middleware = append(middleware, ratelimit.NewRateLimit(limits))
 		}
 	}
 
 	if accountServer := config.GetString("account-server"); accountServer != "" && accountServer != "disable" {
-		ctx.WithField("AccountServer", accountServer).Info("Initializing access key exchanger")
-		authBackend.SetExchanger(auth.NewAccountServer(accountServer, ctx))
+		ctx := ctx.WithField("AccountServer", accountServer)
 
 		expire := viper.GetDuration("info-expire")
-		ctx.WithField("AccountServer", accountServer).WithField("Expire", expire).Info("Initializing public gateway info middleware")
-		middleware = append(middleware, gatewayinfo.NewPublic(accountServer).WithExpire(expire))
+		gatewayInfo := gatewayinfo.NewPublic(accountServer).WithExpire(expire)
+		if redisClient != nil {
+			ctx.WithField("Expire", expire).Info("Initializing Redis gatewayinfo")
+			gatewayInfo, err = gatewayInfo.WithRedis(redisClient, "gatewayinfo")
+		} else {
+			ctx.WithField("Expire", expire).Info("Initializing gatewayinfo")
+		}
+		middleware = append(middleware, gatewayInfo)
+
+		ctx.WithField("AccountServer", accountServer).Info("Initializing access key exchanger")
+		authBackend.SetExchanger(auth.NewAccountServer(accountServer, ctx))
 	}
 	bridge.SetAuth(authBackend)
 

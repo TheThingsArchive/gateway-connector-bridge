@@ -4,8 +4,9 @@
 package gatewayinfo
 
 import (
+	"fmt"
+	"os"
 	"testing"
-
 	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
@@ -14,7 +15,20 @@ import (
 	"github.com/TheThingsNetwork/ttn/api/gateway"
 	"github.com/TheThingsNetwork/ttn/api/router"
 	. "github.com/smartystreets/goconvey/convey"
+	redis "gopkg.in/redis.v5"
 )
+
+func getRedisClient() *redis.Client {
+	host := os.Getenv("REDIS_HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	return redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:6379", host),
+		Password: "", // no password set
+		DB:       1,  // use default DB
+	})
+}
 
 func TestPublic(t *testing.T) {
 	Convey("Given a new Public GatewayInfo", t, func(c C) {
@@ -30,7 +44,7 @@ func TestPublic(t *testing.T) {
 			Convey("The info should not be stored", func() {
 				So(gateway.ID, ShouldBeEmpty)
 			})
-			Convey("An error should not be stored", func() {
+			Convey("An error should be stored", func() {
 				So(err, ShouldNotBeNil)
 			})
 		})
@@ -153,6 +167,37 @@ func TestPublic(t *testing.T) {
 				time.Sleep(500 * time.Millisecond)
 				Convey("It should have updated", func() {
 					So(p.info[gatewayID].lastUpdated, ShouldNotEqual, lastUpdated)
+				})
+			})
+		})
+	})
+
+	Convey("Given a new Public GatewayInfo with Redis", t, func(c C) {
+		p, _ := NewPublic("https://account.thethingsnetwork.org").WithRedis(getRedisClient(), "test-public")
+		gatewayID := "eui-0000024b08060112"
+		Reset(func() {
+			getRedisClient().Del(p.redisKey(gatewayID)).Err()
+		})
+		Convey("When setting the info of a Gateway", func() {
+			p.set(gatewayID, account.Gateway{})
+			Convey("It should be stored in Redis", func() {
+				So(getRedisClient().Exists(p.redisKey(gatewayID)).Val(), ShouldBeTrue)
+			})
+		})
+		Convey("After re-initializing", func() {
+			getRedisClient().Set(p.redisKey(gatewayID), `{"activated":true}`, 0).Err()
+			p.info = make(map[string]*info)
+			_, err := p.WithRedis(getRedisClient(), "test-public")
+			Convey("There should be no error", func() {
+				So(err, ShouldBeNil)
+			})
+			Convey("When getting the info of the Gateway", func() {
+				gateway, err := p.get(gatewayID)
+				Convey("There should be no error", func() {
+					So(err, ShouldBeNil)
+				})
+				Convey("It should be restored from Redis", func() {
+					So(gateway.Activated, ShouldBeTrue)
 				})
 			})
 		})

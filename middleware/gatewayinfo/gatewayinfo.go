@@ -4,6 +4,8 @@
 package gatewayinfo
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -13,6 +15,7 @@ import (
 	"github.com/TheThingsNetwork/go-account-lib/account"
 	"github.com/TheThingsNetwork/go-utils/log"
 	"github.com/TheThingsNetwork/ttn/api/gateway"
+	redis "gopkg.in/redis.v5"
 )
 
 // RequestInterval sets how often the account server may be queried
@@ -43,6 +46,45 @@ func NewPublic(accountServer string) *Public {
 	return p
 }
 
+// WithRedis initializes the Redis store for persistence between restarts
+func (p *Public) WithRedis(client *redis.Client, prefix string) (*Public, error) {
+	p.redisPrefix = prefix
+
+	// Initialize the data from the store
+	var allKeys []string
+	var cursor uint64
+	for {
+		keys, next, err := client.Scan(cursor, p.redisKey("*"), 0).Result()
+		if err != nil {
+			return nil, err
+		}
+		allKeys = append(allKeys, keys...)
+		cursor = next
+		if cursor == 0 {
+			break
+		}
+	}
+
+	var gateway account.Gateway
+	for _, key := range allKeys {
+		res, err := client.Get(key).Result()
+		if err != nil {
+			continue
+		}
+		err = json.Unmarshal([]byte(res), &gateway)
+		if err != nil {
+			continue
+		}
+		gatewayID := strings.TrimPrefix(key, p.redisKey(""))
+		p.set(gatewayID, gateway)
+	}
+
+	// Now set the client
+	p.redisClient = client
+
+	return p, nil
+}
+
 // WithExpire adds an expiration to gateway information. Information is re-fetched if expired
 func (p *Public) WithExpire(duration time.Duration) *Public {
 	p.expire = duration
@@ -55,10 +97,17 @@ type Public struct {
 	account *account.Account
 	expire  time.Duration
 
+	redisClient *redis.Client
+	redisPrefix string
+
 	mu   sync.Mutex
 	info map[string]*info
 
 	available chan struct{}
+}
+
+func (p *Public) redisKey(gatewayID string) string {
+	return fmt.Sprintf("%s:%s", p.redisPrefix, gatewayID)
 }
 
 type info struct {
@@ -93,26 +142,45 @@ func (p *Public) setErr(gatewayID string, err error) {
 }
 
 func (p *Public) set(gatewayID string, gateway account.Gateway) {
+	log := p.log.WithField("GatewayID", gatewayID)
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	log.Debug("Setting public gateway info")
 	p.info[gatewayID] = &info{
 		lastUpdated: time.Now(),
 		gateway:     gateway,
 	}
+	if p.redisClient != nil {
+		data, _ := json.Marshal(gateway)
+		if err := p.redisClient.Set(p.redisKey(gatewayID), string(data), p.expire).Err(); err != nil {
+			log.WithError(err).Warn("Could not set public Gateway information in Redis")
+		}
+	}
 }
 
 func (p *Public) get(gatewayID string) (gateway account.Gateway, err error) {
+	if gatewayID == "" {
+		return
+	}
+	log := p.log.WithField("GatewayID", gatewayID)
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	info, ok := p.info[gatewayID]
-	if !ok {
-		return gateway, nil
-	}
-	if p.expire != 0 && time.Since(info.lastUpdated) > p.expire {
+	if ok {
+		if p.expire == 0 || time.Since(info.lastUpdated) < p.expire {
+			return info.gateway, info.err
+		}
 		info.lastUpdated = time.Now()
-		go p.fetch(gatewayID)
 	}
-	return info.gateway, info.err
+	go func() {
+		err := p.fetch(gatewayID)
+		if err != nil {
+			log.WithError(err).Warn("Could not get public Gateway information")
+		} else {
+			log.Debug("Got public Gateway information")
+		}
+	}()
+	return gateway, nil
 }
 
 func (p *Public) unset(gatewayID string) {
@@ -123,15 +191,7 @@ func (p *Public) unset(gatewayID string) {
 
 // HandleConnect fetches public gateway information in the background when a ConnectMessage is received
 func (p *Public) HandleConnect(ctx middleware.Context, msg *types.ConnectMessage) error {
-	go func() {
-		log := p.log.WithField("GatewayID", msg.GatewayID)
-		err := p.fetch(msg.GatewayID)
-		if err != nil {
-			log.WithError(err).Warn("Could not get public Gateway information")
-		} else {
-			log.Debug("Got public Gateway information")
-		}
-	}()
+	p.get(msg.GatewayID)
 	return nil
 }
 
