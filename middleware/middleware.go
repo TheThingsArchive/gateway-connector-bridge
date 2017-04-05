@@ -4,8 +4,14 @@
 package middleware
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 )
+
+// Timeout for middleware
+var Timeout = 10 * time.Millisecond
 
 // Context for middleware
 type Context interface {
@@ -40,19 +46,30 @@ type Chain []interface{}
 
 // Execute the chain
 func (c Chain) Execute(ctx Context, msg interface{}) error {
-	switch msg := msg.(type) {
-	case *types.ConnectMessage:
-		return c.filterConnect().Execute(ctx, msg)
-	case *types.DisconnectMessage:
-		return c.filterDisconnect().Execute(ctx, msg)
-	case *types.UplinkMessage:
-		return c.filterUplink().Execute(ctx, msg)
-	case *types.StatusMessage:
-		return c.filterStatus().Execute(ctx, msg)
-	case *types.DownlinkMessage:
-		return c.filterDownlink().Execute(ctx, msg)
+	errCh := make(chan error)
+	defer close(errCh)
+	go func() {
+		switch msg := msg.(type) {
+		case *types.ConnectMessage:
+			errCh <- c.filterConnect().Execute(ctx, msg)
+		case *types.DisconnectMessage:
+			errCh <- c.filterDisconnect().Execute(ctx, msg)
+		case *types.UplinkMessage:
+			errCh <- c.filterUplink().Execute(ctx, msg)
+		case *types.StatusMessage:
+			errCh <- c.filterStatus().Execute(ctx, msg)
+		case *types.DownlinkMessage:
+			errCh <- c.filterDownlink().Execute(ctx, msg)
+		default:
+			errCh <- nil
+		}
+	}()
+	select {
+	case err := <-errCh:
+		return err
+	case <-time.After(Timeout):
+		return fmt.Errorf("middleware: timeout for %T", msg)
 	}
-	return nil
 }
 
 // Connect middleware
