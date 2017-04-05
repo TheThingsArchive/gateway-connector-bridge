@@ -6,10 +6,12 @@ package ttn
 import (
 	"bytes"
 	"testing"
+	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	ttnlog "github.com/TheThingsNetwork/go-utils/log"
 	"github.com/TheThingsNetwork/go-utils/log/apex"
+	"github.com/TheThingsNetwork/ttn/api"
 	pb_gateway "github.com/TheThingsNetwork/ttn/api/gateway"
 	"github.com/TheThingsNetwork/ttn/api/pool"
 	pb_router "github.com/TheThingsNetwork/ttn/api/router"
@@ -32,6 +34,8 @@ func TestTTNRouter(t *testing.T) {
 				c.Printf("\n%s", logs.String())
 			}
 		}()
+
+		api.WaitForStreams = time.Second
 
 		Convey("When creating a new TTN Router", func() {
 			router, err := New(RouterConfig{

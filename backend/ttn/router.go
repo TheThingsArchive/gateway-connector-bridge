@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
+	"github.com/TheThingsNetwork/ttn/api"
 	"github.com/TheThingsNetwork/ttn/api/auth"
 	"github.com/TheThingsNetwork/ttn/api/discovery"
 	"github.com/TheThingsNetwork/ttn/api/pool"
@@ -19,6 +20,7 @@ import (
 )
 
 func init() {
+	api.WaitForStreams = 0
 	grpc.EnableTracing = false
 }
 
