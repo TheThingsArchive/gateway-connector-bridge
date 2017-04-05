@@ -65,12 +65,12 @@ func (p *Public) WithRedis(client *redis.Client, prefix string) (*Public, error)
 		}
 	}
 
-	var gateway account.Gateway
 	for _, key := range allKeys {
 		res, err := client.Get(key).Result()
 		if err != nil {
 			continue
 		}
+		var gateway account.Gateway
 		err = json.Unmarshal([]byte(res), &gateway)
 		if err != nil {
 			continue
