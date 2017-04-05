@@ -19,6 +19,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
+// PublishTimeout is the timeout before returning from publish without checking error
+var PublishTimeout = 50 * time.Millisecond
+
 // New returns a new MQTT
 func New(config Config, ctx log.Interface) (*MQTT, error) {
 	mqtt := new(MQTT)
@@ -304,11 +307,14 @@ func (c *MQTT) PublishDownlink(message *types.DownlinkMessage) error {
 		return err
 	}
 	token := c.publish(fmt.Sprintf(DownlinkTopicFormat, message.GatewayID), msg)
-	token.Wait()
-	if err := token.Error(); err != nil {
-		ctx.WithError(err).Warn("Could not publish downlink message")
-		return err
+	if token.WaitTimeout(PublishTimeout) {
+		if err := token.Error(); err != nil {
+			ctx.WithError(err).Warn("Could not publish downlink message")
+			return err
+		}
+		ctx.WithField("ProtoSize", len(msg)).Debug("Published downlink message")
+	} else {
+		ctx.Warn("Timeout publishing downlink message")
 	}
-	ctx.WithField("ProtoSize", len(msg)).Debug("Published downlink message")
 	return nil
 }
