@@ -17,7 +17,7 @@ import (
 
 func TestBackend(t *testing.T) {
 	Convey("Given a new Backend binding at a random port", t, func() {
-		backend, err := NewBackend("127.0.0.1:0", nil, nil, false)
+		backend, err := NewBackend(Config{Bind: "127.0.0.1:0"}, nil, nil, false)
 		So(err, ShouldBeNil)
 
 		backendAddr, err := net.ResolveUDPAddr("udp", backend.conn.LocalAddr().String())

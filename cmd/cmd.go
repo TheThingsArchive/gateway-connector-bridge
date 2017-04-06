@@ -221,7 +221,10 @@ func runBridge(cmd *cobra.Command, args []string) {
 
 	if udp := config.GetString("udp"); udp != "" {
 		pktfwd := pktfwd.New(pktfwd.Config{
-			Bind: udp,
+			Bind:     udp,
+			Session:  config.GetDuration("udp.session"),
+			LockIP:   config.GetBool("udp.lock-ip") || config.GetBool("udp.lock-port"),
+			LockPort: config.GetBool("udp.lock-port"),
 		}, ttnlog.Get())
 		bridge.AddSouthbound(pktfwd)
 	}
@@ -349,6 +352,9 @@ func init() {
 
 	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discover.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
 	BridgeCmd.Flags().String("udp", "", "UDP address to listen on for Semtech Packet Forwarder gateways")
+	BridgeCmd.Flags().Duration("udp.session", time.Minute, "Duration of gateway sessions")
+	BridgeCmd.Flags().Bool("udp.lock-ip", true, "Lock gateways to IP addresses for the session duration")
+	BridgeCmd.Flags().Bool("udp.lock-port", false, "Additional to udp.lock-ip, also lock gateways to ports for the session duration")
 	BridgeCmd.Flags().StringSlice("mqtt", []string{"guest:guest@localhost:1883"}, "MQTT Broker to connect to (user:pass@host:port; disable with \"disable\")")
 	BridgeCmd.Flags().StringSlice("amqp", []string{}, "AMQP Broker to connect to (user:pass@host:port; disable with \"disable\")")
 

@@ -24,7 +24,6 @@ import (
 )
 
 var errGatewayDoesNotExist = errors.New("gateway does not exist")
-var gatewayCleanupDuration = -1 * time.Minute
 var loRaDataRateRegex = regexp.MustCompile(`SF(\d+)BW(\d+)`)
 
 type udpPacket struct {
@@ -39,6 +38,7 @@ type gateway struct {
 }
 
 type gateways struct {
+	session time.Duration
 	sync.RWMutex
 	gateways map[lorawan.EUI64]gateway
 	onNew    func(lorawan.EUI64) error
@@ -83,7 +83,7 @@ func (c *gateways) cleanup() error {
 	defer c.Unlock()
 	c.Lock()
 	for mac := range c.gateways {
-		if c.gateways[mac].lastSeen.Before(time.Now().Add(gatewayCleanupDuration)) {
+		if c.gateways[mac].lastSeen.Before(time.Now().Add(-1 * c.session)) {
 			if c.onDelete != nil {
 				if err := c.onDelete(mac); err != nil {
 					return err
@@ -106,11 +106,15 @@ type Backend struct {
 	gateways     gateways
 	wg           sync.WaitGroup
 	skipCRCCheck bool
+
+	pushSources *sourceLocks
+	pullSources *sourceLocks
+	ackSources  *sourceLocks
 }
 
 // NewBackend creates a new backend.
-func NewBackend(bind string, onNew func(lorawan.EUI64) error, onDelete func(lorawan.EUI64) error, skipCRCCheck bool) (*Backend, error) {
-	addr, err := net.ResolveUDPAddr("udp", bind)
+func NewBackend(config Config, onNew func(lorawan.EUI64) error, onDelete func(lorawan.EUI64) error, skipCRCCheck bool) (*Backend, error) {
+	addr, err := net.ResolveUDPAddr("udp", config.Bind)
 	if err != nil {
 		return nil, err
 	}
@@ -128,10 +132,17 @@ func NewBackend(bind string, onNew func(lorawan.EUI64) error, onDelete func(lora
 		statsChan:    make(chan *types.StatusMessage),
 		udpSendChan:  make(chan udpPacket),
 		gateways: gateways{
+			session:  config.Session,
 			gateways: make(map[lorawan.EUI64]gateway),
 			onNew:    onNew,
 			onDelete: onDelete,
 		},
+	}
+
+	if config.LockIP {
+		b.pushSources = newSourceLocks(config.LockPort, config.Session)
+		b.pullSources = newSourceLocks(config.LockPort, config.Session)
+		b.ackSources = newSourceLocks(config.LockPort, config.Session)
 	}
 
 	go func() {
@@ -288,6 +299,11 @@ func (b *Backend) handlePullData(addr *net.UDPAddr, data []byte) error {
 	if err := p.UnmarshalBinary(data); err != nil {
 		return err
 	}
+	if b.pullSources != nil {
+		if err := b.pullSources.Set(p.GatewayMAC, addr); err != nil {
+			return err
+		}
+	}
 
 	b.log.WithFields(log.Fields{
 		"addr": addr,
@@ -323,6 +339,11 @@ func (b *Backend) handlePushData(addr *net.UDPAddr, data []byte) error {
 	var p PushDataPacket
 	if err := p.UnmarshalBinary(data); err != nil {
 		return err
+	}
+	if b.pushSources != nil {
+		if err := b.pushSources.Set(p.GatewayMAC, addr); err != nil {
+			return err
+		}
 	}
 
 	b.log.WithFields(log.Fields{
@@ -380,6 +401,11 @@ func (b *Backend) handleTXACK(addr *net.UDPAddr, data []byte) error {
 	var p TXACKPacket
 	if err := p.UnmarshalBinary(data); err != nil {
 		return err
+	}
+	if b.ackSources != nil {
+		if err := b.ackSources.Set(p.GatewayMAC, addr); err != nil {
+			return err
+		}
 	}
 	var errBool bool
 

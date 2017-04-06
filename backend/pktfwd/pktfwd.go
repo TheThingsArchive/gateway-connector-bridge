@@ -5,6 +5,7 @@ package pktfwd
 
 import (
 	"sync"
+	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/go-utils/log"
@@ -13,7 +14,10 @@ import (
 
 // Config contains configuration for PacketForwarder
 type Config struct {
-	Bind string
+	Bind     string
+	Session  time.Duration
+	LockIP   bool
+	LockPort bool
 }
 
 // New returns a new Dummy backend
@@ -44,7 +48,7 @@ type PacketForwarder struct {
 
 // Connect implements the Southbound interface
 func (f *PacketForwarder) Connect() (err error) {
-	f.backend, err = NewBackend(f.config.Bind, f.onNew, f.onDelete, false)
+	f.backend, err = NewBackend(f.config, f.onNew, f.onDelete, false)
 	if err != nil {
 		return err
 	}
