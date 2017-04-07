@@ -144,12 +144,12 @@ func (p *Public) setErr(gatewayID string, err error) {
 func (p *Public) set(gatewayID string, gateway account.Gateway) {
 	log := p.log.WithField("GatewayID", gatewayID)
 	p.mu.Lock()
-	defer p.mu.Unlock()
 	log.Debug("Setting public gateway info")
 	p.info[gatewayID] = &info{
 		lastUpdated: time.Now(),
 		gateway:     gateway,
 	}
+	p.mu.Unlock()
 	if p.redisClient != nil {
 		data, _ := json.Marshal(gateway)
 		if err := p.redisClient.Set(p.redisKey(gatewayID), string(data), p.expire).Err(); err != nil {
