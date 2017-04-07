@@ -102,7 +102,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 
 	middleware = append(middleware, inject.NewInject(inject.Fields{
 		Bridge:        id,
-		FrequencyPlan: viper.GetString("inject.frequency-plan"),
+		FrequencyPlan: viper.GetString("inject-frequency-plan"),
 	}))
 
 	// Set up Redis
@@ -145,9 +145,9 @@ func runBridge(cmd *cobra.Command, args []string) {
 	// Ratelimit
 	if viper.GetBool("ratelimit") {
 		limits := ratelimit.Limits{
-			Uplink:   config.GetInt("ratelimit.uplink"),
-			Downlink: config.GetInt("ratelimit.downlink"),
-			Status:   config.GetInt("ratelimit.status"),
+			Uplink:   config.GetInt("ratelimit-uplink"),
+			Downlink: config.GetInt("ratelimit-downlink"),
+			Status:   config.GetInt("ratelimit-status"),
 		}
 
 		if redisClient != nil {
@@ -222,9 +222,9 @@ func runBridge(cmd *cobra.Command, args []string) {
 	if udp := config.GetString("udp"); udp != "" {
 		pktfwd := pktfwd.New(pktfwd.Config{
 			Bind:     udp,
-			Session:  config.GetDuration("udp.session"),
-			LockIP:   config.GetBool("udp.lock-ip") || config.GetBool("udp.lock-port"),
-			LockPort: config.GetBool("udp.lock-port"),
+			Session:  config.GetDuration("udp-session"),
+			LockIP:   config.GetBool("udp-lock-ip") || config.GetBool("udp-lock-port"),
+			LockPort: config.GetBool("udp-lock-port"),
 		}, ttnlog.Get())
 		bridge.AddSouthbound(pktfwd)
 	}
@@ -343,18 +343,18 @@ func init() {
 	BridgeCmd.Flags().Duration("info-expire", time.Hour, "Gateway Information expiration time")
 	BridgeCmd.Flags().Bool("route-unknown-gateways", false, "Route traffic for unknown gateways")
 
-	BridgeCmd.Flags().String("inject.frequency-plan", "", "Inject a frequency plan field into status message that don't have one")
+	BridgeCmd.Flags().String("inject-frequency-plan", "", "Inject a frequency plan field into status message that don't have one")
 
 	BridgeCmd.Flags().Bool("ratelimit", false, "Rate-limit messages")
-	BridgeCmd.Flags().Uint("ratelimit.uplink", 600, "Uplink rate limit (per gateway per minute)")
-	BridgeCmd.Flags().Uint("ratelimit.downlink", 0, "Downlink rate limit (per gateway per minute)")
-	BridgeCmd.Flags().Uint("ratelimit.status", 20, "Status rate limit (per gateway per minute)")
+	BridgeCmd.Flags().Uint("ratelimit-uplink", 600, "Uplink rate limit (per gateway per minute)")
+	BridgeCmd.Flags().Uint("ratelimit-downlink", 0, "Downlink rate limit (per gateway per minute)")
+	BridgeCmd.Flags().Uint("ratelimit-status", 20, "Status rate limit (per gateway per minute)")
 
 	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discover.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
 	BridgeCmd.Flags().String("udp", "", "UDP address to listen on for Semtech Packet Forwarder gateways")
-	BridgeCmd.Flags().Duration("udp.session", time.Minute, "Duration of gateway sessions")
-	BridgeCmd.Flags().Bool("udp.lock-ip", true, "Lock gateways to IP addresses for the session duration")
-	BridgeCmd.Flags().Bool("udp.lock-port", false, "Additional to udp.lock-ip, also lock gateways to ports for the session duration")
+	BridgeCmd.Flags().Duration("udp-session", time.Minute, "Duration of gateway sessions")
+	BridgeCmd.Flags().Bool("udp-lock-ip", true, "Lock gateways to IP addresses for the session duration")
+	BridgeCmd.Flags().Bool("udp-lock-port", false, "Additional to udp-lock-ip, also lock gateways to ports for the session duration")
 	BridgeCmd.Flags().StringSlice("mqtt", []string{"guest:guest@localhost:1883"}, "MQTT Broker to connect to (user:pass@host:port; disable with \"disable\")")
 	BridgeCmd.Flags().StringSlice("amqp", []string{}, "AMQP Broker to connect to (user:pass@host:port; disable with \"disable\")")
 
