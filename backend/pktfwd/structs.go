@@ -128,7 +128,7 @@ func (p *PushACKPacket) UnmarshalBinary(data []byte) error {
 type PullDataPacket struct {
 	ProtocolVersion uint8
 	RandomToken     uint16
-	GatewayMAC      [8]byte
+	GatewayMAC      lorawan.EUI64
 }
 
 // MarshalBinary marshals the object in binary form.

@@ -307,7 +307,7 @@ func (b *Backend) handlePullData(addr *net.UDPAddr, data []byte) error {
 
 	b.log.WithFields(log.Fields{
 		"addr": addr,
-		"mac":  fmt.Sprintf("%x", p.GatewayMAC),
+		"mac":  p.GatewayMAC,
 	}).Debug("Handle PullData")
 
 	ack := PullACKPacket{
@@ -348,7 +348,7 @@ func (b *Backend) handlePushData(addr *net.UDPAddr, data []byte) error {
 
 	b.log.WithFields(log.Fields{
 		"addr": addr,
-		"mac":  fmt.Sprintf("%x", p.GatewayMAC),
+		"mac":  p.GatewayMAC,
 		"rxpk": len(p.Payload.RXPK),
 		"stat": p.Payload.Stat != nil,
 	}).Debug("Handle PushData")
@@ -411,7 +411,7 @@ func (b *Backend) handleTXACK(addr *net.UDPAddr, data []byte) error {
 
 	logFields := log.Fields{
 		"addr": addr,
-		"mac":  fmt.Sprintf("%x", p.GatewayMAC),
+		"mac":  p.GatewayMAC,
 	}
 	if p.Payload != nil {
 		if p.Payload.TXPKACK.Error != "NONE" {
