@@ -437,8 +437,10 @@ func (c *AMQP) unsubscribe(routingKey string) error {
 	c.subscriptionLock.RLock()
 	defer c.subscriptionLock.RUnlock()
 	c.subscriptions[routingKey].Wait()
-	if err := c.subscriptions[routingKey].cancel(); err != nil {
-		return err
+	if subscription, ok := c.subscriptions[routingKey]; ok && subscription.cancel != nil {
+		if err := subscription.cancel(); err != nil {
+			return err
+		}
 	}
 	channel, err := c.channel()
 	if err != nil {
