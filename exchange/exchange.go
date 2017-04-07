@@ -4,6 +4,7 @@
 package exchange
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -166,126 +167,137 @@ func (b *Exchange) ConnectGateway(gatewayID ...string) {
 	}
 }
 
-func (b *Exchange) handleChannels() {
-	var curStart time.Time
-	var curCtx log.Interface
-	var curMsg string
-	start := func(ctx log.Interface, msg string) {
-		curStart = time.Now()
-		curCtx = ctx
-		curMsg = msg
-	}
-	for {
-		if curMsg != "" {
-			curCtx.WithField("Duration", time.Since(curStart)).Infof("Routed %s", curMsg)
+func (b *Exchange) handleChannels() (err error) {
+	errCh := make(chan error)
+	watchdog := newWatchdog(func() {
+		errCh <- errors.New("handleChannels stuck")
+	})
+	go func() {
+		defer func() { errCh <- nil }()
+		var curStart time.Time
+		var curCtx log.Interface
+		var curMsg string
+		start := func(ctx log.Interface, msg string) {
+			watchdog.Kick()
+			curStart = time.Now()
+			curCtx = ctx
+			curMsg = msg
 		}
-		select {
-		case <-b.done:
-			return
-		case connectMessage, ok := <-b.connect:
-			if !ok {
-				continue
+		for {
+			if curMsg != "" {
+				curCtx.WithField("Duration", time.Since(curStart)).Infof("Routed %s", curMsg)
 			}
-			ctx := b.ctx.WithField("GatewayID", connectMessage.GatewayID)
-			start(ctx, "connect")
-			if b.auth != nil {
-				if connectMessage.Key != "" {
-					ctx.Debug("Got access key")
-					if err := b.auth.SetKey(connectMessage.GatewayID, connectMessage.Key); err != nil {
-						ctx.WithError(err).Warn("Could not set gateway key")
+			select {
+			case <-b.done:
+				return
+			case <-time.After(watchdogExpire - 10*time.Millisecond):
+				start(b.ctx, "")
+			case connectMessage, ok := <-b.connect:
+				if !ok {
+					continue
+				}
+				ctx := b.ctx.WithField("GatewayID", connectMessage.GatewayID)
+				start(ctx, "connect")
+				if b.auth != nil {
+					if connectMessage.Key != "" {
+						ctx.Debug("Got access key")
+						if err := b.auth.SetKey(connectMessage.GatewayID, connectMessage.Key); err != nil {
+							ctx.WithError(err).Warn("Could not set gateway key")
+						}
 					}
 				}
-			}
-			if !b.gateways.Add(connectMessage.GatewayID) {
-				ctx.Debug("Got connect message from already-connected gateway")
-				continue
-			}
-			if err := b.middleware.Execute(middleware.NewContext(), connectMessage); err != nil {
-				ctx.WithError(err).Warn("Error in middleware")
-				continue
-			}
-			for _, backend := range b.northboundBackends {
-				go b.activateNorthbound(backend, connectMessage.GatewayID)
-			}
-			for _, backend := range b.southboundBackends {
-				go b.activateSouthbound(backend, connectMessage.GatewayID)
-			}
-			statusserver.ConnectGateway()
-		case disconnectMessage, ok := <-b.disconnect:
-			if !ok {
-				continue
-			}
-			ctx := b.ctx.WithField("GatewayID", disconnectMessage.GatewayID)
-			start(ctx, "disconnect")
-			if !b.gateways.Contains(disconnectMessage.GatewayID) {
-				ctx.Debug("Got disconnect message from not-connected gateway")
-				continue
-			}
-			if err := b.auth.ValidateKey(disconnectMessage.GatewayID, disconnectMessage.Key); err != nil {
-				ctx.WithError(err).Warn("Got disconnect message with invalid Key")
-				continue
-			}
-			if err := b.middleware.Execute(middleware.NewContext(), disconnectMessage); err != nil {
-				ctx.WithError(err).Warn("Error in middleware")
-				continue
-			}
-			b.deactivateNorthbound(disconnectMessage.GatewayID)
-			b.deactivateSouthbound(disconnectMessage.GatewayID)
-			b.gateways.Remove(disconnectMessage.GatewayID)
-			statusserver.DisconnectGateway()
-		case uplinkMessage, ok := <-b.uplink:
-			if !ok {
-				continue
-			}
-			ctx := b.ctx.WithField("GatewayID", uplinkMessage.GatewayID)
-			start(ctx, "uplink")
-			if err := b.middleware.Execute(middleware.NewContext(), uplinkMessage); err != nil {
-				ctx.WithError(err).Warn("Error in middleware")
-				continue
-			}
-			if meta := uplinkMessage.Message.GetGatewayMetadata(); meta != nil {
-				meta.GatewayId = uplinkMessage.GatewayID
-			}
-			for _, backend := range b.northboundBackends {
-				if err := backend.PublishUplink(uplinkMessage); err != nil {
-					ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish uplink")
+				if !b.gateways.Add(connectMessage.GatewayID) {
+					ctx.Debug("Got connect message from already-connected gateway")
+					continue
 				}
-			}
-			statusserver.Uplink()
-		case downlinkMessage, ok := <-b.downlink:
-			if !ok {
-				continue
-			}
-			ctx := b.ctx.WithField("GatewayID", downlinkMessage.GatewayID)
-			start(ctx, "downlink")
-			if err := b.middleware.Execute(middleware.NewContext(), downlinkMessage); err != nil {
-				ctx.WithError(err).Warn("Error in middleware")
-				continue
-			}
-			for _, backend := range b.southboundBackends {
-				if err := backend.PublishDownlink(downlinkMessage); err != nil {
-					ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish downlink")
+				if err := b.middleware.Execute(middleware.NewContext(), connectMessage); err != nil {
+					ctx.WithError(err).Warn("Error in middleware")
+					continue
 				}
-			}
-			statusserver.Downlink()
-		case statusMessage, ok := <-b.status:
-			if !ok {
-				continue
-			}
-			ctx := b.ctx.WithField("GatewayID", statusMessage.GatewayID)
-			start(ctx, "status")
-			if err := b.middleware.Execute(middleware.NewContext(), statusMessage); err != nil {
-				ctx.WithError(err).Warn("Error in middleware")
-				continue
-			}
-			for _, backend := range b.northboundBackends {
-				if err := backend.PublishStatus(statusMessage); err != nil {
-					ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish status")
+				for _, backend := range b.northboundBackends {
+					go b.activateNorthbound(backend, connectMessage.GatewayID)
 				}
+				for _, backend := range b.southboundBackends {
+					go b.activateSouthbound(backend, connectMessage.GatewayID)
+				}
+				statusserver.ConnectGateway()
+			case disconnectMessage, ok := <-b.disconnect:
+				if !ok {
+					continue
+				}
+				ctx := b.ctx.WithField("GatewayID", disconnectMessage.GatewayID)
+				start(ctx, "disconnect")
+				if !b.gateways.Contains(disconnectMessage.GatewayID) {
+					ctx.Debug("Got disconnect message from not-connected gateway")
+					continue
+				}
+				if err := b.auth.ValidateKey(disconnectMessage.GatewayID, disconnectMessage.Key); err != nil {
+					ctx.WithError(err).Warn("Got disconnect message with invalid Key")
+					continue
+				}
+				if err := b.middleware.Execute(middleware.NewContext(), disconnectMessage); err != nil {
+					ctx.WithError(err).Warn("Error in middleware")
+					continue
+				}
+				b.deactivateNorthbound(disconnectMessage.GatewayID)
+				b.deactivateSouthbound(disconnectMessage.GatewayID)
+				b.gateways.Remove(disconnectMessage.GatewayID)
+				statusserver.DisconnectGateway()
+			case uplinkMessage, ok := <-b.uplink:
+				if !ok {
+					continue
+				}
+				ctx := b.ctx.WithField("GatewayID", uplinkMessage.GatewayID)
+				start(ctx, "uplink")
+				if err := b.middleware.Execute(middleware.NewContext(), uplinkMessage); err != nil {
+					ctx.WithError(err).Warn("Error in middleware")
+					continue
+				}
+				if meta := uplinkMessage.Message.GetGatewayMetadata(); meta != nil {
+					meta.GatewayId = uplinkMessage.GatewayID
+				}
+				for _, backend := range b.northboundBackends {
+					if err := backend.PublishUplink(uplinkMessage); err != nil {
+						ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish uplink")
+					}
+				}
+				statusserver.Uplink()
+			case downlinkMessage, ok := <-b.downlink:
+				if !ok {
+					continue
+				}
+				ctx := b.ctx.WithField("GatewayID", downlinkMessage.GatewayID)
+				start(ctx, "downlink")
+				if err := b.middleware.Execute(middleware.NewContext(), downlinkMessage); err != nil {
+					ctx.WithError(err).Warn("Error in middleware")
+					continue
+				}
+				for _, backend := range b.southboundBackends {
+					if err := backend.PublishDownlink(downlinkMessage); err != nil {
+						ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish downlink")
+					}
+				}
+				statusserver.Downlink()
+			case statusMessage, ok := <-b.status:
+				if !ok {
+					continue
+				}
+				ctx := b.ctx.WithField("GatewayID", statusMessage.GatewayID)
+				start(ctx, "status")
+				if err := b.middleware.Execute(middleware.NewContext(), statusMessage); err != nil {
+					ctx.WithError(err).Warn("Error in middleware")
+					continue
+				}
+				for _, backend := range b.northboundBackends {
+					if err := backend.PublishStatus(statusMessage); err != nil {
+						ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish status")
+					}
+				}
+				statusserver.GatewayStatus()
 			}
-			statusserver.GatewayStatus()
 		}
-	}
+	}()
+	return <-errCh
 }
 
 func (b *Exchange) activateNorthbound(backend backend.Northbound, gatewayID string) {
@@ -405,7 +417,15 @@ func (b *Exchange) Start(goroutines int, timeout time.Duration) (finishedWithinT
 		finishedWithinTimeout = false
 	}
 	for i := 0; i < goroutines; i++ {
-		go b.handleChannels()
+		go func() {
+			for {
+				err := b.handleChannels()
+				if err == nil {
+					return
+				}
+				b.ctx.WithError(err).Error("Error in handleChannels")
+			}
+		}()
 	}
 	return
 }
