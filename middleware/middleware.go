@@ -47,7 +47,6 @@ type Chain []interface{}
 // Execute the chain
 func (c Chain) Execute(ctx Context, msg interface{}) error {
 	errCh := make(chan error)
-	defer close(errCh)
 	go func() {
 		switch msg := msg.(type) {
 		case *types.ConnectMessage:
