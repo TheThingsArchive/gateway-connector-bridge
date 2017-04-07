@@ -171,7 +171,7 @@ func (c *MQTT) resubscribe() {
 func (c *MQTT) unsubscribe(topic string) paho.Token {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if subscription, ok := c.subscriptions[topic]; ok {
+	if subscription, ok := c.subscriptions[topic]; ok && subscription.cancel != nil {
 		subscription.cancel()
 	}
 	delete(c.subscriptions, topic)
