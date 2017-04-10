@@ -255,16 +255,16 @@
 			"revisionTime": "2017-02-01T22:58:49Z"
 		},
 		{
-			"checksumSHA1": "YrYC/K8sZrtgaFGZ+mDbxIeJ/BE=",
+			"checksumSHA1": "YJQqkH5JJ/h8r8245J9GCP4zG38=",
 			"path": "github.com/eclipse/paho.mqtt.golang",
-			"revision": "69afaac643519c4a3d3e7877e3b8ad5b48b15568",
-			"revisionTime": "2017-04-05T12:12:49Z"
+			"revision": "dfe35ae8bd6ead198596c5e5f4af1f55914741cf",
+			"revisionTime": "2017-03-08T16:30:23Z"
 		},
 		{
 			"checksumSHA1": "wPreCwXsA/oU2R+lkOGpR6skdA0=",
 			"path": "github.com/eclipse/paho.mqtt.golang/packets",
-			"revision": "69afaac643519c4a3d3e7877e3b8ad5b48b15568",
-			"revisionTime": "2017-04-05T12:12:49Z"
+			"revision": "dfe35ae8bd6ead198596c5e5f4af1f55914741cf",
+			"revisionTime": "2017-03-08T16:30:23Z"
 		},
 		{
 			"checksumSHA1": "x2Km0Qy3WgJJnV19Zv25VwTJcBM=",

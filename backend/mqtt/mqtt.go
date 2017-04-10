@@ -309,14 +309,13 @@ func (c *MQTT) PublishDownlink(message *types.DownlinkMessage) error {
 		return err
 	}
 	token := c.publish(fmt.Sprintf(DownlinkTopicFormat, message.GatewayID), msg)
-	if token.WaitTimeout(PublishTimeout) {
+	go func() {
+		token.Wait()
 		if err := token.Error(); err != nil {
 			ctx.WithError(err).Warn("Could not publish downlink message")
-			return err
+			return
 		}
 		ctx.WithField("ProtoSize", len(msg)).Debug("Published downlink message")
-	} else {
-		ctx.Warn("Timeout publishing downlink message")
-	}
+	}()
 	return nil
 }
