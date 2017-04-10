@@ -49,10 +49,10 @@ func (c *sourceLocks) Set(mac lorawan.EUI64, addr *net.UDPAddr) error {
 	if existing, ok := c.sources[mac]; ok {
 		if time.Since(existing.lastSeen) < c.cacheTime {
 			if c.withPort && existing.addr.Port != addr.Port {
-				return fmt.Errorf("security: inconsistent port %d (expected %d)", addr.Port, existing.addr.Port)
+				return fmt.Errorf("security: inconsistent port for gateway %s: %d (expected %d)", mac, addr.Port, existing.addr.Port)
 			}
 			if !existing.addr.IP.Equal(addr.IP) {
-				return fmt.Errorf("security: inconsistent IP address %s (expected %s)", addr.IP, existing.addr)
+				return fmt.Errorf("security: inconsistent IP address for gateway %s: %s (expected %s)", mac, addr.IP, existing.addr)
 			}
 		}
 	}
