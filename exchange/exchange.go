@@ -4,7 +4,6 @@
 package exchange
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -169,14 +168,14 @@ func (b *Exchange) ConnectGateway(gatewayID ...string) {
 
 func (b *Exchange) handleChannels() (err error) {
 	errCh := make(chan error)
+	var curMsg string
 	watchdog := newWatchdog(func() {
-		errCh <- errors.New("handleChannels stuck")
+		errCh <- fmt.Errorf("handleChannels stuck in %s", curMsg)
 	})
 	go func() {
 		defer func() { errCh <- nil }()
 		var curStart time.Time
 		var curCtx log.Interface
-		var curMsg string
 		start := func(ctx log.Interface, msg string) {
 			watchdog.Kick()
 			curStart = time.Now()
