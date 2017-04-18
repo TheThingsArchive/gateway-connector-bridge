@@ -19,7 +19,9 @@ func newWatchdog(callback func()) *watchdog {
 	}
 }
 
+// Kick the watchdog. No effect if already expired
 func (w *watchdog) Kick() {
-	w.Stop()
-	w.Reset(watchdogExpire)
+	if w.Stop() {
+		w.Reset(watchdogExpire)
+	}
 }
