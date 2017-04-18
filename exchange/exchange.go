@@ -168,12 +168,14 @@ func (b *Exchange) ConnectGateway(gatewayID ...string) {
 
 func (b *Exchange) handleChannels() (err error) {
 	errCh := make(chan error)
+	defer close(errCh)
+	doneCh := make(chan struct{})
+	defer close(doneCh)
 	var curMsg string
 	watchdog := newWatchdog(func() {
 		errCh <- fmt.Errorf("handleChannels stuck in %s", curMsg)
 	})
 	go func() {
-		defer func() { errCh <- nil }()
 		var curStart time.Time
 		var curCtx log.Interface
 		start := func(ctx log.Interface, msg string) {
@@ -187,9 +189,9 @@ func (b *Exchange) handleChannels() (err error) {
 				curCtx.WithField("Duration", time.Since(curStart)).Infof("Routed %s", curMsg)
 			}
 			select {
-			case <-b.done:
+			case <-doneCh:
 				return
-			case <-time.After(watchdogExpire - 10*time.Millisecond):
+			case <-time.After(watchdogExpire - 100*time.Millisecond):
 				start(b.ctx, "")
 			case connectMessage, ok := <-b.connect:
 				if !ok {
@@ -296,7 +298,12 @@ func (b *Exchange) handleChannels() (err error) {
 			}
 		}
 	}()
-	return <-errCh
+	select {
+	case <-b.done:
+		return nil
+	case err := <-errCh:
+		return err
+	}
 }
 
 func (b *Exchange) activateNorthbound(backend backend.Northbound, gatewayID string) {
