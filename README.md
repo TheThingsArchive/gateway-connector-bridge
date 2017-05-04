@@ -1,6 +1,8 @@
 # The Things Network Gateway Connector Bridge
 
-[![Build Status](https://travis-ci.org/TheThingsNetwork/gateway-connector-bridge.svg?branch=master)](https://travis-ci.org/TheThingsNetwork/gateway-connector-bridge) [![Coverage Status](https://coveralls.io/repos/github/TheThingsNetwork/gateway-connector-bridge/badge.svg?branch=master)](https://coveralls.io/github/TheThingsNetwork/gateway-connector-bridge?branch=master)
+[![Build Status](https://travis-ci.org/TheThingsNetwork/gateway-connector-bridge.svg?branch=master)](https://travis-ci.org/TheThingsNetwork/gateway-connector-bridge) [![Coverage Status](https://coveralls.io/repos/github/TheThingsNetwork/gateway-connector-bridge/badge.svg?branch=master)](https://coveralls.io/github/TheThingsNetwork/gateway-connector-bridge?branch=master) [![GoDoc](https://godoc.org/github.com/TheThingsNetwork/gateway-connector-bridge?status.svg)](https://godoc.org/github.com/TheThingsNetwork/gateway-connector-bridge)
+
+![The Things Network](https://thethings.blob.core.windows.net/ttn/logo.svg)
 
 ## Installation
 
@@ -25,24 +27,33 @@ Usage:
   gateway-connector-bridge [flags]
 
 Flags:
-      --account-server string    Use an account server for exchanging access keys and fetching gateway information (default "https://account.thethingsnetwork.org")
-      --amqp stringSlice         AMQP Broker to connect to (user:pass@host:port; disable with "disable")
-      --debug                    Print debug logs
-      --http-debug-addr string   The address of the HTTP debug server to start
-      --id string                ID of this bridge
-      --info-expire duration     Gateway Information expiration time (default 6h0m0s)
-      --inject.frequency-plan string     Inject a frequ field into status message that don't have one
-      --log-file string          Location of the log file
-      --mqtt stringSlice         MQTT Broker to connect to (user:pass@host:port; disable with "disable") (default [guest:guest@localhost:1883])
-      --redis                    Use Redis auth backend (default true)
-      --redis-address string     Redis host and port (default "localhost:6379")
-      --redis-db int             Redis database
-      --redis-password string    Redis password
-      --root-ca-file string      Location of the file containing Root CA certificates
-      --status-addr string       Address of the gRPC status server to start
-      --ttn-router stringSlice   TTN Router to connect to (default [discover.thethingsnetwork.org:1900/ttn-router-eu])
-      --udp string               UDP address to listen on for Semtech Packet Forwarder gateways
-      --workers int              Number of parallel workers (default 1)
+      --account-server string          Use an account server for exchanging access keys and fetching gateway information (default "https://account.thethingsnetwork.org")
+      --amqp stringSlice               AMQP Broker to connect to (user:pass@host:port; disable with "disable")
+      --debug                          Print debug logs
+      --http-debug-addr string         The address of the HTTP debug server to start
+      --id string                      ID of this bridge
+      --info-expire duration           Gateway Information expiration time (default 1h0m0s)
+      --inject-frequency-plan string   Inject a frequency plan field into status message that don't have one
+      --log-file string                Location of the log file
+      --mqtt stringSlice               MQTT Broker to connect to (user:pass@host:port; disable with "disable") (default [guest:guest@localhost:1883])
+      --ratelimit                      Rate-limit messages
+      --ratelimit-downlink uint        Downlink rate limit (per gateway per minute)
+      --ratelimit-status uint          Status rate limit (per gateway per minute) (default 20)
+      --ratelimit-uplink uint          Uplink rate limit (per gateway per minute) (default 600)
+      --redis                          Use Redis auth backend (default true)
+      --redis-address string           Redis host and port (default "localhost:6379")
+      --redis-db int                   Redis database
+      --redis-password string          Redis password
+      --root-ca-file string            Location of the file containing Root CA certificates
+      --route-unknown-gateways         Route traffic for unknown gateways
+      --status-addr string             Address of the gRPC status server to start
+      --status-key stringSlice         Access key for the gRPC status server
+      --ttn-router stringSlice         TTN Router to connect to (default [discover.thethingsnetwork.org:1900/ttn-router-eu])
+      --udp string                     UDP address to listen on for Semtech Packet Forwarder gateways
+      --udp-lock-ip                    Lock gateways to IP addresses for the session duration (default true)
+      --udp-lock-port                  Additional to udp-lock-ip, also lock gateways to ports for the session duration
+      --udp-session duration           Duration of gateway sessions (default 1m0s)
+      --workers int                    Number of parallel workers (default 1)
 ```
 
 For running in Docker, please refer to [`docker-compose.yml`](docker-compose.yml).
