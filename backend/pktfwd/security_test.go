@@ -3,7 +3,6 @@ package pktfwd
 import (
 	"net"
 	"testing"
-
 	"time"
 
 	"github.com/brocaar/lorawan"

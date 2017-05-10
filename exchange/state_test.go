@@ -9,11 +9,10 @@ import (
 	"os"
 	"testing"
 
-	redis "gopkg.in/redis.v5"
-
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
 	. "github.com/smartystreets/goconvey/convey"
+	redis "gopkg.in/redis.v5"
 )
 
 func getRedisClient() *redis.Client {

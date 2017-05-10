@@ -178,8 +178,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 	bridge.SetAuth(authBackend)
 
 	// Set up the TTN routers (from comma-separated list of discovery-server/router-id)
-
-	ttnRouters := strings.Split(config.GetString("ttn-router"), ",")
+	ttnRouters := config.GetStringSlice("ttn-router")
 	if len(ttnRouters) > 0 {
 		if rootCAFile := config.GetString("root-ca-file"); rootCAFile != "" {
 			roots, err := ioutil.ReadFile(rootCAFile)
@@ -231,7 +230,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 
 	// Set up the MQTT backends (from comma-separated list of user:pass@host:port)
 	mqttRegexp := regexp.MustCompile(`^(?:([0-9a-z_-]+)(?::([0-9A-Za-z-!"#$%&'()*+,.:;<=>?@[\]^_{|}~]+))?@)?([0-9a-z.-]+:[0-9]+)$`)
-	mqttBrokers := strings.Split(config.GetString("mqtt"), ",")
+	mqttBrokers := config.GetStringSlice("mqtt")
 	for _, mqttBroker := range mqttBrokers {
 		if mqttBroker == "disable" || mqttBroker == "" {
 			continue
@@ -255,7 +254,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 
 	// Set up the AMQP backends (from comma-separated list of user:pass@host:port)
 	amqpRegexp := regexp.MustCompile(`^(?:([0-9a-z_-]+)(?::([0-9A-Za-z-!"#$%&'()*+,.:;<=>?@[\]^_{|}~]+))?@)?([0-9a-z.-]+:[0-9]+)$`) // user:pass@host:port
-	amqpBrokers := strings.Split(config.GetString("amqp"), ",")
+	amqpBrokers := config.GetStringSlice("amqp")
 	for _, amqpBroker := range amqpBrokers {
 		if amqpBroker == "disable" || amqpBroker == "" {
 			continue
@@ -285,7 +284,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 	}
 
 	if statusAddr := config.GetString("status-addr"); statusAddr != "" {
-		for _, key := range strings.Split(config.GetString("status-key"), ",") {
+		for _, key := range config.GetStringSlice("status-key") {
 			statusserver.AddAccessKey(key)
 		}
 

@@ -9,12 +9,11 @@ import (
 	"sync"
 	"time"
 
-	redis "gopkg.in/redis.v5"
-
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/go-utils/log"
 	"github.com/TheThingsNetwork/go-utils/rate"
+	redis "gopkg.in/redis.v5"
 )
 
 // Limits per minute

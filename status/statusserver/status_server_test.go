@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/status"
-	"github.com/TheThingsNetwork/ttn/api"
+	"github.com/TheThingsNetwork/go-utils/grpc/ttnctx"
 	metrics "github.com/rcrowley/go-metrics"
 	. "github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
@@ -61,7 +61,7 @@ func TestStatusServer(t *testing.T) {
 				})
 			})
 			Convey("When requesting the status with a correct Key", func() {
-				res, err := cli.GetStatus(api.ContextWithKey(context.Background(), "key"), &status.StatusRequest{})
+				res, err := cli.GetStatus(ttnctx.OutgoingContextWithKey(context.Background(), "key"), &status.StatusRequest{})
 				Convey("There should be no error", func() {
 					So(err, ShouldBeNil)
 				})
