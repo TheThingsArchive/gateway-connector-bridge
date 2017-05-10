@@ -138,4 +138,4 @@ clean:
 docker: GOOS=linux
 docker: GOARCH=amd64
 docker: $(RELEASE_DIR)/gateway-connector-bridge-linux-amd64
-	docker build --squash -t thethingsnetwork/gateway-connector-bridge -f Dockerfile .
+	docker build -t thethingsnetwork/gateway-connector-bridge -f Dockerfile .
