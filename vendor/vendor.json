@@ -59,74 +59,74 @@
 		{
 			"checksumSHA1": "x795Q87cyvAAeuxXxft5iwd1Los=",
 			"path": "github.com/TheThingsNetwork/go-utils/backoff",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
 			"checksumSHA1": "Scfp1hQzYCbaI1fR7VJuYTgrJ/g=",
 			"path": "github.com/TheThingsNetwork/go-utils/grpc/auth",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
 			"checksumSHA1": "fWXFZ/SVuqR2ulNbPr1l3dsuV3o=",
 			"path": "github.com/TheThingsNetwork/go-utils/grpc/restartstream",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
-			"checksumSHA1": "0uL9swF3C61omKIxeJS3bMaUOMY=",
+			"checksumSHA1": "o0BMgxUyXPTu7S96RpNI/tPNkAw=",
 			"path": "github.com/TheThingsNetwork/go-utils/grpc/rpclog",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
 			"checksumSHA1": "1ZHMKISbo6QBsYLOx8JKgp6uhs4=",
 			"path": "github.com/TheThingsNetwork/go-utils/grpc/ttnctx",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
 			"checksumSHA1": "T7iFQUlCUAv4cJNDZC0//46Nbio=",
 			"path": "github.com/TheThingsNetwork/go-utils/handlers/cli",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
 			"checksumSHA1": "aXt7ZSqIfsHWBbJPgHFjqtyxyQ0=",
 			"path": "github.com/TheThingsNetwork/go-utils/log",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
 			"checksumSHA1": "RdI5upcV6MHSjr5Y9zogYvbeURw=",
 			"path": "github.com/TheThingsNetwork/go-utils/log/apex",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
 			"checksumSHA1": "2/v0SMyHM5vgImOb1BEEDWeXZEY=",
 			"path": "github.com/TheThingsNetwork/go-utils/pseudorandom",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
 			"checksumSHA1": "iYa+qSqzqZwpmoibM8/1X+aC3sI=",
 			"path": "github.com/TheThingsNetwork/go-utils/random",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
 			"checksumSHA1": "5R6P7aSu8E0Hd1mFfSYOrlnXF80=",
 			"path": "github.com/TheThingsNetwork/go-utils/rate",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
-			"checksumSHA1": "kLFTtAVcjZbHXybodGAqJ8wxflY=",
+			"checksumSHA1": "gqxUqqHQnCd8Nmdb4FU8vtxibag=",
 			"path": "github.com/TheThingsNetwork/go-utils/roots",
-			"revision": "eb3d4ba303fd1c8046e9026fcbb446ebaf0f4461",
-			"revisionTime": "2017-05-10T13:52:04Z"
+			"revision": "8622223277037145f4ed2beda936a39e6382a14d",
+			"revisionTime": "2017-05-10T17:17:25Z"
 		},
 		{
 			"checksumSHA1": "aNTEtU4Kb/03ppH6vQxwEQ54Lrs=",
