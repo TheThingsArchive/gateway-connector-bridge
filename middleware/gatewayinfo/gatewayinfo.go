@@ -223,7 +223,7 @@ func (p *Public) setGPS(gps *gateway.GPSMetadata, location *account.Location) (_
 			gps.Longitude = 0
 		}
 		// Unset GPS if close enough to null island
-		if (gps.Latitude > -1 || gps.Latitude < 1) && (gps.Longitude > -1 || gps.Longitude < 1) {
+		if (gps.Latitude > -1 && gps.Latitude < 1) && (gps.Longitude > -1 && gps.Longitude < 1) {
 			gps.Latitude = 0
 			gps.Longitude = 0
 		}
