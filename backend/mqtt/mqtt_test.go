@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-
 	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"

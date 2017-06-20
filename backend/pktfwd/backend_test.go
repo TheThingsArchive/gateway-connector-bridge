@@ -493,10 +493,14 @@ func TestNewRXPacketFromRXPK(t *testing.T) {
 			Modu: "LORA",
 			DatR: DatR{LoRa: "SF7BW125"},
 			CodR: "4/5",
-			RSSI: -51,
-			LSNR: 7,
+			RSSI: -54,
+			LSNR: 6.5,
 			Size: 16,
 			Data: base64.StdEncoding.EncodeToString([]byte{1, 2, 3, 4}),
+			RSig: []RSig{
+				RSig{Ant: 0, Chan: 2, RSSIC: -54, LSNR: 6.5},
+				RSig{Ant: 1, Chan: 2, RSSIC: -51, LSNR: 7},
+			},
 		}
 		mac := [8]byte{1, 2, 3, 4, 5, 6, 7, 8}
 
@@ -524,6 +528,10 @@ func TestNewRXPacketFromRXPK(t *testing.T) {
 					Frequency: 868500000,
 					Rssi:      -51,
 					Snr:       7,
+					Antennas: []*pb_gateway.RxMetadata_Antenna{
+						&pb_gateway.RxMetadata_Antenna{Antenna: 0, Channel: 2, Rssi: -54, Snr: 6.5},
+						&pb_gateway.RxMetadata_Antenna{Antenna: 1, Channel: 2, Rssi: -51, Snr: 7},
+					},
 				})
 			})
 		})

@@ -6,7 +6,6 @@ package exchange
 import (
 	"bytes"
 	"testing"
-
 	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"

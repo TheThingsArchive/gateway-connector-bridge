@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
+	"github.com/TheThingsNetwork/go-utils/grpc/auth"
 	"github.com/TheThingsNetwork/ttn/api"
-	"github.com/TheThingsNetwork/ttn/api/auth"
 	"github.com/TheThingsNetwork/ttn/api/discovery"
 	"github.com/TheThingsNetwork/ttn/api/pool"
 	"github.com/TheThingsNetwork/ttn/api/router"
@@ -48,7 +48,7 @@ func New(config RouterConfig, ctx log.Interface, tokenFunc func(string) string) 
 	router := &Router{
 		config:   config,
 		Ctx:      ctx.WithField("Connector", "TTN Router"),
-		pool:     pool.NewPool(context.Background(), append(pool.DefaultDialOptions, auth.WithTokenFunc(tokenFunc).DialOption())...),
+		pool:     pool.NewPool(context.Background(), append(pool.DefaultDialOptions, auth.WithTokenFunc("id", tokenFunc).DialOption())...),
 		gateways: make(map[string]*gatewayConn),
 	}
 	return router, nil

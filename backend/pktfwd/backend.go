@@ -494,18 +494,6 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 		return nil, fmt.Errorf("Could not base64 decode data: %s", err)
 	}
 
-	// For multi-antenna gateways, the LSNR and RSSI are those of the best reception
-	for _, sig := range rxpk.RSig {
-		if sig.LSNR > rxpk.LSNR {
-			rxpk.LSNR = sig.LSNR
-			rxpk.RSSI = sig.RSSIC
-			continue
-		}
-		if sig.LSNR == rxpk.LSNR && sig.RSSIC > rxpk.RSSI {
-			rxpk.RSSI = sig.RSSIC
-		}
-	}
-
 	gatewayTime := time.Time(rxpk.Time)
 	if gatewayTime.Before(time.Now().Add(-24 * time.Hour)) {
 		// Gateway time is definitely invalid if longer than 24 hours ago
@@ -537,6 +525,33 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 				Snr:       float32(rxpk.LSNR),
 			},
 		},
+	}
+
+	// Use LSNR and RSSI from RSig if present
+	if len(rxpk.RSig) > 0 {
+		rxPacket.Message.GatewayMetadata.Snr = float32(rxpk.RSig[0].LSNR)
+		rxPacket.Message.GatewayMetadata.Rssi = float32(rxpk.RSig[0].RSSIC)
+	}
+
+	if len(rxpk.RSig) > 1 {
+		for _, sig := range rxpk.RSig {
+			if float32(sig.LSNR) > rxPacket.Message.GatewayMetadata.Snr {
+				rxPacket.Message.GatewayMetadata.Snr = float32(sig.LSNR)
+				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIC)
+			} else if float32(sig.LSNR) == rxPacket.Message.GatewayMetadata.Snr && float32(sig.RSSIC) > rxPacket.Message.GatewayMetadata.Rssi {
+				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIC)
+			}
+			antenna := &pb_gateway.RxMetadata_Antenna{
+				Antenna: uint32(sig.Ant),
+				Channel: uint32(sig.Chan),
+				Rssi:    float32(sig.RSSIC),
+				Snr:     float32(sig.LSNR),
+			}
+			if eTime, err := base64.StdEncoding.DecodeString(sig.ETime); err == nil && len(eTime) > 0 {
+				antenna.EncryptedTime = eTime
+			}
+			rxPacket.Message.GatewayMetadata.Antennas = append(rxPacket.Message.GatewayMetadata.Antennas, antenna)
+		}
 	}
 
 	return rxPacket, nil

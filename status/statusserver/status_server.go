@@ -5,6 +5,7 @@ package statusserver
 
 import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/status"
+	"github.com/TheThingsNetwork/go-utils/grpc/ttnctx"
 	"github.com/TheThingsNetwork/ttn/api"
 	"github.com/TheThingsNetwork/ttn/api/stats"
 	"github.com/rcrowley/go-metrics"
@@ -111,7 +112,7 @@ func (s *statusServer) getStatus() *status.StatusResponse {
 
 func (s *statusServer) GetStatus(ctx context.Context, _ *status.StatusRequest) (*status.StatusResponse, error) {
 	if len(s.accessKeys) != 0 {
-		key, err := api.KeyFromContext(ctx)
+		key, err := ttnctx.KeyFromIncomingContext(ctx)
 		if err != nil {
 			return nil, err
 		}
