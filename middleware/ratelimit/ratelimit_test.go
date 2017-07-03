@@ -80,5 +80,18 @@ func TestRateLimit(t *testing.T) {
 
 		})
 
+		Convey("When sending an UplinkMessage", func() {
+			err := i.HandleUplink(middleware.NewContext(), &types.UplinkMessage{GatewayID: "test"})
+			Convey("There should be no error", func() {
+				So(err, ShouldBeNil)
+			})
+			Convey("When sending another UplinkMessage", func() {
+				err := i.HandleUplink(middleware.NewContext(), &types.UplinkMessage{GatewayID: "test"})
+				Convey("There should be an error", func() {
+					So(err, ShouldEqual, ErrRateLimited)
+				})
+			})
+		})
+
 	})
 }
