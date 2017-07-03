@@ -23,6 +23,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/ttn"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/exchange"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/deduplicate"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/gatewayinfo"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/inject"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/ratelimit"
@@ -90,6 +91,10 @@ func runBridge(cmd *cobra.Command, args []string) {
 	bridge := exchange.New(ctx)
 
 	var middleware middleware.Chain
+
+	if viper.GetBool("deduplicate") {
+		middleware = append(middleware, deduplicate.NewDeduplicate())
+	}
 
 	id := fmt.Sprintf(
 		"%s %s-%s (%s)",
@@ -343,6 +348,8 @@ func init() {
 	BridgeCmd.Flags().Bool("route-unknown-gateways", false, "Route traffic for unknown gateways")
 
 	BridgeCmd.Flags().String("inject-frequency-plan", "", "Inject a frequency plan field into status message that don't have one")
+
+	BridgeCmd.Flags().Bool("deduplicate", true, "Block duplicate messages")
 
 	BridgeCmd.Flags().Bool("ratelimit", false, "Rate-limit messages")
 	BridgeCmd.Flags().Uint("ratelimit-uplink", 600, "Uplink rate limit (per gateway per minute)")
