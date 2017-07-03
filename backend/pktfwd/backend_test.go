@@ -498,8 +498,8 @@ func TestNewRXPacketFromRXPK(t *testing.T) {
 			Size: 16,
 			Data: base64.StdEncoding.EncodeToString([]byte{1, 2, 3, 4}),
 			RSig: []RSig{
-				RSig{Ant: 0, Chan: 2, RSSIC: -54, LSNR: 6.5},
-				RSig{Ant: 1, Chan: 2, RSSIC: -51, LSNR: 7},
+				RSig{Ant: 0, Chan: 2, RSSIS: -54, LSNR: 6.5},
+				RSig{Ant: 1, Chan: 2, RSSIS: -51, LSNR: 7},
 			},
 		}
 		mac := [8]byte{1, 2, 3, 4, 5, 6, 7, 8}

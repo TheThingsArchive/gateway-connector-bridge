@@ -530,22 +530,25 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 	// Use LSNR and RSSI from RSig if present
 	if len(rxpk.RSig) > 0 {
 		rxPacket.Message.GatewayMetadata.Snr = float32(rxpk.RSig[0].LSNR)
-		rxPacket.Message.GatewayMetadata.Rssi = float32(rxpk.RSig[0].RSSIC)
+		rxPacket.Message.GatewayMetadata.Rssi = float32(rxpk.RSig[0].RSSIS)
 	}
 
 	if len(rxpk.RSig) > 1 {
 		for _, sig := range rxpk.RSig {
 			if float32(sig.LSNR) > rxPacket.Message.GatewayMetadata.Snr {
 				rxPacket.Message.GatewayMetadata.Snr = float32(sig.LSNR)
-				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIC)
-			} else if float32(sig.LSNR) == rxPacket.Message.GatewayMetadata.Snr && float32(sig.RSSIC) > rxPacket.Message.GatewayMetadata.Rssi {
-				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIC)
+				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIS)
+			} else if float32(sig.LSNR) == rxPacket.Message.GatewayMetadata.Snr && float32(sig.RSSIS) > rxPacket.Message.GatewayMetadata.Rssi {
+				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIS)
 			}
 			antenna := &pb_gateway.RxMetadata_Antenna{
-				Antenna: uint32(sig.Ant),
-				Channel: uint32(sig.Chan),
-				Rssi:    float32(sig.RSSIC),
-				Snr:     float32(sig.LSNR),
+				Antenna:     uint32(sig.Ant),
+				Channel:     uint32(sig.Chan),
+				ChannelRssi: float32(sig.RSSIC),
+				Rssi:        float32(sig.RSSIS),
+				RssiStandardDeviation: float32(sig.RSSISD),
+				Snr:             float32(sig.LSNR),
+				FrequencyOffset: int64(sig.FOff),
 			}
 			if eTime, err := base64.StdEncoding.DecodeString(sig.ETime); err == nil && len(eTime) > 0 {
 				antenna.EncryptedTime = eTime
