@@ -446,18 +446,31 @@ func newGatewayStatsPacket(mac lorawan.EUI64, stat Stat) *types.StatusMessage {
 		gatewayTime = time.Unix(0, 0)
 	}
 
+	bootTime := time.Time(stat.Boot)
+	if bootTime.IsZero() || bootTime.Before(time.Unix(0, 0)) {
+		bootTime = time.Unix(0, 0)
+	}
+
 	status := &types.StatusMessage{
 		GatewayID: getID(mac),
 		Message: &pb_gateway.Status{
 			Time:         gatewayTime.UnixNano(),
+			BootTime:     bootTime.UnixNano(),
 			Location:     gps,
-			RxIn:         uint32(stat.RXNb),
-			RxOk:         uint32(stat.RXOK),
-			TxIn:         uint32(stat.DWNb),
-			TxOk:         uint32(stat.TXNb),
 			Platform:     stat.Pfrm,
 			ContactEmail: stat.Mail,
 			Description:  stat.Desc,
+			Fpga:         stat.FPGA,
+			Dsp:          stat.DSP,
+			Hal:          stat.HAL,
+			RxIn:         stat.RXNb,
+			RxOk:         stat.RXOK,
+			TxIn:         stat.DWNb,
+			TxOk:         stat.TXNb,
+			LmOk:         stat.LMOK,
+			LmSt:         stat.LMST,
+			LmNw:         stat.LMNW,
+			LPps:         stat.LPPS,
 		},
 	}
 
