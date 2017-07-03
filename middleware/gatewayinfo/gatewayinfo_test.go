@@ -13,7 +13,6 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/go-account-lib/account"
 	"github.com/TheThingsNetwork/ttn/api/gateway"
-	"github.com/TheThingsNetwork/ttn/api/router"
 	. "github.com/smartystreets/goconvey/convey"
 	redis "gopkg.in/redis.v5"
 )
@@ -116,23 +115,6 @@ func TestPublic(t *testing.T) {
 				})
 			})
 
-			Convey("When sending an UplinkMessage", func() {
-				uplink := &types.UplinkMessage{
-					GatewayID: gatewayID,
-					Message: &router.UplinkMessage{
-						GatewayMetadata: &gateway.RxMetadata{},
-					},
-				}
-				err := p.HandleUplink(middleware.NewContext(), uplink)
-				Convey("There should be no error", func() {
-					So(err, ShouldBeNil)
-				})
-				Convey("The UplinkMessage should have GPS Metadata", func() {
-					So(uplink.Message.GetGatewayMetadata().GetGps(), ShouldNotBeNil)
-					So(uplink.Message.GetGatewayMetadata().GetGps().Latitude, ShouldEqual, 12.34)
-				})
-			})
-
 			Convey("When sending a StatusMessage", func() {
 				status := &types.StatusMessage{
 					GatewayID: gatewayID,
@@ -143,8 +125,8 @@ func TestPublic(t *testing.T) {
 					So(err, ShouldBeNil)
 				})
 				Convey("The StatusMessage should have Metadata", func() {
-					So(status.Message.GetGps(), ShouldNotBeNil)
-					So(status.Message.GetGps().Latitude, ShouldEqual, 12.34)
+					So(status.Message.GetLocation(), ShouldNotBeNil)
+					So(status.Message.GetLocation().Latitude, ShouldEqual, 12.34)
 					So(status.Message.Description, ShouldEqual, "My Test Gateway")
 					So(status.Message.Platform, ShouldEqual, "Test Gateway")
 					So(status.Message.FrequencyPlan, ShouldEqual, "EU_868")

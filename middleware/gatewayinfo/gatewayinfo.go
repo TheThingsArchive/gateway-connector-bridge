@@ -201,61 +201,32 @@ func (p *Public) HandleDisconnect(ctx middleware.Context, msg *types.DisconnectM
 	return nil
 }
 
-// HandleUplink inserts metadata if set in info, but not present in message
-func (p *Public) HandleUplink(ctx middleware.Context, msg *types.UplinkMessage) error {
-	info, err := p.get(msg.GatewayID)
-	if err != nil {
-		msg.Message.Trace = msg.Message.Trace.WithEvent("unable to get gateway info", "error", err)
-	}
-	meta := msg.Message.GetGatewayMetadata()
-	if gps, changed := p.setGPS(meta.Gps, info.AntennaLocation); changed {
-		msg.Message.Trace = msg.Message.Trace.WithEvent("injecting gateway location")
-		meta.Gps = gps
-	}
-	return nil
-}
-
-func (p *Public) setGPS(gps *gateway.GPSMetadata, location *account.Location) (_ *gateway.GPSMetadata, injected bool) {
-	if gps != nil {
-		// Unset GPS if invalid coordinates
-		if gps.Latitude > 90 || gps.Latitude < -90 || gps.Longitude > 180 || gps.Longitude < -180 {
-			gps.Latitude = 0
-			gps.Longitude = 0
-		}
-		// Unset GPS if close enough to null island
-		if (gps.Latitude > -1 && gps.Latitude < 1) && (gps.Longitude > -1 && gps.Longitude < 1) {
-			gps.Latitude = 0
-			gps.Longitude = 0
-		}
-		if gps.Latitude == 0 && gps.Longitude == 0 && gps.Altitude == 0 {
-			gps = nil
-		}
-	}
-	if location == nil {
-		return gps, injected
-	}
-	if gps == nil {
-		gps = new(gateway.GPSMetadata)
-	}
-	if gps.Latitude == 0 && gps.Longitude == 0 {
-		gps.Latitude = float32(location.Latitude)
-		gps.Longitude = float32(location.Longitude)
-		injected = true
-	}
-	if gps.Altitude == 0 {
-		gps.Altitude = int32(location.Altitude)
-		injected = true
-	}
-	return gps, injected
-}
-
 // HandleStatus inserts metadata if set in info, but not present in message
 func (p *Public) HandleStatus(ctx middleware.Context, msg *types.StatusMessage) error {
 	info, _ := p.get(msg.GatewayID)
-	msg.Message.Gps, _ = p.setGPS(msg.Message.Gps, info.AntennaLocation)
+
+	if msg.Message.Location == nil || msg.Message.Location.Validate() != nil {
+		msg.Message.Location = nil
+	}
+
+	if info.AntennaLocation != nil {
+		if msg.Message.Location == nil {
+			msg.Message.Location = new(gateway.LocationMetadata)
+		}
+		if msg.Message.Location.IsZero() {
+			msg.Message.Location.Latitude = float32(info.AntennaLocation.Latitude)
+			msg.Message.Location.Longitude = float32(info.AntennaLocation.Longitude)
+			msg.Message.Location.Source = gateway.LocationMetadata_REGISTRY
+		}
+		if msg.Message.Location.Altitude == 0 {
+			msg.Message.Location.Altitude = int32(info.AntennaLocation.Altitude)
+		}
+	}
+
 	if msg.Message.FrequencyPlan == "" && info.FrequencyPlan != "" {
 		msg.Message.FrequencyPlan = info.FrequencyPlan
 	}
+
 	if msg.Message.Platform == "" {
 		platform := []string{}
 		if info.Attributes.Brand != nil {
@@ -266,8 +237,10 @@ func (p *Public) HandleStatus(ctx middleware.Context, msg *types.StatusMessage) 
 		}
 		msg.Message.Platform = strings.Join(platform, " ")
 	}
+
 	if msg.Message.Description == "" && info.Attributes.Description != nil {
 		msg.Message.Description = *info.Attributes.Description
 	}
+
 	return nil
 }

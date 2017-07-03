@@ -431,9 +431,9 @@ func (b *Backend) handleTXACK(addr *net.UDPAddr, data []byte) error {
 
 // newGatewayStatsPacket transforms a Semtech Stat packet into a StatusMessage.
 func newGatewayStatsPacket(mac lorawan.EUI64, stat Stat) *types.StatusMessage {
-	var gps *pb_gateway.GPSMetadata
+	var gps *pb_gateway.LocationMetadata
 	if stat.Lati != 0 || stat.Long != 0 || stat.Alti != 0 {
-		gps = &pb_gateway.GPSMetadata{
+		gps = &pb_gateway.LocationMetadata{
 			Latitude:  float32(stat.Lati),
 			Longitude: float32(stat.Long),
 			Altitude:  stat.Alti,
@@ -450,7 +450,7 @@ func newGatewayStatsPacket(mac lorawan.EUI64, stat Stat) *types.StatusMessage {
 		GatewayID: getID(mac),
 		Message: &pb_gateway.Status{
 			Time:         gatewayTime.UnixNano(),
-			Gps:          gps,
+			Location:     gps,
 			RxIn:         uint32(stat.RXNb),
 			RxOk:         uint32(stat.RXOK),
 			TxIn:         uint32(stat.DWNb),

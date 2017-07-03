@@ -409,7 +409,7 @@ func TestNewGatewayStatPacket(t *testing.T) {
 				So(gwStats.GatewayID, ShouldEqual, "eui-0102030405060708")
 				So(gwStats.Message, ShouldResemble, &pb_gateway.Status{
 					Time: now.UnixNano(),
-					Gps: &pb_gateway.GPSMetadata{
+					Location: &pb_gateway.LocationMetadata{
 						Latitude:  1.234,
 						Longitude: 2.123,
 						Altitude:  234,
