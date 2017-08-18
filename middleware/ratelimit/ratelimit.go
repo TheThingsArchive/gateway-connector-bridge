@@ -109,12 +109,27 @@ func (l *RateLimit) HandleDisconnect(ctx middleware.Context, msg *types.Disconne
 }
 
 func (l *RateLimit) get(gatewayID string) *limits {
+	// Try getting with only RLock
 	l.mu.RLock()
-	defer l.mu.RUnlock()
-	if limits, ok := l.gateways[gatewayID]; ok {
+	limits, ok := l.gateways[gatewayID]
+	if ok {
+		l.mu.RUnlock()
 		return limits
 	}
-	return nil
+	l.mu.RUnlock()
+
+	// Then try getting with full Lock
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	limits, ok = l.gateways[gatewayID]
+	if ok {
+		return limits
+	}
+
+	// Set new
+	limits = l.newLimits(gatewayID)
+	l.gateways[gatewayID] = limits
+	return limits
 }
 
 // ErrRateLimited is returned if the rate limit has been reached

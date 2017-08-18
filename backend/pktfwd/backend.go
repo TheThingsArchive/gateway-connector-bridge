@@ -431,9 +431,9 @@ func (b *Backend) handleTXACK(addr *net.UDPAddr, data []byte) error {
 
 // newGatewayStatsPacket transforms a Semtech Stat packet into a StatusMessage.
 func newGatewayStatsPacket(mac lorawan.EUI64, stat Stat) *types.StatusMessage {
-	var gps *pb_gateway.GPSMetadata
+	var gps *pb_gateway.LocationMetadata
 	if stat.Lati != 0 || stat.Long != 0 || stat.Alti != 0 {
-		gps = &pb_gateway.GPSMetadata{
+		gps = &pb_gateway.LocationMetadata{
 			Latitude:  float32(stat.Lati),
 			Longitude: float32(stat.Long),
 			Altitude:  stat.Alti,
@@ -446,18 +446,31 @@ func newGatewayStatsPacket(mac lorawan.EUI64, stat Stat) *types.StatusMessage {
 		gatewayTime = time.Unix(0, 0)
 	}
 
+	bootTime := time.Time(stat.Boot)
+	if bootTime.IsZero() || bootTime.Before(time.Unix(0, 0)) {
+		bootTime = time.Unix(0, 0)
+	}
+
 	status := &types.StatusMessage{
 		GatewayID: getID(mac),
 		Message: &pb_gateway.Status{
 			Time:         gatewayTime.UnixNano(),
-			Gps:          gps,
-			RxIn:         uint32(stat.RXNb),
-			RxOk:         uint32(stat.RXOK),
-			TxIn:         uint32(stat.DWNb),
-			TxOk:         uint32(stat.TXNb),
+			BootTime:     bootTime.UnixNano(),
+			Location:     gps,
 			Platform:     stat.Pfrm,
 			ContactEmail: stat.Mail,
 			Description:  stat.Desc,
+			Fpga:         stat.FPGA,
+			Dsp:          stat.DSP,
+			Hal:          stat.HAL,
+			RxIn:         stat.RXNb,
+			RxOk:         stat.RXOK,
+			TxIn:         stat.DWNb,
+			TxOk:         stat.TXNb,
+			LmOk:         stat.LMOK,
+			LmSt:         stat.LMST,
+			LmNw:         stat.LMNW,
+			LPps:         stat.LPPS,
 		},
 	}
 
@@ -530,22 +543,25 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 	// Use LSNR and RSSI from RSig if present
 	if len(rxpk.RSig) > 0 {
 		rxPacket.Message.GatewayMetadata.Snr = float32(rxpk.RSig[0].LSNR)
-		rxPacket.Message.GatewayMetadata.Rssi = float32(rxpk.RSig[0].RSSIC)
+		rxPacket.Message.GatewayMetadata.Rssi = float32(rxpk.RSig[0].RSSIS)
 	}
 
 	if len(rxpk.RSig) > 1 {
 		for _, sig := range rxpk.RSig {
 			if float32(sig.LSNR) > rxPacket.Message.GatewayMetadata.Snr {
 				rxPacket.Message.GatewayMetadata.Snr = float32(sig.LSNR)
-				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIC)
-			} else if float32(sig.LSNR) == rxPacket.Message.GatewayMetadata.Snr && float32(sig.RSSIC) > rxPacket.Message.GatewayMetadata.Rssi {
-				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIC)
+				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIS)
+			} else if float32(sig.LSNR) == rxPacket.Message.GatewayMetadata.Snr && float32(sig.RSSIS) > rxPacket.Message.GatewayMetadata.Rssi {
+				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIS)
 			}
 			antenna := &pb_gateway.RxMetadata_Antenna{
-				Antenna: uint32(sig.Ant),
-				Channel: uint32(sig.Chan),
-				Rssi:    float32(sig.RSSIC),
-				Snr:     float32(sig.LSNR),
+				Antenna:     uint32(sig.Ant),
+				Channel:     uint32(sig.Chan),
+				ChannelRssi: float32(sig.RSSIC),
+				Rssi:        float32(sig.RSSIS),
+				RssiStandardDeviation: float32(sig.RSSISD),
+				Snr:             float32(sig.LSNR),
+				FrequencyOffset: int64(sig.FOff),
 			}
 			if eTime, err := base64.StdEncoding.DecodeString(sig.ETime); err == nil && len(eTime) > 0 {
 				antenna.EncryptedTime = eTime
