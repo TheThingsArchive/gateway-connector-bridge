@@ -20,7 +20,7 @@ before_script:
 
 tests:
   stage: test
-  image: golang:latest
+  image: golang:1.8
   services:
     - thethingsnetwork/rabbitmq
     - redis
