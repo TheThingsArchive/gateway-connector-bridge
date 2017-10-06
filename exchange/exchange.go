@@ -174,6 +174,7 @@ func (b *Exchange) handleChannels() (err error) {
 	watchdog := newWatchdog(func() {
 		errCh <- fmt.Errorf("handleChannels stuck in %s", curMsg)
 	})
+	defer watchdog.Stop()
 	go func() {
 		var curStart time.Time
 		var curCtx log.Interface
