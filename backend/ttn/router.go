@@ -8,13 +8,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/TheThingsNetwork/api/discovery"
+	"github.com/TheThingsNetwork/api/discovery/discoveryclient"
+	"github.com/TheThingsNetwork/api/router/routerclient"
+	"github.com/TheThingsNetwork/api/trace"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/go-utils/grpc/auth"
 	"github.com/TheThingsNetwork/ttn/api"
-	"github.com/TheThingsNetwork/ttn/api/discovery"
 	"github.com/TheThingsNetwork/ttn/api/pool"
-	"github.com/TheThingsNetwork/ttn/api/router"
-	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/apex/log"
 	"google.golang.org/grpc"
 )
@@ -35,7 +36,7 @@ type Router struct {
 	config RouterConfig
 	Ctx    log.Interface
 	conn   *grpc.ClientConn
-	client *router.Client
+	client *routerclient.Client
 
 	pool *pool.Pool
 
@@ -62,7 +63,7 @@ func (r *Router) Connect() error {
 		"Discovery": r.config.DiscoveryServer,
 		"RouterID":  r.config.RouterID,
 	}).Info("Discovering Router")
-	discovery, err := discovery.NewClient(r.config.DiscoveryServer, &discovery.Announcement{
+	discovery, err := discoveryclient.NewClient(r.config.DiscoveryServer, &discovery.Announcement{
 		ServiceName: "bridge",
 	}, func() string { return "" })
 	if err != nil {
@@ -84,7 +85,7 @@ func (r *Router) Connect() error {
 	if err != nil {
 		return err
 	}
-	r.client = router.NewClient(router.DefaultClientConfig)
+	r.client = routerclient.NewClient(routerclient.DefaultClientConfig)
 	r.client.AddServer(r.config.RouterID, r.conn)
 	return nil
 }
@@ -99,7 +100,7 @@ func (r *Router) Disconnect() error {
 }
 
 type gatewayConn struct {
-	stream     router.GenericStream
+	stream     routerclient.GenericStream
 	lastActive time.Time
 }
 
@@ -148,7 +149,7 @@ func (r *Router) SubscribeDownlink(gatewayID string) (<-chan *types.DownlinkMess
 	ctx := r.Ctx.WithField("GatewayID", gatewayID)
 
 	ch, err := gtw.stream.Downlink()
-	if err == router.ErrDownlinkInactive {
+	if err == routerclient.ErrDownlinkInactive {
 		ctx.Debug("Downlink inactive, restarting streams with downlink")
 		r.mu.Lock()
 		oldStream := gtw.stream

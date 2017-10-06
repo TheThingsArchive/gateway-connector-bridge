@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/TheThingsNetwork/api/gateway"
+	"github.com/TheThingsNetwork/api/router"
+	"github.com/TheThingsNetwork/api/trace"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	"github.com/TheThingsNetwork/ttn/api/gateway"
-	"github.com/TheThingsNetwork/ttn/api/router"
-	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/TheThingsNetwork/ttn/utils/random"
 	"github.com/apex/log"
 	paho "github.com/eclipse/paho.mqtt.golang"

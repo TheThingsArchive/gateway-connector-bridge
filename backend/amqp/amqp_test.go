@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/TheThingsNetwork/api/gateway"
+	"github.com/TheThingsNetwork/api/router"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	"github.com/TheThingsNetwork/ttn/api/gateway"
-	"github.com/TheThingsNetwork/ttn/api/router"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
 	"github.com/gogo/protobuf/proto"
@@ -56,6 +56,8 @@ func TestAMQP(t *testing.T) {
 			Convey("When calling Connect", func() {
 				amqp.Connect()
 				time.Sleep(10 * time.Millisecond)
+
+				Reset(func() { amqp.Disconnect() })
 
 				Convey("When calling Disconnect", func() {
 					amqp.Disconnect()

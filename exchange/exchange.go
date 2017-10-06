@@ -8,12 +8,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/TheThingsNetwork/api/trace"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/status/statusserver"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/apex/log"
 	"github.com/deckarep/golang-set"
 )
@@ -254,9 +254,7 @@ func (b *Exchange) handleChannels() (err error) {
 					ctx.WithError(err).Warn("Error in middleware")
 					continue
 				}
-				if meta := uplinkMessage.Message.GetGatewayMetadata(); meta != nil {
-					meta.GatewayId = uplinkMessage.GatewayID
-				}
+				uplinkMessage.Message.GatewayMetadata.GatewayID = uplinkMessage.GatewayID
 				for _, backend := range b.northboundBackends {
 					if err := backend.PublishUplink(uplinkMessage); err != nil {
 						ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish uplink")

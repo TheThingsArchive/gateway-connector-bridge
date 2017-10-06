@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var ctx log.Interface
+var ctx *log.Logger
 
 var logFile *os.File
 

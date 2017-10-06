@@ -4,9 +4,9 @@
 package statusserver
 
 import (
+	"github.com/TheThingsNetwork/api"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/status"
 	"github.com/TheThingsNetwork/go-utils/grpc/ttnctx"
-	"github.com/TheThingsNetwork/ttn/api"
 	"github.com/TheThingsNetwork/ttn/api/stats"
 	"github.com/rcrowley/go-metrics"
 	"golang.org/x/net/context"

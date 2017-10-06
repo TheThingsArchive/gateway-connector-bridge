@@ -6,9 +6,9 @@ package deduplicate
 import (
 	"testing"
 
+	"github.com/TheThingsNetwork/api/router"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	"github.com/TheThingsNetwork/ttn/api/router"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

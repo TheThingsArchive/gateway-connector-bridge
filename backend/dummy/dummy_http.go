@@ -6,8 +6,8 @@ package dummy
 import (
 	"time"
 
+	"github.com/TheThingsNetwork/api/trace"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	"github.com/TheThingsNetwork/ttn/api/trace"
 )
 
 // WithServer is a Dummy backend that exposes some events on

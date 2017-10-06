@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
+	pb_gateway "github.com/TheThingsNetwork/api/gateway"
+	pb_router "github.com/TheThingsNetwork/api/router"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/dummy"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	pb_gateway "github.com/TheThingsNetwork/ttn/api/gateway"
-	pb_router "github.com/TheThingsNetwork/ttn/api/router"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
 	. "github.com/smartystreets/goconvey/convey"

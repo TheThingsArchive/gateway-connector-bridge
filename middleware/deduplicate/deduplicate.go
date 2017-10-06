@@ -45,7 +45,7 @@ func (d *Deduplicate) HandleUplink(_ middleware.Context, msg *types.UplinkMessag
 	defer d.mu.Unlock()
 	if lastMessage, ok := d.lastMessage[msg.GatewayID]; ok {
 		if bytes.Equal(msg.Message.Payload, lastMessage.Message.Payload) && // length check on slice is fast
-			msg.Message.GetGatewayMetadata().GetTimestamp() == lastMessage.Message.GetGatewayMetadata().GetTimestamp() {
+			msg.Message.GatewayMetadata.GetTimestamp() == lastMessage.Message.GatewayMetadata.GetTimestamp() {
 			return ErrDuplicateMessage
 		}
 	}

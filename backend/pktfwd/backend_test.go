@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
+	pb_gateway "github.com/TheThingsNetwork/api/gateway"
+	pb_protocol "github.com/TheThingsNetwork/api/protocol"
+	pb_lorawan "github.com/TheThingsNetwork/api/protocol/lorawan"
+	pb_router "github.com/TheThingsNetwork/api/router"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	pb_gateway "github.com/TheThingsNetwork/ttn/api/gateway"
-	pb_protocol "github.com/TheThingsNetwork/ttn/api/protocol"
-	pb_lorawan "github.com/TheThingsNetwork/ttn/api/protocol/lorawan"
-	pb_router "github.com/TheThingsNetwork/ttn/api/router"
 	"github.com/brocaar/lorawan"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -301,16 +301,16 @@ func TestBackend(t *testing.T) {
 				txPacket := &types.DownlinkMessage{
 					GatewayID: "eui-0102030405060708",
 					Message: &pb_router.DownlinkMessage{
-						ProtocolConfiguration: &pb_protocol.TxConfiguration{
-							Protocol: &pb_protocol.TxConfiguration_Lorawan{
-								Lorawan: &pb_lorawan.TxConfiguration{
+						ProtocolConfiguration: pb_protocol.TxConfiguration{
+							Protocol: &pb_protocol.TxConfiguration_LoRaWAN{
+								LoRaWAN: &pb_lorawan.TxConfiguration{
 									Modulation: pb_lorawan.Modulation_LORA,
 									DataRate:   "SF12BW250",
 									CodingRate: "4/5",
 								},
 							},
 						},
-						GatewayConfiguration: &pb_gateway.TxConfiguration{
+						GatewayConfiguration: pb_gateway.TxConfiguration{
 							Timestamp: 12345,
 							Frequency: 868100000,
 							Power:     14,
@@ -430,16 +430,16 @@ func TestNewTXPKFromTXPacket(t *testing.T) {
 		txPacket := &types.DownlinkMessage{
 			GatewayID: "eui-0102030405060708",
 			Message: &pb_router.DownlinkMessage{
-				ProtocolConfiguration: &pb_protocol.TxConfiguration{
-					Protocol: &pb_protocol.TxConfiguration_Lorawan{
-						Lorawan: &pb_lorawan.TxConfiguration{
+				ProtocolConfiguration: pb_protocol.TxConfiguration{
+					Protocol: &pb_protocol.TxConfiguration_LoRaWAN{
+						LoRaWAN: &pb_lorawan.TxConfiguration{
 							Modulation: pb_lorawan.Modulation_LORA,
 							DataRate:   "SF9BW250",
 							CodingRate: "4/5",
 						},
 					},
 				},
-				GatewayConfiguration: &pb_gateway.TxConfiguration{
+				GatewayConfiguration: pb_gateway.TxConfiguration{
 					Timestamp: 12345,
 					Frequency: 868100000,
 					Power:     14,
@@ -513,24 +513,24 @@ func TestNewRXPacketFromRXPK(t *testing.T) {
 
 				So(rxPacket.Message.Payload, ShouldResemble, []byte{1, 2, 3, 4})
 
-				So(rxPacket.Message.GetProtocolMetadata().GetLorawan(), ShouldResemble, &pb_lorawan.Metadata{
+				So(rxPacket.Message.ProtocolMetadata.GetLoRaWAN(), ShouldResemble, &pb_lorawan.Metadata{
 					Modulation: pb_lorawan.Modulation_LORA,
 					DataRate:   "SF7BW125",
 					CodingRate: "4/5",
 				})
 
-				So(rxPacket.Message.GetGatewayMetadata(), ShouldResemble, &pb_gateway.RxMetadata{
-					GatewayId: "eui-0102030405060708",
+				So(rxPacket.Message.GatewayMetadata, ShouldResemble, pb_gateway.RxMetadata{
+					GatewayID: "eui-0102030405060708",
 					Time:      now.UnixNano(),
 					Timestamp: 708016819,
 					Channel:   2,
 					RfChain:   1,
 					Frequency: 868500000,
-					Rssi:      -51,
-					Snr:       7,
+					RSSI:      -51,
+					SNR:       7,
 					Antennas: []*pb_gateway.RxMetadata_Antenna{
-						&pb_gateway.RxMetadata_Antenna{Antenna: 0, Channel: 2, Rssi: -54, Snr: 6.5},
-						&pb_gateway.RxMetadata_Antenna{Antenna: 1, Channel: 2, Rssi: -51, Snr: 7},
+						&pb_gateway.RxMetadata_Antenna{Antenna: 0, Channel: 2, RSSI: -54, SNR: 6.5},
+						&pb_gateway.RxMetadata_Antenna{Antenna: 1, Channel: 2, RSSI: -51, SNR: 7},
 					},
 				})
 			})
