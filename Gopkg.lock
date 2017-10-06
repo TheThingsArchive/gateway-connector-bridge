@@ -3,12 +3,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/StackExchange/wmi"
-  packages = ["."]
-  revision = "ea383cf3ba6ec950874b8486cd72356d007c768f"
-
-[[projects]]
-  branch = "master"
   name = "github.com/TheThingsNetwork/api"
   packages = [".","discovery","discovery/discoveryclient","gateway","protocol","protocol/lorawan","router","router/routerclient","trace"]
   revision = "f074ae7262444b3fac2149635e16e66b13413510"
@@ -27,7 +21,7 @@
 
 [[projects]]
   name = "github.com/TheThingsNetwork/ttn"
-  packages = ["api","api/pool","api/stats","core/types","utils","utils/errors","utils/random"]
+  packages = ["api","api/pool","core/types","utils","utils/errors","utils/random"]
   revision = "3b1084da170068ead4abad222d2e750296f9ea5d"
   version = "v2.8.1"
 
@@ -42,6 +36,12 @@
   packages = ["."]
   revision = "73945b6115bfbbcc57d89b7316e28109364124e1"
   version = "v7"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
 
 [[projects]]
   branch = "master"
@@ -78,12 +78,6 @@
   packages = ["."]
   revision = "629574ca2a5df945712d3079857300b5e4da0236"
   version = "v1.4.2"
-
-[[projects]]
-  name = "github.com/go-ole/go-ole"
-  packages = [".","oleutil"]
-  revision = "0e87ea779d9deb219633b828a023b32e1244dd57"
-  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -164,6 +158,12 @@
   version = "v1.7.3"
 
 [[projects]]
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  revision = "3247c84500bff8d9fb6d579d800f20b3e091582c"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
@@ -188,22 +188,28 @@
   version = "v0.8.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/rcrowley/go-metrics"
-  packages = ["."]
-  revision = "1f30fe9094a513ce4c700b9a54458bbb0c96996c"
-
-[[projects]]
-  name = "github.com/shirou/gopsutil"
-  packages = ["cpu","host","internal/common","load","mem","net","process"]
-  revision = "6e221c482653ef05c9f6a7bf71ddceea0e40bac5"
-  version = "v2.17.09"
+  name = "github.com/prometheus/client_golang"
+  packages = ["prometheus","prometheus/promhttp"]
+  revision = "c5b7fccd204277076155f10851dad72b76a49317"
+  version = "v0.8.0"
 
 [[projects]]
   branch = "master"
-  name = "github.com/shirou/w32"
-  packages = ["."]
-  revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  revision = "6f3806018612930941127f2a7c6c453ba2c527d2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/common"
+  packages = ["expfmt","internal/bitbucket.org/ww/goautoneg","model"]
+  revision = "2f17f4a9d485bf34b4bfaccc273805040e4f86c8"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/procfs"
+  packages = [".","xfs"]
+  revision = "e645f4e5aaa8506fc71d6edbc5c4ff02c04c46f2"
 
 [[projects]]
   name = "github.com/smartystreets/assertions"
@@ -274,7 +280,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix","windows"]
+  packages = ["unix"]
   revision = "314a259e304ff91bd6985da2a7149bbf91237993"
 
 [[projects]]
@@ -316,6 +322,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2c9a9b0893cf6a27e9576139275b14a6908a422fc0d57eaba0d71235330df5ae"
+  inputs-digest = "07adbf0c3fe7576834ba40f19703a39012fcdbfc1138ce266d0c34a5e2e47712"
   solver-name = "gps-cdcl"
   solver-version = 1

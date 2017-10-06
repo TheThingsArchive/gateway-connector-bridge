@@ -6,7 +6,8 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -27,7 +28,6 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/gatewayinfo"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/inject"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/ratelimit"
-	"github.com/TheThingsNetwork/gateway-connector-bridge/status/statusserver"
 	"github.com/TheThingsNetwork/go-utils/handlers/cli"
 	ttnlog "github.com/TheThingsNetwork/go-utils/log"
 	"github.com/TheThingsNetwork/go-utils/log/apex"
@@ -35,9 +35,9 @@ import (
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/json"
 	"github.com/apex/log/handlers/multi"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"google.golang.org/grpc"
 	redis "gopkg.in/redis.v5"
 )
 
@@ -288,22 +288,6 @@ func runBridge(cmd *cobra.Command, args []string) {
 		bridge.AddSouthbound(httpDummy)
 	}
 
-	if statusAddr := config.GetString("status-addr"); statusAddr != "" {
-		for _, key := range config.GetStringSlice("status-key") {
-			statusserver.AddAccessKey(key)
-		}
-
-		// Set up the status server
-		ctx.WithField("Address", statusAddr).Infof("Initializing Status Server")
-		lis, err := net.Listen("tcp", statusAddr)
-		if err != nil {
-			ctx.WithError(err).Fatal("Could not start status server")
-		}
-		srv := grpc.NewServer()
-		statusserver.Register(srv)
-		go srv.Serve(lis)
-	}
-
 	bridge.SetMiddleware(middleware)
 
 	ctx.WithField("NumWorkers", config.GetInt("workers")).Info("Starting Bridge...")
@@ -325,6 +309,12 @@ func runBridge(cmd *cobra.Command, args []string) {
 
 	if viper.GetBool("route-unknown-gateways") {
 		bridge.ConnectGateway("")
+	}
+
+	if addr := config.GetString("http-status-addr"); addr != "" {
+		ctx.WithField("Address", addr).Infof("Initializing HTTP Status")
+		http.Handle("/metrics", promhttp.Handler())
+		go http.ListenAndServe(addr, nil)
 	}
 
 	sigChan := make(chan os.Signal)
@@ -364,8 +354,7 @@ func init() {
 	BridgeCmd.Flags().StringSlice("mqtt", []string{"guest:guest@localhost:1883"}, "MQTT Broker to connect to (user:pass@host:port; disable with \"disable\")")
 	BridgeCmd.Flags().StringSlice("amqp", []string{}, "AMQP Broker to connect to (user:pass@host:port; disable with \"disable\")")
 
-	BridgeCmd.Flags().String("status-addr", "", "Address of the gRPC status server to start")
-	BridgeCmd.Flags().StringSlice("status-key", []string{}, "Access key for the gRPC status server")
+	BridgeCmd.Flags().String("http-status-addr", ":10700", "Address of the HTTP status server to start")
 	BridgeCmd.Flags().String("http-debug-addr", "", "The address of the HTTP debug server to start")
 
 	BridgeCmd.Flags().String("id", "", "ID of this bridge")
