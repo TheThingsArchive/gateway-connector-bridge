@@ -401,6 +401,7 @@ type RSig struct {
 	RSSISD uint16  `json:"rssisd"` // Standard deviation of RSSI during preamble (unsigned integer) (Optional)
 	LSNR   float64 `json:"lsnr"`   // Lora SNR ratio in dB (signed float, 0.1 dB precision)
 	ETime  string  `json:"etime"`  // Encrypted timestamp, ns precision [0..999999999] (Optional)
+	FTime  int64   `json:"ftime"`  // Fine timestamp, ns precision [0..999999999] (Optional)
 	FOff   int32   `json:"foff"`   // Frequency offset in Hz [-125kHz..+125Khz] (Optional)
 }
 

@@ -562,6 +562,7 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 				RSSIStandardDeviation: float32(sig.RSSISD),
 				SNR:             float32(sig.LSNR),
 				FrequencyOffset: int64(sig.FOff),
+				FineTime:        sig.FTime,
 			}
 			if eTime, err := base64.StdEncoding.DecodeString(sig.ETime); err == nil && len(eTime) > 0 {
 				antenna.EncryptedTime = eTime
