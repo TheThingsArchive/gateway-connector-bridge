@@ -8,12 +8,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/TheThingsNetwork/api/trace"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
-	"github.com/TheThingsNetwork/gateway-connector-bridge/status/statusserver"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/apex/log"
 	"github.com/deckarep/golang-set"
 )
@@ -162,7 +161,7 @@ func (b *Exchange) ConnectGateway(gatewayID ...string) {
 		for _, backend := range b.southboundBackends {
 			go b.activateSouthbound(backend, gatewayID)
 		}
-		statusserver.ConnectGateway()
+		connectedGateways.Inc()
 	}
 }
 
@@ -175,6 +174,7 @@ func (b *Exchange) handleChannels() (err error) {
 	watchdog := newWatchdog(func() {
 		errCh <- fmt.Errorf("handleChannels stuck in %s", curMsg)
 	})
+	defer watchdog.Stop()
 	go func() {
 		var curStart time.Time
 		var curCtx log.Interface
@@ -221,7 +221,7 @@ func (b *Exchange) handleChannels() (err error) {
 				for _, backend := range b.southboundBackends {
 					go b.activateSouthbound(backend, connectMessage.GatewayID)
 				}
-				statusserver.ConnectGateway()
+				connectedGateways.Inc()
 			case disconnectMessage, ok := <-b.disconnect:
 				if !ok {
 					continue
@@ -243,7 +243,7 @@ func (b *Exchange) handleChannels() (err error) {
 				b.deactivateNorthbound(disconnectMessage.GatewayID)
 				b.deactivateSouthbound(disconnectMessage.GatewayID)
 				b.gateways.Remove(disconnectMessage.GatewayID)
-				statusserver.DisconnectGateway()
+				connectedGateways.Dec()
 			case uplinkMessage, ok := <-b.uplink:
 				if !ok {
 					continue
@@ -254,15 +254,13 @@ func (b *Exchange) handleChannels() (err error) {
 					ctx.WithError(err).Warn("Error in middleware")
 					continue
 				}
-				if meta := uplinkMessage.Message.GetGatewayMetadata(); meta != nil {
-					meta.GatewayId = uplinkMessage.GatewayID
-				}
+				uplinkMessage.Message.GatewayMetadata.GatewayID = uplinkMessage.GatewayID
 				for _, backend := range b.northboundBackends {
 					if err := backend.PublishUplink(uplinkMessage); err != nil {
 						ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish uplink")
 					}
 				}
-				statusserver.Uplink()
+				registerHandled(uplinkMessage.Message)
 			case downlinkMessage, ok := <-b.downlink:
 				if !ok {
 					continue
@@ -278,7 +276,7 @@ func (b *Exchange) handleChannels() (err error) {
 						ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish downlink")
 					}
 				}
-				statusserver.Downlink()
+				registerHandled(downlinkMessage.Message)
 			case statusMessage, ok := <-b.status:
 				if !ok {
 					continue
@@ -294,7 +292,7 @@ func (b *Exchange) handleChannels() (err error) {
 						ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish status")
 					}
 				}
-				statusserver.GatewayStatus()
+				registerStatus()
 			}
 		}
 	}()

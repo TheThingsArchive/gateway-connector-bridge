@@ -11,14 +11,14 @@ import (
 	"sync"
 	"time"
 
+	pb_gateway "github.com/TheThingsNetwork/api/gateway"
+	pb_protocol "github.com/TheThingsNetwork/api/protocol"
+	pb_lorawan "github.com/TheThingsNetwork/api/protocol/lorawan"
+	pb_router "github.com/TheThingsNetwork/api/router"
+	"github.com/TheThingsNetwork/api/trace"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/go-utils/log"
 	"github.com/TheThingsNetwork/go-utils/pseudorandom"
-	pb_gateway "github.com/TheThingsNetwork/ttn/api/gateway"
-	pb_protocol "github.com/TheThingsNetwork/ttn/api/protocol"
-	pb_lorawan "github.com/TheThingsNetwork/ttn/api/protocol/lorawan"
-	pb_router "github.com/TheThingsNetwork/ttn/api/router"
-	"github.com/TheThingsNetwork/ttn/api/trace"
 	"github.com/brocaar/lorawan"
 	"github.com/brocaar/lorawan/band"
 )
@@ -383,7 +383,7 @@ func (b *Backend) handlePushData(addr *net.UDPAddr, data []byte) error {
 
 func (b *Backend) handleStat(addr *net.UDPAddr, mac lorawan.EUI64, stat Stat) {
 	gwStats := newGatewayStatsPacket(mac, stat)
-	gwStats.Message.Ip = append(gwStats.Message.Ip, addr.IP.String())
+	gwStats.Message.IP = append(gwStats.Message.IP, addr.IP.String())
 	b.statsChan <- gwStats
 }
 
@@ -460,9 +460,9 @@ func newGatewayStatsPacket(mac lorawan.EUI64, stat Stat) *types.StatusMessage {
 			Platform:     stat.Pfrm,
 			ContactEmail: stat.Mail,
 			Description:  stat.Desc,
-			Fpga:         stat.FPGA,
-			Dsp:          stat.DSP,
-			Hal:          stat.HAL,
+			FPGA:         stat.FPGA,
+			DSP:          stat.DSP,
+			HAL:          stat.HAL,
 			RxIn:         stat.RXNb,
 			RxOk:         stat.RXOK,
 			TxIn:         stat.DWNb,
@@ -470,7 +470,7 @@ func newGatewayStatsPacket(mac lorawan.EUI64, stat Stat) *types.StatusMessage {
 			LmOk:         stat.LMOK,
 			LmSt:         stat.LMST,
 			LmNw:         stat.LMNW,
-			LPps:         stat.LPPS,
+			LPPS:         stat.LPPS,
 		},
 	}
 
@@ -479,7 +479,7 @@ func newGatewayStatsPacket(mac lorawan.EUI64, stat Stat) *types.StatusMessage {
 	}
 
 	if stat.Temp != 0 {
-		status.Message.Os = &pb_gateway.Status_OSMetrics{
+		status.Message.OS = &pb_gateway.Status_OSMetrics{
 			Temperature: float32(stat.Temp),
 		}
 	}
@@ -502,7 +502,7 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 		dataRate = fmt.Sprintf("SF%dBW%d", datr.SpreadFactor, datr.Bandwidth)
 	}
 
-	b, err := base64.StdEncoding.DecodeString(rxpk.Data)
+	b, err := base64.RawStdEncoding.DecodeString(strings.TrimRight(rxpk.Data, "="))
 	if err != nil {
 		return nil, fmt.Errorf("Could not base64 decode data: %s", err)
 	}
@@ -517,9 +517,9 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 		GatewayID: getID(mac),
 		Message: &pb_router.UplinkMessage{
 			Payload: b,
-			ProtocolMetadata: &pb_protocol.RxMetadata{
-				Protocol: &pb_protocol.RxMetadata_Lorawan{
-					Lorawan: &pb_lorawan.Metadata{
+			ProtocolMetadata: pb_protocol.RxMetadata{
+				Protocol: &pb_protocol.RxMetadata_LoRaWAN{
+					LoRaWAN: &pb_lorawan.Metadata{
 						Modulation: modulation,
 						BitRate:    uint32(datr.BitRate),
 						DataRate:   dataRate,
@@ -527,41 +527,42 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 					},
 				},
 			},
-			GatewayMetadata: &pb_gateway.RxMetadata{
-				GatewayId: getID(mac),
+			GatewayMetadata: pb_gateway.RxMetadata{
+				GatewayID: getID(mac),
 				Timestamp: rxpk.Tmst,
 				Time:      gatewayTime.UnixNano(),
 				RfChain:   uint32(rxpk.RFCh),
 				Channel:   uint32(rxpk.Chan),
 				Frequency: uint64(rxpk.Freq * 1000000),
-				Rssi:      float32(rxpk.RSSI),
-				Snr:       float32(rxpk.LSNR),
+				RSSI:      float32(rxpk.RSSI),
+				SNR:       float32(rxpk.LSNR),
 			},
 		},
 	}
 
 	// Use LSNR and RSSI from RSig if present
 	if len(rxpk.RSig) > 0 {
-		rxPacket.Message.GatewayMetadata.Snr = float32(rxpk.RSig[0].LSNR)
-		rxPacket.Message.GatewayMetadata.Rssi = float32(rxpk.RSig[0].RSSIS)
+		rxPacket.Message.GatewayMetadata.SNR = float32(rxpk.RSig[0].LSNR)
+		rxPacket.Message.GatewayMetadata.RSSI = float32(rxpk.RSig[0].RSSIS)
 	}
 
 	if len(rxpk.RSig) > 1 {
 		for _, sig := range rxpk.RSig {
-			if float32(sig.LSNR) > rxPacket.Message.GatewayMetadata.Snr {
-				rxPacket.Message.GatewayMetadata.Snr = float32(sig.LSNR)
-				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIS)
-			} else if float32(sig.LSNR) == rxPacket.Message.GatewayMetadata.Snr && float32(sig.RSSIS) > rxPacket.Message.GatewayMetadata.Rssi {
-				rxPacket.Message.GatewayMetadata.Rssi = float32(sig.RSSIS)
+			if float32(sig.LSNR) > rxPacket.Message.GatewayMetadata.SNR {
+				rxPacket.Message.GatewayMetadata.SNR = float32(sig.LSNR)
+				rxPacket.Message.GatewayMetadata.RSSI = float32(sig.RSSIS)
+			} else if float32(sig.LSNR) == rxPacket.Message.GatewayMetadata.SNR && float32(sig.RSSIS) > rxPacket.Message.GatewayMetadata.RSSI {
+				rxPacket.Message.GatewayMetadata.RSSI = float32(sig.RSSIS)
 			}
 			antenna := &pb_gateway.RxMetadata_Antenna{
 				Antenna:     uint32(sig.Ant),
 				Channel:     uint32(sig.Chan),
-				ChannelRssi: float32(sig.RSSIC),
-				Rssi:        float32(sig.RSSIS),
-				RssiStandardDeviation: float32(sig.RSSISD),
-				Snr:             float32(sig.LSNR),
+				ChannelRSSI: float32(sig.RSSIC),
+				RSSI:        float32(sig.RSSIS),
+				RSSIStandardDeviation: float32(sig.RSSISD),
+				SNR:             float32(sig.LSNR),
 				FrequencyOffset: int64(sig.FOff),
+				FineTime:        sig.FTime,
 			}
 			if eTime, err := base64.StdEncoding.DecodeString(sig.ETime); err == nil && len(eTime) > 0 {
 				antenna.EncryptedTime = eTime
@@ -575,7 +576,7 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 
 // newTXPKFromTXPacket transforms a DownlinkMessage into a Semtech compatible packet.
 func newTXPKFromTXPacket(txPacket *types.DownlinkMessage) (TXPK, error) {
-	protocol := txPacket.Message.GetProtocolConfiguration().GetLorawan()
+	protocol := txPacket.Message.ProtocolConfiguration.GetLoRaWAN()
 	gateway := txPacket.Message.GetGatewayConfiguration()
 
 	datr := DatR{

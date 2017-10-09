@@ -4,8 +4,8 @@
 package types
 
 import (
-	"github.com/TheThingsNetwork/ttn/api/gateway"
-	"github.com/TheThingsNetwork/ttn/api/router"
+	"github.com/TheThingsNetwork/api/gateway"
+	"github.com/TheThingsNetwork/api/router"
 )
 
 // UplinkMessage is used internally

@@ -8,14 +8,11 @@ variables:
   CONTAINER_NAME: thethingsnetwork/gateway-connector-bridge
 
 cache:
-  key: "$CI_PROJECT_PATH"
   paths:
-    - .govendor
+    - /go/pkg/dep
 
 before_script:
-  - mkdir -p $(pwd)/.govendor
   - rm -rf $GOPATH
-  - mkdir -p $GOPATH/.cache && ln -s $(pwd)/.govendor $GOPATH/.cache/govendor
   - mkdir -p $GOPATH/src/github.com/TheThingsNetwork && ln -s $(pwd) $GOPATH/src/github.com/TheThingsNetwork/gateway-connector-bridge
 
 tests:

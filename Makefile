@@ -26,10 +26,10 @@ all: deps build
 # Deps
 
 build-deps:
-	@command -v govendor > /dev/null || go get "github.com/kardianos/govendor"
+	@command -v dep > /dev/null || go get "github.com/golang/dep/cmd/dep"
 
 deps: build-deps
-	govendor sync -v
+	dep ensure -v -vendor-only
 
 dev-deps: deps
 	@command -v protoc-gen-gofast > /dev/null || go get github.com/gogo/protobuf/protoc-gen-gofast

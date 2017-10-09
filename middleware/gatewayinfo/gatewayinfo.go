@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/TheThingsNetwork/api/gateway"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/TheThingsNetwork/go-account-lib/account"
 	"github.com/TheThingsNetwork/go-utils/log"
-	"github.com/TheThingsNetwork/ttn/api/gateway"
 	redis "gopkg.in/redis.v5"
 )
 

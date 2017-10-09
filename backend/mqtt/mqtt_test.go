@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/TheThingsNetwork/api/gateway"
+	"github.com/TheThingsNetwork/api/router"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
-	"github.com/TheThingsNetwork/ttn/api/gateway"
-	"github.com/TheThingsNetwork/ttn/api/router"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
 	paho "github.com/eclipse/paho.mqtt.golang"

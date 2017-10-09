@@ -6,7 +6,11 @@ services:
   - docker
 
 go:
-  - 1.7
+  - 1.8
+
+cache:
+  directories:
+    - $HOME/gopath/pkg/dep
 
 install:
   - make deps
