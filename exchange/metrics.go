@@ -4,9 +4,8 @@
 package exchange
 
 import (
-	"strings"
-
 	"github.com/TheThingsNetwork/api/protocol"
+	"github.com/TheThingsNetwork/api/protocol/lorawan"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -28,10 +27,32 @@ var handledCounter = prometheus.NewCounterVec(
 	}, []string{"message_type"},
 )
 
+func mTypeToString(mType lorawan.MType) string {
+	switch mType {
+	case lorawan.MType_JOIN_REQUEST:
+		return "JoinRequest"
+	case lorawan.MType_JOIN_ACCEPT:
+		return "JoinAccept"
+	case lorawan.MType_UNCONFIRMED_UP:
+		return "UnconfirmedUp"
+	case lorawan.MType_UNCONFIRMED_DOWN:
+		return "UnconfirmedDown"
+	case lorawan.MType_CONFIRMED_UP:
+		return "ConfirmedUp"
+	case lorawan.MType_CONFIRMED_DOWN:
+		return "ConfirmedDown"
+	case 6:
+		return "RejoinRequest"
+	case 7:
+		return "Proprietary"
+	default:
+		return "Unknown"
+	}
+}
+
 func messageType(msg *protocol.Message) string {
 	if msg := msg.GetLoRaWAN(); msg != nil {
-		mType := msg.GetMType().String()
-		return strings.Replace(strings.Title(strings.ToLower(strings.Replace(mType, "_", " ", -1))), " ", "", -1)
+		return mTypeToString(msg.GetMType())
 	}
 	return "Unknown"
 }
@@ -54,4 +75,7 @@ func registerStatus() {
 func init() {
 	prometheus.MustRegister(connectedGateways)
 	prometheus.MustRegister(handledCounter)
+	for mType := lorawan.MType(0); mType < 8; mType++ {
+		handledCounter.WithLabelValues(mTypeToString(mType)).Add(0)
+	}
 }
