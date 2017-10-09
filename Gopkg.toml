@@ -45,6 +45,10 @@
   branch = "master"
   name = "github.com/eclipse/paho.mqtt.golang"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/prometheus/client_golang"
+
 [[override]]
   branch = "master"
   name = "github.com/grpc-ecosystem/grpc-gateway"
