@@ -105,11 +105,6 @@ func runBridge(cmd *cobra.Command, args []string) {
 	)
 	bridge.SetID(config.GetString("id"))
 
-	middleware = append(middleware, inject.NewInject(inject.Fields{
-		Bridge:        id,
-		FrequencyPlan: viper.GetString("inject-frequency-plan"),
-	}))
-
 	// Set up Redis
 	var redisClient *redis.Client
 	if config.GetBool("redis") {
@@ -181,6 +176,11 @@ func runBridge(cmd *cobra.Command, args []string) {
 		authBackend.SetExchanger(auth.NewAccountServer(accountServer, ctx))
 	}
 	bridge.SetAuth(authBackend)
+
+	middleware = append(middleware, inject.NewInject(inject.Fields{
+		Bridge:        id,
+		FrequencyPlan: viper.GetString("inject-frequency-plan"),
+	}))
 
 	// Set up the TTN routers (from comma-separated list of discovery-server/router-id)
 	ttnRouters := config.GetStringSlice("ttn-router")
