@@ -53,7 +53,7 @@ func getMac(id string) (mac lorawan.EUI64) {
 
 func getID(mac lorawan.EUI64) string {
 	txt, _ := mac.MarshalText()
-	return "eui-" + string(txt)
+	return "eui-" + strings.ToLower(string(txt))
 }
 
 func (c *gateways) get(mac lorawan.EUI64) (gateway, error) {
