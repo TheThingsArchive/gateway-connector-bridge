@@ -5,6 +5,7 @@ package exchange
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -197,17 +198,18 @@ func (b *Exchange) handleChannels() (err error) {
 				if !ok {
 					continue
 				}
-				ctx := b.ctx.WithField("GatewayID", connectMessage.GatewayID)
+				gatewayID := strings.ToLower(connectMessage.GatewayID)
+				ctx := b.ctx.WithField("GatewayID", gatewayID)
 				start(ctx, "connect")
 				if b.auth != nil {
 					if connectMessage.Key != "" {
 						ctx.Debug("Got access key")
-						if err := b.auth.SetKey(connectMessage.GatewayID, connectMessage.Key); err != nil {
+						if err := b.auth.SetKey(gatewayID, connectMessage.Key); err != nil {
 							ctx.WithError(err).Warn("Could not set gateway key")
 						}
 					}
 				}
-				if !b.gateways.Add(connectMessage.GatewayID) {
+				if !b.gateways.Add(gatewayID) {
 					ctx.Debug("Got connect message from already-connected gateway")
 					continue
 				}
@@ -216,23 +218,24 @@ func (b *Exchange) handleChannels() (err error) {
 					continue
 				}
 				for _, backend := range b.northboundBackends {
-					go b.activateNorthbound(backend, connectMessage.GatewayID)
+					go b.activateNorthbound(backend, gatewayID)
 				}
 				for _, backend := range b.southboundBackends {
-					go b.activateSouthbound(backend, connectMessage.GatewayID)
+					go b.activateSouthbound(backend, gatewayID)
 				}
 				connectedGateways.Inc()
 			case disconnectMessage, ok := <-b.disconnect:
 				if !ok {
 					continue
 				}
-				ctx := b.ctx.WithField("GatewayID", disconnectMessage.GatewayID)
+				gatewayID := strings.ToLower(disconnectMessage.GatewayID)
+				ctx := b.ctx.WithField("GatewayID", gatewayID)
 				start(ctx, "disconnect")
-				if !b.gateways.Contains(disconnectMessage.GatewayID) {
+				if !b.gateways.Contains(gatewayID) {
 					ctx.Debug("Got disconnect message from not-connected gateway")
 					continue
 				}
-				if err := b.auth.ValidateKey(disconnectMessage.GatewayID, disconnectMessage.Key); err != nil {
+				if err := b.auth.ValidateKey(gatewayID, disconnectMessage.Key); err != nil {
 					ctx.WithError(err).Warn("Got disconnect message with invalid Key")
 					continue
 				}
@@ -240,9 +243,9 @@ func (b *Exchange) handleChannels() (err error) {
 					ctx.WithError(err).Warn("Error in middleware")
 					continue
 				}
-				b.deactivateNorthbound(disconnectMessage.GatewayID)
-				b.deactivateSouthbound(disconnectMessage.GatewayID)
-				b.gateways.Remove(disconnectMessage.GatewayID)
+				b.deactivateNorthbound(gatewayID)
+				b.deactivateSouthbound(gatewayID)
+				b.gateways.Remove(gatewayID)
 				connectedGateways.Dec()
 			case uplinkMessage, ok := <-b.uplink:
 				if !ok {
