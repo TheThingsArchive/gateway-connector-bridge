@@ -243,14 +243,17 @@ func (c *MQTT) SubscribeUplink(gatewayID string) (<-chan *types.UplinkMessage, e
 	ctx := c.ctx.WithField("GatewayID", gatewayID)
 	messages := make(chan *types.UplinkMessage, BufferSize)
 	token := c.subscribe(fmt.Sprintf(UplinkTopicFormat, gatewayID), func(_ paho.Client, msg paho.Message) {
-		var uplink router.UplinkMessage
-		if err := proto.Unmarshal(msg.Payload(), &uplink); err != nil {
+		uplink := types.UplinkMessage{
+			GatewayID: gatewayID,
+			Message:   new(router.UplinkMessage),
+		}
+		if err := proto.Unmarshal(msg.Payload(), uplink.Message); err != nil {
 			ctx.WithError(err).Warn("Could not unmarshal uplink message")
 			return
 		}
-		uplink.Trace = uplink.Trace.WithEvent(trace.ReceiveEvent, "backend", "mqtt")
+		uplink.Message.Trace = uplink.Message.Trace.WithEvent(trace.ReceiveEvent, "backend", "mqtt")
 		select {
-		case messages <- &types.UplinkMessage{GatewayID: gatewayID, Message: &uplink}:
+		case messages <- &uplink:
 			ctx.WithField("ProtoSize", len(msg.Payload())).Debug("Received uplink message")
 		default:
 			ctx.Warn("Could not handle uplink message: buffer full")
@@ -274,13 +277,17 @@ func (c *MQTT) SubscribeStatus(gatewayID string) (<-chan *types.StatusMessage, e
 	ctx := c.ctx.WithField("GatewayID", gatewayID)
 	messages := make(chan *types.StatusMessage, BufferSize)
 	token := c.subscribe(fmt.Sprintf(StatusTopicFormat, gatewayID), func(_ paho.Client, msg paho.Message) {
-		var status gateway.Status
-		if err := proto.Unmarshal(msg.Payload(), &status); err != nil {
+		status := types.StatusMessage{
+			Backend:   "MQTT",
+			GatewayID: gatewayID,
+			Message:   new(gateway.Status),
+		}
+		if err := proto.Unmarshal(msg.Payload(), status.Message); err != nil {
 			ctx.WithError(err).Warn("Could not unmarshal status message")
 			return
 		}
 		select {
-		case messages <- &types.StatusMessage{Backend: "MQTT", GatewayID: gatewayID, Message: &status}:
+		case messages <- &status:
 			ctx.WithField("ProtoSize", len(msg.Payload())).Debug("Received status message")
 		default:
 			ctx.Warn("Could not handle status message: buffer full")
