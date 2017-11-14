@@ -258,12 +258,22 @@ func (b *Exchange) handleChannels() (err error) {
 					continue
 				}
 				uplinkMessage.Message.GatewayMetadata.GatewayID = uplinkMessage.GatewayID
+				published := 0
 				for _, backend := range b.northboundBackends {
-					if err := backend.PublishUplink(uplinkMessage); err != nil {
-						ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish uplink")
+					ctx := ctx.WithField("Backend", fmt.Sprintf("%T", backend))
+					err := backend.PublishUplink(uplinkMessage)
+					if err == nil {
+						ctx.Debug("Published uplink")
+						published++
+					} else {
+						ctx.WithError(err).Debug("Did not publish uplink")
 					}
 				}
-				registerHandled(uplinkMessage.Message)
+				if published > 0 {
+					registerHandled(uplinkMessage.Message)
+				} else {
+					ctx.Warn("Uplink not accepted by any northbound backend")
+				}
 			case downlinkMessage, ok := <-b.downlink:
 				if !ok {
 					continue
@@ -274,12 +284,22 @@ func (b *Exchange) handleChannels() (err error) {
 					ctx.WithError(err).Warn("Error in middleware")
 					continue
 				}
+				published := 0
 				for _, backend := range b.southboundBackends {
-					if err := backend.PublishDownlink(downlinkMessage); err != nil {
-						ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish downlink")
+					ctx := ctx.WithField("Backend", fmt.Sprintf("%T", backend))
+					err := backend.PublishDownlink(downlinkMessage)
+					if err == nil {
+						ctx.Debug("Published downlink")
+						published++
+					} else {
+						ctx.WithError(err).Debug("Did not publish downlink")
 					}
 				}
-				registerHandled(downlinkMessage.Message)
+				if published > 0 {
+					registerHandled(downlinkMessage.Message)
+				} else {
+					ctx.Warn("Downlink not accepted by any southbound backend")
+				}
 			case statusMessage, ok := <-b.status:
 				if !ok {
 					continue
@@ -290,12 +310,22 @@ func (b *Exchange) handleChannels() (err error) {
 					ctx.WithError(err).Warn("Error in middleware")
 					continue
 				}
+				published := 0
 				for _, backend := range b.northboundBackends {
-					if err := backend.PublishStatus(statusMessage); err != nil {
-						ctx.WithField("Backend", fmt.Sprintf("%T", backend)).WithError(err).Warn("Could not publish status")
+					ctx := ctx.WithField("Backend", fmt.Sprintf("%T", backend))
+					err := backend.PublishStatus(statusMessage)
+					if err == nil {
+						ctx.Debug("Published status")
+						published++
+					} else {
+						ctx.WithError(err).Debug("Did not publish status")
 					}
 				}
-				registerStatus()
+				if published > 0 {
+					registerStatus()
+				} else {
+					ctx.Warn("Status not accepted by any northbound backend")
+				}
 			}
 		}
 	}()
