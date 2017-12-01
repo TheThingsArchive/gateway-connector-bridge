@@ -27,6 +27,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/deduplicate"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/gatewayinfo"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/inject"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/lorafilter"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/ratelimit"
 	"github.com/TheThingsNetwork/go-utils/handlers/cli"
 	ttnlog "github.com/TheThingsNetwork/go-utils/log"
@@ -91,6 +92,10 @@ func runBridge(cmd *cobra.Command, args []string) {
 	bridge := exchange.New(ctx)
 
 	var middleware middleware.Chain
+
+	if viper.GetBool("lorafilter") {
+		middleware = append(middleware, lorafilter.NewFilter())
+	}
 
 	if viper.GetBool("deduplicate") {
 		middleware = append(middleware, deduplicate.NewDeduplicate())
@@ -339,6 +344,7 @@ func init() {
 
 	BridgeCmd.Flags().String("inject-frequency-plan", "", "Inject a frequency plan field into status message that don't have one")
 
+	BridgeCmd.Flags().Bool("lorafilter", true, "Block non-LoRaWAN messages")
 	BridgeCmd.Flags().Bool("deduplicate", true, "Block duplicate messages")
 
 	BridgeCmd.Flags().Bool("ratelimit", false, "Rate-limit messages")
