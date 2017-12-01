@@ -383,6 +383,7 @@ func (b *Backend) handlePushData(addr *net.UDPAddr, data []byte) error {
 
 func (b *Backend) handleStat(addr *net.UDPAddr, mac lorawan.EUI64, stat Stat) {
 	gwStats := newGatewayStatsPacket(mac, stat)
+	gwStats.GatewayAddr = addr
 	gwStats.Message.IP = append(gwStats.Message.IP, addr.IP.String())
 	b.statsChan <- gwStats
 }
@@ -392,6 +393,7 @@ func (b *Backend) handleRXPacket(addr *net.UDPAddr, mac lorawan.EUI64, rxpk RXPK
 	if err != nil {
 		return err
 	}
+	rxPacket.GatewayAddr = addr
 	rxPacket.Message.Trace = rxPacket.Message.Trace.WithEvent(trace.ReceiveEvent, "backend", "packet-forwarder")
 	b.rxChan <- rxPacket
 	return nil

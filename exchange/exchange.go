@@ -251,7 +251,7 @@ func (b *Exchange) handleChannels() (err error) {
 				if !ok {
 					continue
 				}
-				ctx := b.ctx.WithField("GatewayID", uplinkMessage.GatewayID)
+				ctx := b.ctx.WithFields(log.Fields{"GatewayID": uplinkMessage.GatewayID, "GatewayAddr": uplinkMessage.GatewayAddr})
 				start(ctx, "uplink")
 				if err := b.middleware.Execute(middleware.NewContext(), uplinkMessage); err != nil {
 					ctx.WithError(err).Warn("Error in middleware")
@@ -304,7 +304,7 @@ func (b *Exchange) handleChannels() (err error) {
 				if !ok {
 					continue
 				}
-				ctx := b.ctx.WithField("GatewayID", statusMessage.GatewayID)
+				ctx := b.ctx.WithFields(log.Fields{"GatewayID": statusMessage.GatewayID, "GatewayAddr": statusMessage.GatewayAddr})
 				start(ctx, "status")
 				if err := b.middleware.Execute(middleware.NewContext(), statusMessage); err != nil {
 					ctx.WithError(err).Warn("Error in middleware")

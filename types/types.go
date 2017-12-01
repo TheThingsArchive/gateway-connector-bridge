@@ -4,14 +4,17 @@
 package types
 
 import (
+	"net"
+
 	"github.com/TheThingsNetwork/api/gateway"
 	"github.com/TheThingsNetwork/api/router"
 )
 
 // UplinkMessage is used internally
 type UplinkMessage struct {
-	GatewayID string
-	Message   *router.UplinkMessage
+	GatewayID   string
+	GatewayAddr net.Addr
+	Message     *router.UplinkMessage
 }
 
 // DownlinkMessage is used internally
@@ -22,7 +25,8 @@ type DownlinkMessage struct {
 
 // StatusMessage is used internally
 type StatusMessage struct {
-	Backend   string
-	GatewayID string
-	Message   *gateway.Status
+	Backend     string
+	GatewayID   string
+	GatewayAddr net.Addr
+	Message     *gateway.Status
 }
