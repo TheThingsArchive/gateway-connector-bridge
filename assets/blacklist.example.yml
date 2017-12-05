@@ -1,0 +1,4 @@
+- gateway: malicious
+  comment: Malicious gateway
+- ip: 8.8.8.8
+  comment: This is a DNS server, not a gateway

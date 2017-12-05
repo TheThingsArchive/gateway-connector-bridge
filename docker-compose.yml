@@ -31,4 +31,5 @@ services:
       BRIDGE_AMQP: rabbitmq:5672
       BRIDGE_MQTT: disable
       BRIDGE_TTN_ROUTER: disable
+      BRIDGE_BLACKLIST: https://ttn.fyi/blacklist.yml
       # BRIDGE_TTN_ROUTER: discovery.thethingsnetwork.org:1900/the-router-id

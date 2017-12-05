@@ -24,6 +24,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend/ttn"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/exchange"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/blacklist"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/deduplicate"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/gatewayinfo"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/inject"
@@ -94,10 +95,23 @@ func runBridge(cmd *cobra.Command, args []string) {
 	var middleware middleware.Chain
 
 	if viper.GetBool("lorafilter") {
+		ctx.Info("Adding lorafilter middleware")
 		middleware = append(middleware, lorafilter.NewFilter())
 	}
 
+	if list := viper.GetStringSlice("blacklist"); len(list) > 0 {
+		ctx.Info("Adding blacklist middleware")
+		blacklist, _ := blacklist.NewBlacklist(list...)
+		go func() {
+			for range time.Tick(viper.GetDuration("blacklist-refresh")) {
+				blacklist.FetchRemotes()
+			}
+		}()
+		middleware = append(middleware, blacklist)
+	}
+
 	if viper.GetBool("deduplicate") {
+		ctx.Info("Adding deduplicate middleware")
 		middleware = append(middleware, deduplicate.NewDeduplicate())
 	}
 
@@ -346,6 +360,8 @@ func init() {
 
 	BridgeCmd.Flags().Bool("lorafilter", true, "Block non-LoRaWAN messages")
 	BridgeCmd.Flags().Bool("deduplicate", true, "Block duplicate messages")
+	BridgeCmd.Flags().StringSlice("blacklist", nil, "Blacklists to use")
+	BridgeCmd.Flags().Duration("blacklist-refresh", time.Hour, "Refresh rate for remote blacklists")
 
 	BridgeCmd.Flags().Bool("ratelimit", false, "Rate-limit messages")
 	BridgeCmd.Flags().Uint("ratelimit-uplink", 600, "Uplink rate limit (per gateway per minute)")
