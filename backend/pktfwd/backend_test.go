@@ -379,6 +379,7 @@ func TestBackend(t *testing.T) {
 									Size: uint16(len([]byte{1, 2, 3, 4})),
 									Data: base64.StdEncoding.EncodeToString([]byte{1, 2, 3, 4}),
 									IPol: true,
+									NCRC: true,
 								},
 							},
 						})
@@ -468,6 +469,7 @@ func TestNewTXPKFromTXPacket(t *testing.T) {
 				Size: 4,
 				Data: "AQIDBA==",
 				IPol: true,
+				NCRC: true,
 			})
 		})
 

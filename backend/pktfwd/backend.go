@@ -597,6 +597,7 @@ func newTXPKFromTXPacket(txPacket *types.DownlinkMessage) (TXPK, error) {
 		IPol: gateway.PolarizationInversion,
 		Size: uint16(len(txPacket.Message.Payload)),
 		Data: base64.StdEncoding.EncodeToString(txPacket.Message.Payload),
+		NCRC: protocol.Modulation == pb_lorawan.Modulation_LORA,
 	}
 
 	if protocol.Modulation == pb_lorawan.Modulation_FSK {
