@@ -4,6 +4,7 @@
 package exchange
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -166,6 +167,8 @@ func (b *Exchange) ConnectGateway(gatewayID ...string) {
 	}
 }
 
+var errClosedChannel = errors.New("closed channel")
+
 func (b *Exchange) handleChannels() (err error) {
 	errCh := make(chan error)
 	defer close(errCh)
@@ -185,10 +188,12 @@ func (b *Exchange) handleChannels() (err error) {
 			curCtx = ctx
 			curMsg = msg
 		}
+		var err error
 		for {
-			if curMsg != "" {
+			if curMsg != "" && err == nil {
 				curCtx.WithField("Duration", time.Since(curStart)).Infof("Routed %s", curMsg)
 			}
+			err = nil
 			select {
 			case <-doneCh:
 				return
@@ -196,6 +201,7 @@ func (b *Exchange) handleChannels() (err error) {
 				start(b.ctx, "")
 			case connectMessage, ok := <-b.connect:
 				if !ok {
+					err = errClosedChannel
 					continue
 				}
 				gatewayID := strings.ToLower(connectMessage.GatewayID)
@@ -211,9 +217,10 @@ func (b *Exchange) handleChannels() (err error) {
 				}
 				if !b.gateways.Add(gatewayID) {
 					ctx.Debug("Got connect message from already-connected gateway")
+					err = errors.New("Got connect message from already-connected gateway")
 					continue
 				}
-				if err := b.middleware.Execute(middleware.NewContext(), connectMessage); err != nil {
+				if err = b.middleware.Execute(middleware.NewContext(), connectMessage); err != nil {
 					ctx.WithError(err).Warn("Error in middleware")
 					continue
 				}
@@ -226,6 +233,7 @@ func (b *Exchange) handleChannels() (err error) {
 				connectedGateways.Inc()
 			case disconnectMessage, ok := <-b.disconnect:
 				if !ok {
+					err = errClosedChannel
 					continue
 				}
 				gatewayID := strings.ToLower(disconnectMessage.GatewayID)
@@ -235,11 +243,11 @@ func (b *Exchange) handleChannels() (err error) {
 					ctx.Debug("Got disconnect message from not-connected gateway")
 					continue
 				}
-				if err := b.auth.ValidateKey(gatewayID, disconnectMessage.Key); err != nil {
+				if err = b.auth.ValidateKey(gatewayID, disconnectMessage.Key); err != nil {
 					ctx.WithError(err).Warn("Got disconnect message with invalid Key")
 					continue
 				}
-				if err := b.middleware.Execute(middleware.NewContext(), disconnectMessage); err != nil {
+				if err = b.middleware.Execute(middleware.NewContext(), disconnectMessage); err != nil {
 					ctx.WithError(err).Warn("Error in middleware")
 					continue
 				}
@@ -249,11 +257,12 @@ func (b *Exchange) handleChannels() (err error) {
 				connectedGateways.Dec()
 			case uplinkMessage, ok := <-b.uplink:
 				if !ok {
+					err = errClosedChannel
 					continue
 				}
 				ctx := b.ctx.WithFields(log.Fields{"GatewayID": uplinkMessage.GatewayID, "GatewayAddr": uplinkMessage.GatewayAddr})
 				start(ctx, "uplink")
-				if err := b.middleware.Execute(middleware.NewContext(), uplinkMessage); err != nil {
+				if err = b.middleware.Execute(middleware.NewContext(), uplinkMessage); err != nil {
 					ctx.WithError(err).Warn("Error in middleware")
 					continue
 				}
@@ -273,14 +282,16 @@ func (b *Exchange) handleChannels() (err error) {
 					registerHandled(uplinkMessage.Message)
 				} else {
 					ctx.Warn("Uplink not accepted by any northbound backend")
+					err = errors.New("Uplink not accepted by any northbound backend")
 				}
 			case downlinkMessage, ok := <-b.downlink:
 				if !ok {
+					err = errClosedChannel
 					continue
 				}
 				ctx := b.ctx.WithField("GatewayID", downlinkMessage.GatewayID)
 				start(ctx, "downlink")
-				if err := b.middleware.Execute(middleware.NewContext(), downlinkMessage); err != nil {
+				if err = b.middleware.Execute(middleware.NewContext(), downlinkMessage); err != nil {
 					ctx.WithError(err).Warn("Error in middleware")
 					continue
 				}
@@ -299,14 +310,16 @@ func (b *Exchange) handleChannels() (err error) {
 					registerHandled(downlinkMessage.Message)
 				} else {
 					ctx.Warn("Downlink not accepted by any southbound backend")
+					err = errors.New("Downlink not accepted by any southbound backend")
 				}
 			case statusMessage, ok := <-b.status:
 				if !ok {
+					err = errClosedChannel
 					continue
 				}
 				ctx := b.ctx.WithFields(log.Fields{"GatewayID": statusMessage.GatewayID, "GatewayAddr": statusMessage.GatewayAddr})
 				start(ctx, "status")
-				if err := b.middleware.Execute(middleware.NewContext(), statusMessage); err != nil {
+				if err = b.middleware.Execute(middleware.NewContext(), statusMessage); err != nil {
 					ctx.WithError(err).Warn("Error in middleware")
 					continue
 				}
@@ -325,6 +338,7 @@ func (b *Exchange) handleChannels() (err error) {
 					registerStatus()
 				} else {
 					ctx.Warn("Status not accepted by any northbound backend")
+					err = errors.New("Status not accepted by any northbound backend")
 				}
 			}
 		}
