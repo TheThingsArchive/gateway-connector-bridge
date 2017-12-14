@@ -25,6 +25,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/exchange"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/blacklist"
+	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/debug"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/deduplicate"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/gatewayinfo"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware/inject"
@@ -114,6 +115,8 @@ func runBridge(cmd *cobra.Command, args []string) {
 		ctx.Info("Adding deduplicate middleware")
 		middleware = append(middleware, deduplicate.NewDeduplicate())
 	}
+
+	middleware = append(middleware, debug.New())
 
 	id := fmt.Sprintf(
 		"%s %s-%s (%s)",
