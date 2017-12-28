@@ -404,11 +404,13 @@ loop:
 			break loop
 		case uplinkMessage, ok := <-uplink:
 			if !ok {
+				uplink = nil
 				continue
 			}
 			b.uplink <- uplinkMessage
 		case statusMessage, ok := <-status:
 			if !ok {
+				status = nil
 				continue
 			}
 			b.status <- statusMessage
