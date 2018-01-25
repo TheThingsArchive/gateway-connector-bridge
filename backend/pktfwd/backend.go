@@ -546,9 +546,6 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 	if len(rxpk.RSig) > 0 {
 		rxPacket.Message.GatewayMetadata.SNR = float32(rxpk.RSig[0].LSNR)
 		rxPacket.Message.GatewayMetadata.RSSI = float32(rxpk.RSig[0].RSSIS)
-	}
-
-	if len(rxpk.RSig) > 1 {
 		for _, sig := range rxpk.RSig {
 			if float32(sig.LSNR) > rxPacket.Message.GatewayMetadata.SNR {
 				rxPacket.Message.GatewayMetadata.SNR = float32(sig.LSNR)
