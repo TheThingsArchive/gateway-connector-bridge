@@ -324,7 +324,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 		time.Sleep(100 * time.Millisecond)
 	}()
 
-	if len(connectedGatewayIDs) > 0 {
+	if viper.GetBool("reconnect-gateways") && len(connectedGatewayIDs) > 0 {
 		ctx.Infof("Reconnecting %d gateways", len(connectedGatewayIDs))
 		bridge.ConnectGateway(connectedGatewayIDs...)
 	}
@@ -357,6 +357,7 @@ func init() {
 
 	BridgeCmd.Flags().String("account-server", "https://account.thethingsnetwork.org", "Use an account server for exchanging access keys and fetching gateway information")
 	BridgeCmd.Flags().Duration("info-expire", time.Hour, "Gateway Information expiration time")
+	BridgeCmd.Flags().Bool("reconnect-gateways", true, "Reconnect previously connected gateways")
 	BridgeCmd.Flags().Bool("route-unknown-gateways", false, "Route traffic for unknown gateways")
 
 	BridgeCmd.Flags().String("inject-frequency-plan", "", "Inject a frequency plan field into status message that don't have one")
