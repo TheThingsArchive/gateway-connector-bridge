@@ -149,7 +149,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 
 	// Redis state
 	var connectedGatewayIDs []string
-	if redisClient != nil {
+	if viper.GetBool("reconnect-gateways") && redisClient != nil {
 		ctx.Info("Initializing Redis state backend")
 		connectedGatewayIDs = bridge.InitRedisState(redisClient, "")
 	}
