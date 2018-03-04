@@ -69,9 +69,9 @@ The Things Network's `gateway-connector` protocol sends protocol buffers over MQ
 - On disconnect: send [`types.DisconnectMessage`](types/types.proto) on topic `disconnect`.
   - Supply the same ID and Access Key as in the `ConnectMessage`.
   - Use the "will" feature of MQTT to send the `DisconnectMessage` when the gateway unexpectedly disconnects.
-- On uplink: send [`router.UplinkMessage`](https://github.com/TheThingsNetwork/ttn/blob/develop/api/router/router.proto) on topic `<gateway-id>/up`.
-- For downlink: subscribe to topic `<gateway-id>/down` and receive [`router.DownlinkMessage`](https://github.com/TheThingsNetwork/ttn/blob/develop/api/router/router.proto).
-- On status: send [`gateway.Status`](https://github.com/TheThingsNetwork/ttn/blob/develop/api/gateway/gateway.proto) on topic `<gateway-id>/status`.
+- On uplink: send [`router.UplinkMessage`](https://github.com/TheThingsNetwork/api/blob/master/router/router.proto) on topic `<gateway-id>/up`.
+- For downlink: subscribe to topic `<gateway-id>/down` and receive [`router.DownlinkMessage`](https://github.com/TheThingsNetwork/api/blob/master/router/router.proto).
+- On status: send [`gateway.Status`](https://github.com/TheThingsNetwork/api/blob/master/gateway/gateway.proto) on topic `<gateway-id>/status`.
 
 ## Security
 
