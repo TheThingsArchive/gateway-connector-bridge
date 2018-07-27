@@ -242,6 +242,8 @@ func runBridge(cmd *cobra.Command, args []string) {
 				continue
 			}
 			bridge.AddNorthbound(router)
+		} else {
+			ctx.Warnf("Bad ttn-router, expected '<server>/<router-id>' but got '%s'", ttnRouter)
 		}
 	}
 
