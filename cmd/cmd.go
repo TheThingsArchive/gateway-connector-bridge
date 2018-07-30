@@ -375,7 +375,7 @@ func init() {
 	BridgeCmd.Flags().Uint("ratelimit-status", 20, "Status rate limit (per gateway per minute)")
 
 	BridgeCmd.Flags().StringSlice("ttn-router", []string{"discover.thethingsnetwork.org:1900/ttn-router-eu"}, "TTN Router to connect to")
-	BridgeCmd.Flags().String("udp", ":1700", "UDP address to listen on for Semtech Packet Forwarder gateways")
+	BridgeCmd.Flags().String("udp", "", "UDP address to listen on for Semtech Packet Forwarder gateways")
 	BridgeCmd.Flags().Duration("udp-session", time.Minute, "Duration of gateway sessions")
 	BridgeCmd.Flags().Bool("udp-lock-ip", true, "Lock gateways to IP addresses for the session duration")
 	BridgeCmd.Flags().Bool("udp-lock-port", false, "Additional to udp-lock-ip, also lock gateways to ports for the session duration")
