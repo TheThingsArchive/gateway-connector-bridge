@@ -269,7 +269,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 			ctx.WithField("Broker", mqttBroker).Info("Skipping MQTT Broker")
 			continue
 		}
-		ctx.WithField("Username", parts[1]).WithField("Password", parts[2]).WithField("Address", parts[3]).Infof("Initializing MQTT")
+		ctx.WithField("Username", parts[1]).WithField("Password", strings.Repeat("*", len(parts[2]))).WithField("Address", parts[3]).Infof("Initializing MQTT")
 		mqtt, err := mqtt.New(mqtt.Config{
 			Brokers:  []string{"tcp://" + parts[3]},
 			Username: parts[1],
@@ -293,7 +293,7 @@ func runBridge(cmd *cobra.Command, args []string) {
 			ctx.WithField("Broker", amqpBroker).Info("Skipping AMQP Broker")
 			continue
 		}
-		ctx.WithField("Username", parts[1]).WithField("Password", parts[2]).WithField("Address", parts[3]).Infof("Initializing AMQP")
+		ctx.WithField("Username", parts[1]).WithField("Password", strings.Repeat("*", len(parts[2]))).WithField("Address", parts[3]).Infof("Initializing AMQP")
 		amqp, err := amqp.New(amqp.Config{
 			Address:  parts[3],
 			Username: parts[1],
