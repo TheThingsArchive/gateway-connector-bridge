@@ -218,7 +218,10 @@ func runBridge(cmd *cobra.Command, args []string) {
 				ctx.Infof("Using Root CAs from %s", rootCAFile)
 			}
 		}
+	} else {
+		ctx.Warnf("No ttn-router configured")
 	}
+
 	for _, ttnRouter := range ttnRouters {
 		if ttnRouter == "disable" {
 			continue
@@ -242,6 +245,8 @@ func runBridge(cmd *cobra.Command, args []string) {
 				continue
 			}
 			bridge.AddNorthbound(router)
+		} else {
+			ctx.Warnf("Bad ttn-router, expected '<server>/<router-id>' but got '%s'", ttnRouter)
 		}
 	}
 
