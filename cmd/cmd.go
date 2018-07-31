@@ -253,6 +253,8 @@ func runBridge(cmd *cobra.Command, args []string) {
 			LockPort: config.GetBool("udp-lock-port"),
 		}, ttnlog.Get())
 		bridge.AddSouthbound(pktfwd)
+	} else {
+		ctx.Warn("Parameter 'udp' is empty. No UDP listener for gateways opened")
 	}
 
 	// Set up the MQTT backends (from comma-separated list of user:pass@host:port)
