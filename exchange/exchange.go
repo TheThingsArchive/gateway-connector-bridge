@@ -10,6 +10,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/TheThingsNetwork/api/gateway"
+	"github.com/TheThingsNetwork/api/protocol"
+	"github.com/TheThingsNetwork/api/protocol/lorawan"
 	"github.com/TheThingsNetwork/api/trace"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/auth"
 	"github.com/TheThingsNetwork/gateway-connector-bridge/backend"
@@ -260,7 +263,11 @@ func (b *Exchange) handleChannels() (err error) {
 					err = errClosedChannel
 					continue
 				}
-				ctx := b.ctx.WithFields(log.Fields{"GatewayID": uplinkMessage.GatewayID, "GatewayAddr": uplinkMessage.GatewayAddr})
+				ctx := b.ctx.WithFields(log.Fields{
+					"GatewayID":   uplinkMessage.GatewayID,
+					"GatewayAddr": uplinkMessage.GatewayAddr,
+				})
+				ctx = ctxWithMessageFields(ctx, uplinkMessage.Message)
 				start(ctx, "uplink")
 				if err = b.middleware.Execute(middleware.NewContext(), uplinkMessage); err != nil {
 					ctx.WithError(err).Warn("Error in middleware")
@@ -289,7 +296,10 @@ func (b *Exchange) handleChannels() (err error) {
 					err = errClosedChannel
 					continue
 				}
-				ctx := b.ctx.WithField("GatewayID", downlinkMessage.GatewayID)
+				ctx := b.ctx.WithFields(log.Fields{
+					"GatewayID": downlinkMessage.GatewayID,
+				})
+				ctx = ctxWithMessageFields(ctx, downlinkMessage.Message)
 				start(ctx, "downlink")
 				if err = b.middleware.Execute(middleware.NewContext(), downlinkMessage); err != nil {
 					ctx.WithError(err).Warn("Error in middleware")
@@ -349,6 +359,57 @@ func (b *Exchange) handleChannels() (err error) {
 	case err := <-errCh:
 		return err
 	}
+}
+
+func ctxWithMessageFields(ctx *log.Entry, m message) *log.Entry {
+	fields := make(log.Fields)
+	fields["PayloadSize"] = len(m.GetPayload())
+
+	m.UnmarshalPayload()
+	msg := m.GetMessage()
+	if msg == nil {
+		return ctx.WithFields(fields)
+	}
+
+	if msg := msg.GetLoRaWAN(); msg != nil {
+		fields["MType"] = msg.MType.String()
+		switch msg.MType {
+		case lorawan.MType_JOIN_REQUEST:
+			msg := msg.GetJoinRequestPayload()
+			fields["AppEUI"] = msg.AppEUI
+			fields["DevEUI"] = msg.DevEUI
+		case lorawan.MType_UNCONFIRMED_UP, lorawan.MType_CONFIRMED_UP,
+			lorawan.MType_UNCONFIRMED_DOWN, lorawan.MType_CONFIRMED_DOWN:
+			msg := msg.GetMACPayload()
+			fields["DevAddr"] = msg.DevAddr
+			fields["FCnt"] = msg.FCnt
+			fields["FPort"] = msg.FPort
+		}
+	}
+
+	if msg, ok := m.(interface {
+		GetProtocolConfiguration() protocol.TxConfiguration
+		GetGatewayConfiguration() gateway.TxConfiguration
+	}); ok {
+		fields["Frequency"] = msg.GetGatewayConfiguration().Frequency
+		protocol := msg.GetProtocolConfiguration()
+		if lorawan := (&protocol).GetLoRaWAN(); lorawan != nil {
+			fields["DataRate"] = lorawan.DataRate
+		}
+	}
+
+	if msg, ok := m.(interface {
+		GetProtocolMetadata() protocol.RxMetadata
+		GetGatewayMetadata() gateway.RxMetadata
+	}); ok {
+		fields["Frequency"] = msg.GetGatewayMetadata().Frequency
+		protocol := msg.GetProtocolMetadata()
+		if lorawan := (&protocol).GetLoRaWAN(); lorawan != nil {
+			fields["DataRate"] = lorawan.DataRate
+		}
+	}
+
+	return ctx.WithFields(fields)
 }
 
 func (b *Exchange) activateNorthbound(backend backend.Northbound, gatewayID string) {
