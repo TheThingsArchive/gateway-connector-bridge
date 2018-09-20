@@ -391,6 +391,7 @@ func ctxWithMessageFields(ctx *log.Entry, m message) *log.Entry {
 		GetProtocolConfiguration() protocol.TxConfiguration
 		GetGatewayConfiguration() gateway.TxConfiguration
 	}); ok {
+		fields["Timestamp"] = msg.GetGatewayConfiguration().Timestamp
 		fields["Frequency"] = msg.GetGatewayConfiguration().Frequency
 		protocol := msg.GetProtocolConfiguration()
 		if lorawan := (&protocol).GetLoRaWAN(); lorawan != nil {
@@ -402,6 +403,7 @@ func ctxWithMessageFields(ctx *log.Entry, m message) *log.Entry {
 		GetProtocolMetadata() protocol.RxMetadata
 		GetGatewayMetadata() gateway.RxMetadata
 	}); ok {
+		fields["Timestamp"] = msg.GetGatewayMetadata().Timestamp
 		fields["Frequency"] = msg.GetGatewayMetadata().Frequency
 		protocol := msg.GetProtocolMetadata()
 		if lorawan := (&protocol).GetLoRaWAN(); lorawan != nil {
