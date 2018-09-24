@@ -91,7 +91,7 @@ var BridgeCmd = &cobra.Command{
 func runBridge(cmd *cobra.Command, args []string) {
 	var err error
 
-	bridge := exchange.New(ctx)
+	bridge := exchange.New(ctx, viper.GetDuration("kill-when-idle-for"))
 
 	var middleware middleware.Chain
 
@@ -392,6 +392,7 @@ func init() {
 
 	BridgeCmd.Flags().String("id", "", "ID of this bridge")
 	BridgeCmd.Flags().Int("workers", 1, "Number of parallel workers")
+	BridgeCmd.Flags().Duration("kill-when-idle-for", 0, "Kill the process if idle for this duration")
 
 	viper.BindPFlags(BridgeCmd.Flags())
 }
