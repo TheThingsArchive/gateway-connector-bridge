@@ -54,23 +54,33 @@ type Exchange struct {
 	status     chan *types.StatusMessage
 	downlink   chan *types.DownlinkMessage
 
+	killWhenIdleFor time.Duration
+	idleWatchdog    *time.Timer
+
 	gateways gatewayState
 }
 
 // New initializes a new Exchange
-func New(ctx log.Interface) *Exchange {
-	return &Exchange{
-		ctx:            ctx,
-		done:           make(chan struct{}),
-		northboundDone: make(map[string][]chan struct{}),
-		southboundDone: make(map[string][]chan struct{}),
-		connect:        make(chan *types.ConnectMessage),
-		disconnect:     make(chan *types.DisconnectMessage),
-		uplink:         make(chan *types.UplinkMessage),
-		status:         make(chan *types.StatusMessage),
-		downlink:       make(chan *types.DownlinkMessage),
-		gateways:       mapset.NewSet(),
+func New(ctx log.Interface, killWhenIdleFor time.Duration) *Exchange {
+	e := &Exchange{
+		ctx:             ctx,
+		done:            make(chan struct{}),
+		northboundDone:  make(map[string][]chan struct{}),
+		southboundDone:  make(map[string][]chan struct{}),
+		connect:         make(chan *types.ConnectMessage),
+		disconnect:      make(chan *types.DisconnectMessage),
+		uplink:          make(chan *types.UplinkMessage),
+		status:          make(chan *types.StatusMessage),
+		downlink:        make(chan *types.DownlinkMessage),
+		gateways:        mapset.NewSet(),
+		killWhenIdleFor: killWhenIdleFor,
 	}
+	if killWhenIdleFor > 0 {
+		e.idleWatchdog = time.AfterFunc(killWhenIdleFor, func() {
+			ctx.Fatalf("Exchange was idle for more than %v", killWhenIdleFor)
+		})
+	}
+	return e
 }
 
 // SetID sets the id of this bridge
@@ -280,6 +290,9 @@ func (b *Exchange) handleChannels() (err error) {
 					err := backend.PublishUplink(uplinkMessage)
 					if err == nil {
 						ctx.Debug("Published uplink")
+						if b.killWhenIdleFor > 0 && b.idleWatchdog.Stop() {
+							b.idleWatchdog.Reset(b.killWhenIdleFor)
+						}
 						published++
 					} else {
 						ctx.WithError(err).Debug("Did not publish uplink")

@@ -38,7 +38,7 @@ func TestExchange(t *testing.T) {
 		auth := auth.NewMemory()
 
 		Convey("When creating a new Exchange", func() {
-			b := New(ctx)
+			b := New(ctx, 0)
 			b.SetAuth(auth)
 
 			Convey("When adding a Northbound and Southbound backend", func() {

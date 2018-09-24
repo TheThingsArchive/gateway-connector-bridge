@@ -42,7 +42,7 @@ func TestExchangeState(t *testing.T) {
 		}()
 
 		Convey("When creating a new Exchange", func() {
-			b := New(ctx)
+			b := New(ctx, 0)
 
 			Convey("When calling InitRedisState", func() {
 				gatewayIDs := b.InitRedisState(getRedisClient(), "")
@@ -56,7 +56,7 @@ func TestExchangeState(t *testing.T) {
 						b.gateways.Remove("dev")
 					})
 					Convey("When calling InitRedisState on another Exchange", func() {
-						gatewayIDs := New(ctx).InitRedisState(getRedisClient(), "")
+						gatewayIDs := New(ctx, 0).InitRedisState(getRedisClient(), "")
 						Convey("It should return the gateway", func() {
 							So(gatewayIDs, ShouldContain, "dev")
 						})
@@ -67,7 +67,7 @@ func TestExchangeState(t *testing.T) {
 							b.gateways.Add("dev")
 						})
 						Convey("When calling InitRedisState on another Exchange", func() {
-							gatewayIDs := New(ctx).InitRedisState(getRedisClient(), "")
+							gatewayIDs := New(ctx, 0).InitRedisState(getRedisClient(), "")
 							Convey("It should not return the gateway", func() {
 								So(gatewayIDs, ShouldNotContain, "dev")
 							})
