@@ -86,7 +86,7 @@ The Things Network's `gateway-connector` protocol sends protocol buffers over MQ
 
 ## Development
 
-- Make sure you have [Go](https://golang.org) installed (version 1.7 or later).
+- Make sure you have [Go](https://golang.org) installed (recommended version 1.11, version 1.8 or later is known to work).
 - Set up your [Go environment](https://golang.org/doc/code.html#GOPATH).
 - Make sure you have [Redis](http://redis.io/download) **installed** and **running**.
 - Make sure you have [RabbitMQ](https://www.rabbitmq.com/download.html) and its [MQTT plugin](https://www.rabbitmq.com/mqtt.html) **installed** and **running**.
