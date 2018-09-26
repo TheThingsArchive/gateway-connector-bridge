@@ -554,14 +554,14 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 				rxPacket.Message.GatewayMetadata.RSSI = float32(sig.RSSIS)
 			}
 			antenna := &pb_gateway.RxMetadata_Antenna{
-				Antenna:     uint32(sig.Ant),
-				Channel:     uint32(sig.Chan),
-				ChannelRSSI: float32(sig.RSSIC),
-				RSSI:        float32(sig.RSSIS),
+				Antenna:               uint32(sig.Ant),
+				Channel:               uint32(sig.Chan),
+				ChannelRSSI:           float32(sig.RSSIC),
+				RSSI:                  float32(sig.RSSIS),
 				RSSIStandardDeviation: float32(sig.RSSISD),
-				SNR:             float32(sig.LSNR),
-				FrequencyOffset: int64(sig.FOff),
-				FineTime:        sig.FTime,
+				SNR:                   float32(sig.LSNR),
+				FrequencyOffset:       int64(sig.FOff),
+				FineTime:              sig.FTime,
 			}
 			if eTime, err := base64.StdEncoding.DecodeString(sig.ETime); err == nil && len(eTime) > 0 {
 				antenna.EncryptedTime = eTime

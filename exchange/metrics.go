@@ -9,6 +9,17 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+var info = prometheus.NewGaugeVec(
+	prometheus.GaugeOpts{
+		Namespace: "ttn",
+		Subsystem: "bridge",
+		Name:      "info",
+		Help:      "Information about the TTN environment.",
+	}, []string{
+		"build_date", "git_commit", "id", "version",
+	},
+)
+
 var connectedGateways = prometheus.NewGauge(
 	prometheus.GaugeOpts{
 		Namespace: "ttn",
@@ -73,6 +84,7 @@ func registerStatus() {
 }
 
 func init() {
+	prometheus.MustRegister(info)
 	prometheus.MustRegister(connectedGateways)
 	prometheus.MustRegister(handledCounter)
 	for mType := lorawan.MType(0); mType < 8; mType++ {

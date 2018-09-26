@@ -20,6 +20,7 @@ import (
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/apex/log"
 	"github.com/deckarep/golang-set"
+	"github.com/spf13/viper"
 )
 
 // Exchange routes messages between northbound backends (servers that are up the chain)
@@ -75,6 +76,7 @@ func New(ctx log.Interface, killWhenIdleFor time.Duration) *Exchange {
 		gateways:        mapset.NewSet(),
 		killWhenIdleFor: killWhenIdleFor,
 	}
+	info.WithLabelValues(viper.GetString("buildDate"), viper.GetString("gitCommit"), viper.GetString("id"), viper.GetString("version")).Set(1)
 	if killWhenIdleFor > 0 {
 		e.idleWatchdog = time.AfterFunc(killWhenIdleFor, func() {
 			ctx.Fatalf("Exchange was idle for more than %v", killWhenIdleFor)
