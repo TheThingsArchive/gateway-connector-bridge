@@ -6,8 +6,6 @@ GIT_BRANCH = $(or $(CI_BUILD_REF_NAME) ,`git rev-parse --abbrev-ref HEAD 2>/dev/
 GIT_COMMIT = $(or $(CI_BUILD_REF), `git rev-parse HEAD 2>/dev/null`)
 GIT_TAG = $(shell git describe --abbrev=0 --tags 2>/dev/null)
 BUILD_DATE = $(or $(CI_BUILD_DATE), `date -u +%Y-%m-%dT%H:%M:%SZ`)
-GO_PATH = `echo $(GOPATH) | awk -F':' '{print $$1}'`
-GO_SRC = `pwd | xargs dirname | xargs dirname | xargs dirname`
 
 ifeq ($(GIT_BRANCH), $(GIT_TAG))
 	TTN_VERSION = $(GIT_TAG)
@@ -19,79 +17,44 @@ endif
 
 # All
 
-.PHONY: all build-deps deps dev-deps protos-clean protos test cover-clean cover-deps cover coveralls fmt vet build dev link docs clean docker
+.PHONY: all deps dev-deps test cover-clean cover-deps cover coveralls fmt vet build dev link docs clean docker
 
 all: deps build
 
 # Deps
 
-build-deps:
-	@command -v dep > /dev/null || go get "github.com/golang/dep/cmd/dep"
-
-deps: build-deps
-	dep ensure -v -vendor-only
+deps:
+	go mod download
 
 dev-deps: deps
-	@command -v protoc-gen-gofast > /dev/null || go get github.com/gogo/protobuf/protoc-gen-gofast
-	@command -v golint > /dev/null || go get github.com/golang/lint/golint
 	@command -v forego > /dev/null || go get github.com/ddollar/forego
-
-# Protobuf
-
-PROTOC = protoc \
--I/usr/local/include \
--I$(GO_PATH)/src \
---gofast_out=plugins=grpc:$(GO_SRC) \
-`pwd`/
-
-protos-clean:
-	rm -f types/types.pb.go status/status.pb.go
-
-protos: types/types.pb.go status/status.pb.go
-
-%.pb.go: %.proto
-	$(PROTOC)$<
 
 # Go Test
 
 GO_FILES = $(shell find . -name "*.go" | grep -vE ".git|.env|vendor")
-GO_PACKAGES = $(shell find . -name "*.go" | grep -vE ".git|.env|vendor" | sed 's:/[^/]*$$::' | sort | uniq)
-GO_TEST_PACKAGES = $(shell find . -name "*_test.go" | grep -vE ".git|.env|vendor" | sed 's:/[^/]*$$::' | sort | uniq)
-
-GO_COVER_FILE ?= coverage.out
-GO_COVER_DIR ?= .cover
-GO_COVER_FILES = $(patsubst ./%, $(GO_COVER_DIR)/%.out, $(shell echo "$(GO_TEST_PACKAGES)"))
 
 test: $(GO_FILES)
-	go test -v $(GO_TEST_PACKAGES)
+	go test -v ./...
+
+GO_COVER_FILE ?= coverage.out
 
 cover-clean:
-	rm -rf $(GO_COVER_DIR) $(GO_COVER_FILE)
+	rm -f $(GO_COVER_FILE)
 
 cover-deps:
 	@command -v goveralls > /dev/null || go get github.com/mattn/goveralls
 
-cover: $(GO_COVER_FILE)
-
-$(GO_COVER_FILE): cover-clean $(GO_COVER_FILES)
-	echo "mode: set" > $(GO_COVER_FILE)
-	cat $(GO_COVER_FILES) | grep -vE "mode: set" | sort >> $(GO_COVER_FILE)
-
-$(GO_COVER_DIR)/%.out: %
-	@mkdir -p "$(GO_COVER_DIR)/$<"
-	go test -cover -coverprofile="$@" "./$<"
+cover:
+	go test -cover -coverprofile=$(GO_COVER_FILE) ./...
 
 coveralls: cover-deps $(GO_COVER_FILE)
 	goveralls -coverprofile=$(GO_COVER_FILE) -service=travis-ci -repotoken $$COVERALLS_TOKEN
 
 fmt:
-	[[ -z "`echo "$(GO_PACKAGES)" | xargs go fmt | tee -a /dev/stderr`" ]]
+	go fmt ./...
 
 vet:
-	echo $(GO_PACKAGES) | xargs go vet
-
-lint:
-	for pkg in `echo $(GO_PACKAGES)`; do golint $$pkg; done
+	go vet ./...
 
 # Go Build
 
@@ -101,32 +64,19 @@ GOARCH ?= $(shell go env GOARCH)
 GOEXE = $(shell GOOS=$(GOOS) GOARCH=$(GOARCH) go env GOEXE)
 CGO_ENABLED ?= 0
 
-DIST_FLAGS ?= -a -installsuffix cgo
-
 splitfilename = $(subst ., ,$(subst -, ,$(subst $(RELEASE_DIR)/,,$1)))
 GOOSfromfilename = $(word 4, $(call splitfilename, $1))
 GOARCHfromfilename = $(word 5, $(call splitfilename, $1))
 LDFLAGS = -ldflags "-w -X main.gitBranch=${GIT_BRANCH} -X main.gitCommit=${GIT_COMMIT} -X main.buildDate=${BUILD_DATE}"
-GOBUILD = CGO_ENABLED=$(CGO_ENABLED) GOOS=$(call GOOSfromfilename, $@) GOARCH=$(call GOARCHfromfilename, $@) go build $(DIST_FLAGS) ${LDFLAGS} -tags "${TAGS}" -o "$@"
+GOBUILD = CGO_ENABLED=$(CGO_ENABLED) GOOS=$(call GOOSfromfilename, $@) GOARCH=$(call GOARCHfromfilename, $@) go build ${LDFLAGS} -tags "${TAGS}" -o "$@"
 
 build: $(RELEASE_DIR)/gateway-connector-bridge-$(GOOS)-$(GOARCH)$(GOEXE)
 
 $(RELEASE_DIR)/gateway-connector-bridge-%: $(GO_FILES)
-	$(GOBUILD) ./main.go
-
-gateway-connector-bridge-dev: DIST_FLAGS=
-gateway-connector-bridge-dev: CGO_ENABLED=1
-gateway-connector-bridge-dev: $(RELEASE_DIR)/gateway-connector-bridge-$(GOOS)-$(GOARCH)$(GOEXE)
+	$(GOBUILD) .
 
 install:
 	go install -v
-
-dev: install gateway-connector-bridge-dev
-
-GOBIN ?= $(GO_PATH)/bin
-
-link: build
-	ln -sf $(PWD)/$(RELEASE_DIR)/gateway-connector-bridge-$(GOOS)-$(GOARCH)$(GOEXE) $(GOBIN)/gateway-connector-bridge
 
 # Clean
 

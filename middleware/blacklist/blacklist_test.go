@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/middleware"
@@ -16,7 +17,10 @@ import (
 )
 
 func TestBlacklist(t *testing.T) {
-	exampleBlacklist := os.ExpandEnv("$GOPATH/src/github.com/TheThingsNetwork/gateway-connector-bridge/assets/blacklist.example.yml")
+	exampleBlacklist, err := filepath.Abs("../../assets/blacklist.example.yml")
+	if err != nil {
+		panic(fmt.Errorf("blacklist example file path could not be determined; %s", err))
+	}
 	if _, err := os.Stat(exampleBlacklist); err != nil {
 		panic(fmt.Errorf("blacklist example file not found: %s", err))
 	}

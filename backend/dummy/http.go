@@ -10,7 +10,7 @@ import (
 
 	"github.com/TheThingsNetwork/gateway-connector-bridge/types"
 	"github.com/apex/log"
-	"github.com/googollee/go-socket.io"
+	socketio "github.com/googollee/go-socket.io"
 )
 
 const (
