@@ -1,16 +1,23 @@
 language: go
 
+go_import_path: github.com/TheThingsNetwork/gateway-connector-bridge
+
 sudo: required
 
 services:
   - docker
 
 go:
-  - "1.11"
+  - "1.12.x"
+
+env:
+  global:
+  - GOPROXY=https://proxy.golang.org
+  - GO111MODULE=on
 
 cache:
   directories:
-    - $HOME/gopath/pkg/dep
+    - $HOME/gopath/pkg/mod
 
 install:
   - make deps
