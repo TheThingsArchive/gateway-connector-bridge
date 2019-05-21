@@ -5,7 +5,7 @@ go 1.11
 replace github.com/brocaar/lorawan => github.com/ThethingsIndustries/legacy-lorawan-lib v0.0.0-20190212122748-b905ab327304
 
 require (
-	github.com/TheThingsNetwork/api v0.0.0-20190516145942-631860935c2b
+	github.com/TheThingsNetwork/api v0.0.0-20190517100736-d4d18a220bfe
 	github.com/TheThingsNetwork/go-account-lib v0.0.0-20190516094738-77d15a3f8875
 	github.com/TheThingsNetwork/go-utils v0.0.0-20190516083235-bdd4967fab4e
 	github.com/TheThingsNetwork/ttn/api v0.0.0-20190516113615-648de2b33240
