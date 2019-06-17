@@ -422,7 +422,7 @@ type Stat struct {
 	LMST uint32       `json:"lmst"` // Sequence number of the first packet received from link testing mote (unsigned integer)
 	LMNW uint32       `json:"lmnw"` // Sequence number of the last packet received from link testing mote (unsigned integer)
 	LPPS uint32       `json:"lpps"` // Number of lost PPS pulses (unsigned integer)
-	Temp int32        `json:"temp"` // Temperature of the Gateway (signed integer)
+	Temp float32      `json:"temp"` // Temperature of the Gateway (signed integer)
 	FPGA uint32       `json:"fpga"` // Version of Gateway FPGA (unsigned integer)
 	DSP  uint32       `json:"dsp"`  // Version of Gateway DSP software (unsigned interger)
 	HAL  string       `json:"hal"`  // Version of Gateway driver (format X.X.X)
