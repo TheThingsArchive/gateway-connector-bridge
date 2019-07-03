@@ -503,8 +503,8 @@ func TestNewRXPacketFromRXPK(t *testing.T) {
 			Size: 16,
 			Data: base64.StdEncoding.EncodeToString([]byte{1, 2, 3, 4}),
 			RSig: []RSig{
-				RSig{Ant: 0, Chan: 2, RSSIS: -54, LSNR: 6.5},
-				RSig{Ant: 1, Chan: 2, RSSIS: -51, LSNR: 7},
+				RSig{Ant: 0, Chan: 2, RSSIC: -54, LSNR: 6.5},
+				RSig{Ant: 1, Chan: 2, RSSIC: -51, LSNR: 7},
 			},
 		}
 		mac := [8]byte{1, 2, 3, 4, 5, 6, 7, 8}
@@ -534,8 +534,8 @@ func TestNewRXPacketFromRXPK(t *testing.T) {
 					RSSI:      -51,
 					SNR:       7,
 					Antennas: []*pb_gateway.RxMetadata_Antenna{
-						&pb_gateway.RxMetadata_Antenna{Antenna: 0, Channel: 2, RSSI: -54, SNR: 6.5},
-						&pb_gateway.RxMetadata_Antenna{Antenna: 1, Channel: 2, RSSI: -51, SNR: 7},
+						&pb_gateway.RxMetadata_Antenna{Antenna: 0, Channel: 2, RSSI: -54, ChannelRSSI: -54, SNR: 6.5},
+						&pb_gateway.RxMetadata_Antenna{Antenna: 1, Channel: 2, RSSI: -51, ChannelRSSI: -51, SNR: 7},
 					},
 				})
 			})

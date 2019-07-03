@@ -544,28 +544,44 @@ func newRXPacketFromRXPK(mac lorawan.EUI64, rxpk RXPK) (*types.UplinkMessage, er
 
 	// Use LSNR and RSSI from RSig if present
 	if len(rxpk.RSig) > 0 {
-		rxPacket.Message.GatewayMetadata.SNR = float32(rxpk.RSig[0].LSNR)
-		rxPacket.Message.GatewayMetadata.RSSI = float32(rxpk.RSig[0].RSSIS)
-		for _, sig := range rxpk.RSig {
-			if float32(sig.LSNR) > rxPacket.Message.GatewayMetadata.SNR {
-				rxPacket.Message.GatewayMetadata.SNR = float32(sig.LSNR)
-				rxPacket.Message.GatewayMetadata.RSSI = float32(sig.RSSIS)
-			} else if float32(sig.LSNR) == rxPacket.Message.GatewayMetadata.SNR && float32(sig.RSSIS) > rxPacket.Message.GatewayMetadata.RSSI {
-				rxPacket.Message.GatewayMetadata.RSSI = float32(sig.RSSIS)
-			}
+		for i, sig := range rxpk.RSig {
 			antenna := &pb_gateway.RxMetadata_Antenna{
-				Antenna:               uint32(sig.Ant),
-				Channel:               uint32(sig.Chan),
-				ChannelRSSI:           float32(sig.RSSIC),
-				RSSI:                  float32(sig.RSSIS),
-				RSSIStandardDeviation: float32(sig.RSSISD),
-				SNR:                   float32(sig.LSNR),
-				FrequencyOffset:       int64(sig.FOff),
-				FineTime:              sig.FTime,
+				Antenna:     uint32(sig.Ant),
+				Channel:     uint32(sig.Chan),
+				ChannelRSSI: float32(sig.RSSIC),
+				SNR:         float32(sig.LSNR),
 			}
-			if eTime, err := base64.StdEncoding.DecodeString(sig.ETime); err == nil && len(eTime) > 0 {
-				antenna.EncryptedTime = eTime
+			if sig.RSSIS != nil {
+				antenna.RSSI = float32(*sig.RSSIS)
+			} else {
+				antenna.RSSI = antenna.ChannelRSSI
 			}
+			if sig.RSSISD != nil {
+				antenna.RSSIStandardDeviation = float32(*sig.RSSISD)
+			}
+			if sig.FOff != nil {
+				antenna.FrequencyOffset = int64(*sig.FOff)
+			}
+			if sig.ETime != nil {
+				if eTime, err := base64.StdEncoding.DecodeString(*sig.ETime); err == nil && len(eTime) > 0 {
+					antenna.EncryptedTime = eTime
+				}
+			}
+			if sig.FTime != nil {
+				antenna.FineTime = *sig.FTime
+			}
+
+			if i == 0 {
+				rxPacket.Message.GatewayMetadata.SNR = antenna.SNR
+				rxPacket.Message.GatewayMetadata.RSSI = antenna.RSSI
+			}
+			if antenna.SNR > rxPacket.Message.GatewayMetadata.SNR {
+				rxPacket.Message.GatewayMetadata.SNR = antenna.SNR
+				rxPacket.Message.GatewayMetadata.RSSI = antenna.RSSI
+			} else if antenna.SNR == rxPacket.Message.GatewayMetadata.SNR && antenna.RSSI > rxPacket.Message.GatewayMetadata.RSSI {
+				rxPacket.Message.GatewayMetadata.RSSI = antenna.RSSI
+			}
+
 			rxPacket.Message.GatewayMetadata.Antennas = append(rxPacket.Message.GatewayMetadata.Antennas, antenna)
 		}
 	}
